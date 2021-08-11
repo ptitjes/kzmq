@@ -1,5 +1,6 @@
 package org.zeromq
 
+import kotlinx.cinterop.toKString
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -11,7 +12,7 @@ import kotlin.test.assertEquals
 class Simple {
     @Test
     fun testSimple() = runBlocking {
-        val context = JeroMQContext()
+        val context = LibzmqContext()
         val sent = "Hello 0MQ!"
 
         val publication = launch {
@@ -19,7 +20,7 @@ class Simple {
             publisher.bind("inproc://testSimple")
 
             delay(100)
-            publisher.send(sent.toByteArray(Charsets.UTF_8))
+            publisher.send(sent.encodeToByteArray())
         }
 
         val subscription = launch {
@@ -27,7 +28,7 @@ class Simple {
             subscriber.connect("inproc://testSimple")
             subscriber.subscribe("")
 
-            val received = subscriber.receive().toString(Charsets.UTF_8)
+            val received = subscriber.receive().toKString()
             assertEquals(sent, received)
         }
 
@@ -37,7 +38,7 @@ class Simple {
 
     @Test
     fun testFlow() = runBlocking {
-        val context = JeroMQContext()
+        val context = LibzmqContext()
         val intFlow: Flow<Int> = flow { for (i in 0..9) emit(i) }
 
         val publication = launch {
@@ -46,7 +47,7 @@ class Simple {
 
             delay(100)
             intFlow
-                .map { it.toString().toByteArray(Charsets.UTF_8) }
+                .map { it.toString().encodeToByteArray() }
                 .collectToSocket(publisher)
         }
 
@@ -55,7 +56,7 @@ class Simple {
             subscriber.connect("inproc://testFlow")
             subscriber.subscribe("")
 
-            val values = subscriber.asFlow().take(10).map { it.toString(Charsets.UTF_8).toInt() }
+            val values = subscriber.asFlow().take(10).map { it.toKString().toInt() }
             assertContentEquals(intFlow.toList(), values.toList())
         }
 

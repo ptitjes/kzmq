@@ -9,7 +9,7 @@ interface Socket {
     val type: Type
 
     /**
-     * Closes this socket..
+     * Closes this socket.
      */
     fun close()
 
@@ -22,9 +22,8 @@ interface Socket {
      * </p>
      *
      * @param endpoint the endpoint to bind to
-     * @return returns true if bind to the endpoint was successful
      */
-    fun bind(endpoint: String): Boolean
+    fun bind(endpoint: String)
 
     /**
      * Connects the socket to an endpoint and then accepts incoming connections on that endpoint.
@@ -35,17 +34,15 @@ interface Socket {
      * </p>
      *
      * @param endpoint the endpoint to connect to
-     * @return returns true if connecting to the endpoint was successful
      */
-    fun connect(endpoint: String): Boolean
+    fun connect(endpoint: String)
 
     /**
      * Disconnecting a socket from an endpoint.
      *
      * @param endpoint the endpoint to disconnect from
-     * @return returns true if disconnecting to endpoint was successful
      */
-    fun disconnect(endpoint: String): Boolean
+    fun disconnect(endpoint: String)
 
     /**
      * The 'ZMQ_SUBSCRIBE' option shall establish a new message filter on a 'ZMQ_SUB' socket.
@@ -58,9 +55,8 @@ interface Socket {
      * message shall be accepted if it matches at least one filter.
      *
      * @param topic the topic to subscribe to
-     * @return true if the option was set, otherwise false
      */
-    fun subscribe(topic: ByteArray): Boolean
+    fun subscribe(topic: ByteArray)
 
     /**
      * The 'ZMQ_SUBSCRIBE' option shall establish a new message filter on a 'ZMQ_SUB' socket.
@@ -73,9 +69,8 @@ interface Socket {
      * message shall be accepted if it matches at least one filter.
      *
      * @param topic the topic to subscribe to
-     * @return true if the option was set, otherwise false
      */
-    fun subscribe(topic: String): Boolean
+    fun subscribe(topic: String)
 
     /**
      * The 'ZMQ_UNSUBSCRIBE' option shall remove an existing message filter on a 'ZMQ_SUB'
@@ -85,9 +80,8 @@ interface Socket {
      * place and functional.
      *
      * @param topic the topic to unsubscribe from
-     * @return true if the option was set, otherwise false
      */
-    fun unsubscribe(topic: ByteArray): Boolean
+    fun unsubscribe(topic: ByteArray)
 
     /**
      * The 'ZMQ_UNSUBSCRIBE' option shall remove an existing message filter on a 'ZMQ_SUB'
@@ -97,19 +91,16 @@ interface Socket {
      * place and functional.
      *
      * @param topic the topic to unsubscribe from
-     * @return true if the option was set, otherwise false
      */
-    fun unsubscribe(topic: String): Boolean
+    fun unsubscribe(topic: String)
 
     /**
      * Queues a message created from data, so it can be sent.
      *
      * @param data  the data to send.
      * @param sendMore whether the message being sent is a multi-part message
-     * @return true when it has been queued on the socket and ØMQ has assumed responsibility for the message.
-     * This does not indicate that the message has been transmitted to the network.
      */
-    suspend fun send(data: ByteArray, sendMore: Boolean = false): Boolean
+    suspend fun send(data: ByteArray, sendMore: Boolean = false)
 
     /**
      * Receives a message.
