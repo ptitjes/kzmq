@@ -4,8 +4,10 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="29349cfb-169e-46b2-9dc5-ea6c27558148" name="Changes" comment="feat: reorganize project and add naive js implementation">
-      <change afterPath="$PROJECT_DIR$/.github/workflows/gradle.yml" afterDir="false" />
+    <list default="true" id="29349cfb-169e-46b2-9dc5-ea6c27558148" name="Changes" comment="ci: add gradle workflow">
+      <change beforePath="$PROJECT_DIR$/.github/workflows/gradle.yml" beforeDir="false" afterPath="$PROJECT_DIR$/.github/workflows/gradle.yml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/gradle.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/gradle.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -75,18 +77,18 @@
   </component>
   <component name="KotlinMultiplatform" konanHome="$USER_HOME$/.konan/kotlin-native-prebuilt-linux-1.5.21">
     <allAvailableExecutables>
-      <executable target="linux_x64" targetName="native" execName="test" projectPrefix=":ktzmq-native-libzmq:" isTest="true">
+      <executable target="linux_x64" targetName="native" execName="test" projectPrefix=":ktzmq-core:" isTest="true">
         <variants>
-          <variant name="Debug" gradleTask=":ktzmq-native-libzmq:linkDebugTestNative" file="ktzmq-native-libzmq/build/bin/native/debugTest/test.kexe">
+          <variant name="Debug" gradleTask=":ktzmq-core:linkDebugTestNative" file="ktzmq-core/build/bin/native/debugTest/test.kexe">
             <params workingDirectory="" programParameters="">
               <environmentVariables />
             </params>
           </variant>
         </variants>
       </executable>
-      <executable target="linux_x64" targetName="native" execName="test" projectPrefix=":ktzmq-core:" isTest="true">
+      <executable target="linux_x64" targetName="native" execName="test" projectPrefix=":ktzmq-native-libzmq:" isTest="true">
         <variants>
-          <variant name="Debug" gradleTask=":ktzmq-core:linkDebugTestNative" file="ktzmq-core/build/bin/native/debugTest/test.kexe">
+          <variant name="Debug" gradleTask=":ktzmq-native-libzmq:linkDebugTestNative" file="ktzmq-native-libzmq/build/bin/native/debugTest/test.kexe">
             <params workingDirectory="" programParameters="">
               <environmentVariables />
             </params>
@@ -259,7 +261,8 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1629048565872</updated>
-      <workItem from="1629048567215" duration="31229000" />
+      <workItem from="1629048567215" duration="31688000" />
+      <workItem from="1629182776607" duration="268000" />
     </task>
     <task id="LOCAL-00001" summary="feat: reorganize project and add naive js implementation">
       <created>1629130465708</created>
@@ -275,7 +278,14 @@
       <option name="project" value="LOCAL" />
       <updated>1629158357111</updated>
     </task>
-    <option name="localTasksCounter" value="3" />
+    <task id="LOCAL-00003" summary="ci: add gradle workflow">
+      <created>1629158626996</created>
+      <option name="number" value="00003" />
+      <option name="presentableId" value="LOCAL-00003" />
+      <option name="project" value="LOCAL" />
+      <updated>1629158626996</updated>
+    </task>
+    <option name="localTasksCounter" value="4" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -323,9 +333,11 @@
         </entry>
       </map>
     </option>
+    <option name="oldMeFiltersMigrated" value="true" />
   </component>
   <component name="VcsManagerConfiguration">
     <MESSAGE value="feat: reorganize project and add naive js implementation" />
-    <option name="LAST_COMMIT_MESSAGE" value="feat: reorganize project and add naive js implementation" />
+    <MESSAGE value="ci: add gradle workflow" />
+    <option name="LAST_COMMIT_MESSAGE" value="ci: add gradle workflow" />
   </component>
 </project>
