@@ -5,43 +5,7 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="29349cfb-169e-46b2-9dc5-ea6c27558148" name="Changes" comment="feat: reorganize project and add naive js implementation">
-      <change afterPath="$PROJECT_DIR$/ktzmq-core/src/commonMain/kotlin/org/zeromq/Engine.kt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/ktzmq-core/src/commonMain/kotlin/org/zeromq/EngineInstance.kt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/ktzmq-core/src/commonMain/kotlin/org/zeromq/Message.kt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/ktzmq-core/src/commonMain/kotlin/org/zeromq/SocketIterator.kt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/ktzmq-core/src/commonMain/kotlin/org/zeromq/SocketResult.kt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/ktzmq-js/src/jsMain/kotlin/org/zeromq/JSInstance.kt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/ktzmq-js/src/jsTest/kotlin/org/zeromq/test-utils.ts.kt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/ktzmq-jvm-jeromq/src/jvmMain/kotlin/org/zeromq/JeroMQInstance.kt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/ktzmq-native-libzmq/src/nativeMain/kotlin/org/zeromq/LibzmqInstance.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/artifacts/ktzmq_core_js_0_1_SNAPSHOT.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/artifacts/ktzmq_core_js_0_1_SNAPSHOT.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/build.gradle.kts" beforeDir="false" afterPath="$PROJECT_DIR$/build.gradle.kts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/gradle.properties" beforeDir="false" afterPath="$PROJECT_DIR$/gradle.properties" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ktzmq-core/build.gradle.kts" beforeDir="false" afterPath="$PROJECT_DIR$/ktzmq-core/build.gradle.kts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ktzmq-core/src/commonMain/kotlin/org/zeromq/Context.kt" beforeDir="false" afterPath="$PROJECT_DIR$/ktzmq-core/src/commonMain/kotlin/org/zeromq/Context.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ktzmq-core/src/commonMain/kotlin/org/zeromq/PublisherSocket.kt" beforeDir="false" afterPath="$PROJECT_DIR$/ktzmq-core/src/commonMain/kotlin/org/zeromq/PublisherSocket.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ktzmq-core/src/commonMain/kotlin/org/zeromq/ReadableSocket.kt" beforeDir="false" afterPath="$PROJECT_DIR$/ktzmq-core/src/commonMain/kotlin/org/zeromq/ReceiveSocket.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ktzmq-core/src/commonMain/kotlin/org/zeromq/SubscriberSocket.kt" beforeDir="false" afterPath="$PROJECT_DIR$/ktzmq-core/src/commonMain/kotlin/org/zeromq/SubscriberSocket.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ktzmq-core/src/commonMain/kotlin/org/zeromq/Type.kt" beforeDir="false" afterPath="$PROJECT_DIR$/ktzmq-core/src/commonMain/kotlin/org/zeromq/Type.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ktzmq-core/src/commonMain/kotlin/org/zeromq/WritableSocket.kt" beforeDir="false" afterPath="$PROJECT_DIR$/ktzmq-core/src/commonMain/kotlin/org/zeromq/SendSocket.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ktzmq-core/src/commonMain/kotlin/org/zeromq/extensions.kt" beforeDir="false" afterPath="$PROJECT_DIR$/ktzmq-core/src/commonMain/kotlin/org/zeromq/extensions.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ktzmq-js/build.gradle.kts" beforeDir="false" afterPath="$PROJECT_DIR$/ktzmq-js/build.gradle.kts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ktzmq-js/src/jsMain/kotlin/org/zeromq/ZeroMQJsContext.kt" beforeDir="false" afterPath="$PROJECT_DIR$/ktzmq-js/src/jsMain/kotlin/org/zeromq/JS.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ktzmq-js/src/jsMain/kotlin/org/zeromq/ZeroMQJsPublisherSocket.kt" beforeDir="false" afterPath="$PROJECT_DIR$/ktzmq-js/src/jsMain/kotlin/org/zeromq/ZeroMQJsPublisherSocket.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ktzmq-js/src/jsMain/kotlin/org/zeromq/ZeroMQJsSocket.kt" beforeDir="false" afterPath="$PROJECT_DIR$/ktzmq-js/src/jsMain/kotlin/org/zeromq/ZeroMQJsSocket.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ktzmq-js/src/jsMain/kotlin/org/zeromq/ZeroMQJsSubscriberSocket.kt" beforeDir="false" afterPath="$PROJECT_DIR$/ktzmq-js/src/jsMain/kotlin/org/zeromq/ZeroMQJsSubscriberSocket.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ktzmq-js/src/jsMain/kotlin/org/zeromq/utils.kt" beforeDir="false" afterPath="$PROJECT_DIR$/ktzmq-js/src/jsMain/kotlin/org/zeromq/utils.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ktzmq-js/src/jsMain/kotlin/tsstdlib/lib.es2015.iterable.kt" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/ktzmq-js/src/jsMain/kotlin/tsstdlib/lib.es5.kt" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/ktzmq-js/src/jsMain/kotlin/zeromqjs/index.module_zeromq.kt" beforeDir="false" afterPath="$PROJECT_DIR$/ktzmq-js/src/jsMain/kotlin/zeromqjs/index.module_zeromq.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ktzmq-js/src/jsMain/kotlin/zeromqjs/native.module_zeromq.kt" beforeDir="false" afterPath="$PROJECT_DIR$/ktzmq-js/src/jsMain/kotlin/zeromqjs/native.module_zeromq.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ktzmq-js/src/jsTest/kotlin/org/zeromq/simple.kt" beforeDir="false" afterPath="$PROJECT_DIR$/ktzmq-js/src/jsTest/kotlin/org/zeromq/simple.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ktzmq-jvm-jeromq/src/jvmMain/kotlin/org/zeromq/JeroMQContext.kt" beforeDir="false" afterPath="$PROJECT_DIR$/ktzmq-jvm-jeromq/src/jvmMain/kotlin/org/zeromq/JeroMQ.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ktzmq-jvm-jeromq/src/jvmMain/kotlin/org/zeromq/JeroMQPublisherSocket.kt" beforeDir="false" afterPath="$PROJECT_DIR$/ktzmq-jvm-jeromq/src/jvmMain/kotlin/org/zeromq/JeroMQPublisherSocket.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ktzmq-jvm-jeromq/src/jvmMain/kotlin/org/zeromq/JeroMQSocket.kt" beforeDir="false" afterPath="$PROJECT_DIR$/ktzmq-jvm-jeromq/src/jvmMain/kotlin/org/zeromq/JeroMQSocket.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ktzmq-jvm-jeromq/src/jvmTest/kotlin/org/zeromq/simple.kt" beforeDir="false" afterPath="$PROJECT_DIR$/ktzmq-jvm-jeromq/src/jvmTest/kotlin/org/zeromq/simple.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ktzmq-native-libzmq/src/nativeMain/kotlin/org/zeromq/LibzmqContext.kt" beforeDir="false" afterPath="$PROJECT_DIR$/ktzmq-native-libzmq/src/nativeMain/kotlin/org/zeromq/Libzmq.kt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.github/workflows/gradle.yml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -77,17 +41,6 @@
               <path>
                 <item name="" type="6a2764b6:ExternalProjectsStructure$RootNode" />
                 <item name="ktzmq" type="f1a62948:ProjectNode" />
-              </path>
-              <path>
-                <item name="" type="6a2764b6:ExternalProjectsStructure$RootNode" />
-                <item name="ktzmq" type="f1a62948:ProjectNode" />
-                <item name="Tasks" type="e4a08cd1:TasksNode" />
-              </path>
-              <path>
-                <item name="" type="6a2764b6:ExternalProjectsStructure$RootNode" />
-                <item name="ktzmq" type="f1a62948:ProjectNode" />
-                <item name="Tasks" type="e4a08cd1:TasksNode" />
-                <item name="documentation" type="c8890929:TasksNode$1" />
               </path>
             </expand>
             <select />
@@ -306,7 +259,7 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1629048565872</updated>
-      <workItem from="1629048567215" duration="30931000" />
+      <workItem from="1629048567215" duration="31229000" />
     </task>
     <task id="LOCAL-00001" summary="feat: reorganize project and add naive js implementation">
       <created>1629130465708</created>
@@ -315,7 +268,14 @@
       <option name="project" value="LOCAL" />
       <updated>1629130465708</updated>
     </task>
-    <option name="localTasksCounter" value="2" />
+    <task id="LOCAL-00002" summary="feat: reorganize project and add naive js implementation">
+      <created>1629158357111</created>
+      <option name="number" value="00002" />
+      <option name="presentableId" value="LOCAL-00002" />
+      <option name="project" value="LOCAL" />
+      <updated>1629158357111</updated>
+    </task>
+    <option name="localTasksCounter" value="3" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
