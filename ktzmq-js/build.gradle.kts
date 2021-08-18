@@ -9,6 +9,7 @@ kotlin {
 
     sourceSets {
         all {
+            languageSettings.useExperimentalAnnotation("kotlin.RequiresOptIn")
             languageSettings.useExperimentalAnnotation("kotlinx.coroutines.ExperimentalCoroutinesApi")
         }
 
@@ -24,11 +25,5 @@ kotlin {
                 implementation(kotlin("test"))
             }
         }
-    }
-}
-
-tasks.withType<org.jetbrains.kotlin.gradle.tasks.Kotlin2JsCompile>().configureEach {
-    kotlinOptions {
-        freeCompilerArgs = freeCompilerArgs + "-Xopt-in=kotlin.RequiresOptIn"
     }
 }

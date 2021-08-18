@@ -10,7 +10,7 @@ interface SubscriberSocket : Socket, ReceiveSocket {
      * <p>
      * An empty 'option_value' of length zero shall subscribe to all incoming messages. A
      * non-empty 'option_value' shall subscribe to all messages beginning with the specified
-     * prefix. Mutiple filters may be attached to a single 'ZMQ_SUB' socket, in which case a
+     * prefix. Multiple filters may be attached to a single 'ZMQ_SUB' socket, in which case a
      * message shall be accepted if it matches at least one filter.
      *
      * @param topic the topic to subscribe to
@@ -24,7 +24,7 @@ interface SubscriberSocket : Socket, ReceiveSocket {
      * <p>
      * An empty 'option_value' of length zero shall subscribe to all incoming messages. A
      * non-empty 'option_value' shall subscribe to all messages beginning with the specified
-     * prefix. Mutiple filters may be attached to a single 'ZMQ_SUB' socket, in which case a
+     * prefix. Multiple filters may be attached to a single 'ZMQ_SUB' socket, in which case a
      * message shall be accepted if it matches at least one filter.
      *
      * @param topic the topic to subscribe to

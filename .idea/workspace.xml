@@ -4,15 +4,60 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="29349cfb-169e-46b2-9dc5-ea6c27558148" name="Changes" comment="ci: add gradle workflow">
-      <change beforePath="$PROJECT_DIR$/.github/workflows/gradle.yml" beforeDir="false" afterPath="$PROJECT_DIR$/.github/workflows/gradle.yml" afterDir="false" />
+    <list default="true" id="29349cfb-169e-46b2-9dc5-ea6c27558148" name="Changes" comment="chore: rename implementations">
+      <change afterPath="$PROJECT_DIR$/.idea/artifacts/ktzmq_jeromq_jvm_0_1_SNAPSHOT.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/kotlinScripting.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/modules/ktzmq-native-libzmq/ktzmq.ktzmq-native-libzmq.nativeTest.iml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/ktzmq-jeromq/src/jvmMain/kotlin/org/zeromq/JeroMQSocket.kt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/ktzmq-jeromq/src/jvmMain/kotlin/org/zeromq/utils.kt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/ktzmq-jeromq/src/jvmTest/kotlin/org/zeromq/SelectTests.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/compiler.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/compiler.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/gradle.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/gradle.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/modules/ktzmq-core/ktzmq.ktzmq-core.jsTest.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/modules/ktzmq-jvm-jeromq/ktzmq.ktzmq-jvm-jeromq.jvmTest.iml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/modules/ktzmq-js/ktzmq.ktzmq-js.commonTest.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/modules/ktzmq-jvm-jeromq/ktzmq.ktzmq-jvm-jeromq.commonTest.iml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/modules/ktzmq-js/ktzmq.ktzmq-js.jsTest.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/modules/ktzmq-native-libzmq/ktzmq.ktzmq-native-libzmq.commonTest.iml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ktzmq-core/build.gradle.kts" beforeDir="false" afterPath="$PROJECT_DIR$/ktzmq-core/build.gradle.kts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ktzmq-core/src/commonMain/kotlin/org/zeromq/ReceiveSocket.kt" beforeDir="false" afterPath="$PROJECT_DIR$/ktzmq-core/src/commonMain/kotlin/org/zeromq/ReceiveSocket.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ktzmq-core/src/commonMain/kotlin/org/zeromq/SendSocket.kt" beforeDir="false" afterPath="$PROJECT_DIR$/ktzmq-core/src/commonMain/kotlin/org/zeromq/SendSocket.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ktzmq-core/src/commonMain/kotlin/org/zeromq/SocketResult.kt" beforeDir="false" afterPath="$PROJECT_DIR$/ktzmq-core/src/commonMain/kotlin/org/zeromq/SocketResult.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ktzmq-core/src/commonMain/kotlin/org/zeromq/SubscriberSocket.kt" beforeDir="false" afterPath="$PROJECT_DIR$/ktzmq-core/src/commonMain/kotlin/org/zeromq/SubscriberSocket.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ktzmq-core/src/commonMain/kotlin/org/zeromq/extensions.kt" beforeDir="false" afterPath="$PROJECT_DIR$/ktzmq-core/src/commonMain/kotlin/org/zeromq/extensions.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ktzmq-js/build.gradle.kts" beforeDir="false" afterPath="$PROJECT_DIR$/ktzmq-js/build.gradle.kts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ktzmq-js/src/jsMain/kotlin/org/zeromq/ZeroMQJsPublisherSocket.kt" beforeDir="false" afterPath="$PROJECT_DIR$/ktzmq-js/src/jsMain/kotlin/org/zeromq/ZeroMQJsPublisherSocket.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ktzmq-js/src/jsMain/kotlin/org/zeromq/ZeroMQJsSocket.kt" beforeDir="false" afterPath="$PROJECT_DIR$/ktzmq-js/src/jsMain/kotlin/org/zeromq/ZeroMQJsSocket.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ktzmq-js/src/jsMain/kotlin/org/zeromq/ZeroMQJsSubscriberSocket.kt" beforeDir="false" afterPath="$PROJECT_DIR$/ktzmq-js/src/jsMain/kotlin/org/zeromq/ZeroMQJsSubscriberSocket.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ktzmq-js/src/jsMain/kotlin/zeromqjs/index.module_zeromq.kt" beforeDir="false" afterPath="$PROJECT_DIR$/ktzmq-js/src/jsMain/kotlin/org/zeromq/internal/zeromqjs/index.module_zeromq.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ktzmq-js/src/jsMain/kotlin/zeromqjs/native.module_zeromq.kt" beforeDir="false" afterPath="$PROJECT_DIR$/ktzmq-js/src/jsMain/kotlin/org/zeromq/internal/zeromqjs/native.module_zeromq.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ktzmq-js/src/jsTest/kotlin/org/zeromq/simple.kt" beforeDir="false" afterPath="$PROJECT_DIR$/ktzmq-js/src/jsTest/kotlin/org/zeromq/simple.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ktzmq-jvm-jeromq/build.gradle.kts" beforeDir="false" afterPath="$PROJECT_DIR$/ktzmq-jeromq/build.gradle.kts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ktzmq-jvm-jeromq/src/jvmMain/kotlin/org/zeromq/JeroMQ.kt" beforeDir="false" afterPath="$PROJECT_DIR$/ktzmq-jeromq/src/jvmMain/kotlin/org/zeromq/JeroMQ.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ktzmq-jvm-jeromq/src/jvmMain/kotlin/org/zeromq/JeroMQInstance.kt" beforeDir="false" afterPath="$PROJECT_DIR$/ktzmq-jeromq/src/jvmMain/kotlin/org/zeromq/JeroMQInstance.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ktzmq-jvm-jeromq/src/jvmMain/kotlin/org/zeromq/JeroMQPublisherSocket.kt" beforeDir="false" afterPath="$PROJECT_DIR$/ktzmq-jeromq/src/jvmMain/kotlin/org/zeromq/JeroMQPublisherSocket.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ktzmq-jvm-jeromq/src/jvmMain/kotlin/org/zeromq/JeroMQSocket.kt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/ktzmq-jvm-jeromq/src/jvmMain/kotlin/org/zeromq/JeroMQSubscriberSocket.kt" beforeDir="false" afterPath="$PROJECT_DIR$/ktzmq-jeromq/src/jvmMain/kotlin/org/zeromq/JeroMQSubscriberSocket.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ktzmq-jvm-jeromq/src/jvmMain/kotlin/org/zeromq/utils.kt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/ktzmq-jvm-jeromq/src/jvmTest/kotlin/org/zeromq/simple.kt" beforeDir="false" afterPath="$PROJECT_DIR$/ktzmq-jeromq/src/jvmTest/kotlin/org/zeromq/SimpleTests.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ktzmq-native-libzmq/build.gradle.kts" beforeDir="false" afterPath="$PROJECT_DIR$/ktzmq-libzmq/build.gradle.kts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ktzmq-native-libzmq/src/nativeInterop/cinterop/libzmq.def" beforeDir="false" afterPath="$PROJECT_DIR$/ktzmq-libzmq/src/nativeInterop/cinterop/libzmq.def" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ktzmq-native-libzmq/src/nativeMain/kotlin/org/zeromq/Libzmq.kt" beforeDir="false" afterPath="$PROJECT_DIR$/ktzmq-libzmq/src/nativeMain/kotlin/org/zeromq/Libzmq.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ktzmq-native-libzmq/src/nativeMain/kotlin/org/zeromq/LibzmqInstance.kt" beforeDir="false" afterPath="$PROJECT_DIR$/ktzmq-libzmq/src/nativeMain/kotlin/org/zeromq/LibzmqInstance.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ktzmq-native-libzmq/src/nativeMain/kotlin/org/zeromq/LibzmqPublisherSocket.kt" beforeDir="false" afterPath="$PROJECT_DIR$/ktzmq-libzmq/src/nativeMain/kotlin/org/zeromq/LibzmqPublisherSocket.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ktzmq-native-libzmq/src/nativeMain/kotlin/org/zeromq/LibzmqSocket.kt" beforeDir="false" afterPath="$PROJECT_DIR$/ktzmq-libzmq/src/nativeMain/kotlin/org/zeromq/LibzmqSocket.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ktzmq-native-libzmq/src/nativeMain/kotlin/org/zeromq/LibzmqSubscriberSocket.kt" beforeDir="false" afterPath="$PROJECT_DIR$/ktzmq-libzmq/src/nativeMain/kotlin/org/zeromq/LibzmqSubscriberSocket.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ktzmq-native-libzmq/src/nativeMain/kotlin/org/zeromq/utils.kt" beforeDir="false" afterPath="$PROJECT_DIR$/ktzmq-libzmq/src/nativeMain/kotlin/org/zeromq/utils.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ktzmq-native-libzmq/src/nativeTest/kotlin/org/zeromq/simple.kt" beforeDir="false" afterPath="$PROJECT_DIR$/ktzmq-libzmq/src/nativeTest/kotlin/org/zeromq/simple.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/settings.gradle.kts" beforeDir="false" afterPath="$PROJECT_DIR$/settings.gradle.kts" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
     <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="ChangesViewManager">
+    <option name="groupingKeys">
+      <option value="directory" />
+    </option>
   </component>
   <component name="ExternalProjectsData">
     <projectState path="$PROJECT_DIR$">
@@ -37,12 +82,47 @@
         <task path="$PROJECT_DIR$/ktzmq-core">
           <activation />
         </task>
+        <task path="$PROJECT_DIR$/ktzmq-jeromq">
+          <activation />
+        </task>
+        <task path="$PROJECT_DIR$/ktzmq-libzmq">
+          <activation />
+        </task>
         <projects_view>
           <tree_state>
             <expand>
               <path>
                 <item name="" type="6a2764b6:ExternalProjectsStructure$RootNode" />
                 <item name="ktzmq" type="f1a62948:ProjectNode" />
+              </path>
+              <path>
+                <item name="" type="6a2764b6:ExternalProjectsStructure$RootNode" />
+                <item name="ktzmq" type="f1a62948:ProjectNode" />
+                <item name="Tasks" type="e4a08cd1:TasksNode" />
+              </path>
+              <path>
+                <item name="" type="6a2764b6:ExternalProjectsStructure$RootNode" />
+                <item name="ktzmq" type="f1a62948:ProjectNode" />
+                <item name="Tasks" type="e4a08cd1:TasksNode" />
+                <item name="build" type="c8890929:TasksNode$1" />
+              </path>
+              <path>
+                <item name="" type="6a2764b6:ExternalProjectsStructure$RootNode" />
+                <item name="ktzmq" type="f1a62948:ProjectNode" />
+                <item name="ktzmq-libzmq" type="2d1252cf:ModuleNode" />
+              </path>
+              <path>
+                <item name="" type="6a2764b6:ExternalProjectsStructure$RootNode" />
+                <item name="ktzmq" type="f1a62948:ProjectNode" />
+                <item name="ktzmq-libzmq" type="2d1252cf:ModuleNode" />
+                <item name="Tasks" type="e4a08cd1:TasksNode" />
+              </path>
+              <path>
+                <item name="" type="6a2764b6:ExternalProjectsStructure$RootNode" />
+                <item name="ktzmq" type="f1a62948:ProjectNode" />
+                <item name="ktzmq-libzmq" type="2d1252cf:ModuleNode" />
+                <item name="Tasks" type="e4a08cd1:TasksNode" />
+                <item name="interop" type="c8890929:TasksNode$1" />
               </path>
             </expand>
             <select />
@@ -55,8 +135,8 @@
     <option name="RECENT_TEMPLATES">
       <list>
         <option value="Kotlin Interface" />
-        <option value="Kotlin Class" />
         <option value="Kotlin File" />
+        <option value="Kotlin Class" />
       </list>
     </option>
   </component>
@@ -72,8 +152,8 @@
     </file-type-list>
   </component>
   <component name="HighlightingSettingsPerFile">
-    <setting file="file://$PROJECT_DIR$/ktzmq-js/src/jsMain/kotlin/zeromqjs/index.module_zeromq.kt" root0="SKIP_INSPECTION" />
-    <setting file="file://$PROJECT_DIR$/ktzmq-js/src/jsMain/kotlin/zeromqjs/native.module_zeromq.kt" root0="SKIP_INSPECTION" />
+    <setting file="file://$PROJECT_DIR$/ktzmq-js/src/jsMain/kotlin/org/zeromq/internal/zeromqjs/index.module_zeromq.kt" root0="SKIP_INSPECTION" />
+    <setting file="file://$PROJECT_DIR$/ktzmq-js/src/jsMain/kotlin/org/zeromq/internal/zeromqjs/native.module_zeromq.kt" root0="SKIP_INSPECTION" />
   </component>
   <component name="KotlinMultiplatform" konanHome="$USER_HOME$/.konan/kotlin-native-prebuilt-linux-1.5.21">
     <allAvailableExecutables>
@@ -86,9 +166,9 @@
           </variant>
         </variants>
       </executable>
-      <executable target="linux_x64" targetName="native" execName="test" projectPrefix=":ktzmq-native-libzmq:" isTest="true">
+      <executable target="linux_x64" targetName="native" execName="test" projectPrefix=":ktzmq-libzmq:" isTest="true">
         <variants>
-          <variant name="Debug" gradleTask=":ktzmq-native-libzmq:linkDebugTestNative" file="ktzmq-native-libzmq/build/bin/native/debugTest/test.kexe">
+          <variant name="Debug" gradleTask=":ktzmq-libzmq:linkDebugTestNative" file="ktzmq-libzmq/build/bin/native/debugTest/test.kexe">
             <params workingDirectory="" programParameters="">
               <environmentVariables />
             </params>
@@ -110,21 +190,25 @@
     <property name="SHARE_PROJECT_CONFIGURATION_FILES" value="true" />
     <property name="WebServerToolWindowFactoryState" value="false" />
     <property name="ignore.preview.features.used" value="true" />
-    <property name="last_opened_file_path" value="$PROJECT_DIR$/ktzmq-js/src/jsMain/kotlin/tsstdlib" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$" />
     <property name="node.js.detected.package.eslint" value="true" />
     <property name="node.js.detected.package.tslint" value="true" />
     <property name="node.js.selected.package.eslint" value="(autodetect)" />
     <property name="node.js.selected.package.tslint" value="(autodetect)" />
+    <property name="project.structure.last.edited" value="Modules" />
+    <property name="project.structure.proportion" value="0.0" />
+    <property name="project.structure.side.proportion" value="0.0" />
+    <property name="restartRequiresConfirmation" value="false" />
     <property name="settings.editor.selected.configurable" value="project.propCompiler" />
     <property name="ts.external.directory.path" value="$APPLICATION_HOME_DIR$/plugins/JavaScriptLanguage/jsLanguageServicesImpl/external" />
   </component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$" />
+      <recent name="$PROJECT_DIR$/ktzmq-core/src/commonTest/kotlin/org/zeromq" />
       <recent name="$PROJECT_DIR$/ktzmq-js/src/jsMain/kotlin/tsstdlib" />
       <recent name="$PROJECT_DIR$/ktzmq-js/src/jsMain/kotlin/zeromqjs" />
       <recent name="$PROJECT_DIR$/ktzmq-js/src/jsTest/kotlin" />
-      <recent name="$PROJECT_DIR$/ktzmq-js/src/jsMain/kotlin/org/zeromq" />
-      <recent name="$PROJECT_DIR$/ktzmq-native-libzmq/src/nativeMain/kotlin/org/zeromq" />
     </key>
     <key name="MoveFile.RECENT_KEYS">
       <recent name="$PROJECT_DIR$/ktzmq-js/src/jsMain/kotlin" />
@@ -136,20 +220,20 @@
       <recent name="org.zeromq" />
     </key>
   </component>
-  <component name="RunManager" selected="Gradle.Simple">
-    <configuration name="Simple" type="GradleRunConfiguration" factoryName="Gradle" temporary="true">
+  <component name="RunManager" selected="Gradle.ktzmq [build]">
+    <configuration name="SelectTests.onReceiveTest" type="GradleRunConfiguration" factoryName="Gradle" temporary="true">
       <ExternalSystemSettings>
         <option name="executionName" />
-        <option name="externalProjectPath" value="$PROJECT_DIR$/ktzmq-js" />
+        <option name="externalProjectPath" value="$PROJECT_DIR$/ktzmq-jvm-jeromq" />
         <option name="externalSystemIdString" value="GRADLE" />
-        <option name="scriptParameters" value="--tests &quot;org.zeromq.Simple&quot;" />
+        <option name="scriptParameters" value="--tests &quot;org.zeromq.SelectTests.onReceiveTest&quot;" />
         <option name="taskDescriptions">
           <list />
         </option>
         <option name="taskNames">
           <list>
-            <option value="cleanJsNodeTest" />
-            <option value="jsNodeTest" />
+            <option value="cleanJvmTest" />
+            <option value="jvmTest" />
           </list>
         </option>
         <option name="vmOptions" />
@@ -159,74 +243,33 @@
       <DebugAllEnabled>false</DebugAllEnabled>
       <method v="2" />
     </configuration>
-    <configuration name="ktzmq [dokkaHtmlPartial]" type="GradleRunConfiguration" factoryName="Gradle" temporary="true">
-      <ExternalSystemSettings>
-        <option name="executionName" />
-        <option name="externalProjectPath" value="$PROJECT_DIR$" />
-        <option name="externalSystemIdString" value="GRADLE" />
-        <option name="scriptParameters" />
-        <option name="taskDescriptions">
-          <list />
-        </option>
-        <option name="taskNames">
-          <list>
-            <option value="dokkaHtmlPartial" />
-          </list>
-        </option>
-        <option name="vmOptions" />
-      </ExternalSystemSettings>
-      <ExternalSystemDebugServerProcess>true</ExternalSystemDebugServerProcess>
-      <ExternalSystemReattachDebugProcess>true</ExternalSystemReattachDebugProcess>
-      <DebugAllEnabled>false</DebugAllEnabled>
-      <method v="2" />
-    </configuration>
-    <configuration name="ktzmq [dokkaHtml]" type="GradleRunConfiguration" factoryName="Gradle" temporary="true">
-      <ExternalSystemSettings>
-        <option name="executionName" />
-        <option name="externalProjectPath" value="$PROJECT_DIR$" />
-        <option name="externalSystemIdString" value="GRADLE" />
-        <option name="scriptParameters" />
-        <option name="taskDescriptions">
-          <list />
-        </option>
-        <option name="taskNames">
-          <list>
-            <option value="dokkaHtml" />
-          </list>
-        </option>
-        <option name="vmOptions" />
-      </ExternalSystemSettings>
-      <ExternalSystemDebugServerProcess>true</ExternalSystemDebugServerProcess>
-      <ExternalSystemReattachDebugProcess>true</ExternalSystemReattachDebugProcess>
-      <DebugAllEnabled>false</DebugAllEnabled>
-      <method v="2" />
-    </configuration>
-    <configuration name="ktzmq:ktzmq-js [build]" type="GradleRunConfiguration" factoryName="Gradle" temporary="true">
-      <ExternalSystemSettings>
-        <option name="executionName" />
-        <option name="externalProjectPath" value="$PROJECT_DIR$/ktzmq-js" />
-        <option name="externalSystemIdString" value="GRADLE" />
-        <option name="scriptParameters" />
-        <option name="taskDescriptions">
-          <list />
-        </option>
-        <option name="taskNames">
-          <list>
-            <option value="build" />
-          </list>
-        </option>
-        <option name="vmOptions" />
-      </ExternalSystemSettings>
-      <ExternalSystemDebugServerProcess>true</ExternalSystemDebugServerProcess>
-      <ExternalSystemReattachDebugProcess>true</ExternalSystemReattachDebugProcess>
-      <DebugAllEnabled>false</DebugAllEnabled>
-      <method v="2" />
-    </configuration>
-    <configuration name="ktzmq:ktzmq-jvm-jeromq [build]" type="GradleRunConfiguration" factoryName="Gradle" temporary="true">
+    <configuration name="SelectTests.onReceiveTest2" type="GradleRunConfiguration" factoryName="Gradle" temporary="true">
       <ExternalSystemSettings>
         <option name="executionName" />
         <option name="externalProjectPath" value="$PROJECT_DIR$/ktzmq-jvm-jeromq" />
         <option name="externalSystemIdString" value="GRADLE" />
+        <option name="scriptParameters" value="--tests &quot;org.zeromq.SelectTests.onReceiveTest2&quot;" />
+        <option name="taskDescriptions">
+          <list />
+        </option>
+        <option name="taskNames">
+          <list>
+            <option value="cleanJvmTest" />
+            <option value="jvmTest" />
+          </list>
+        </option>
+        <option name="vmOptions" />
+      </ExternalSystemSettings>
+      <ExternalSystemDebugServerProcess>false</ExternalSystemDebugServerProcess>
+      <ExternalSystemReattachDebugProcess>true</ExternalSystemReattachDebugProcess>
+      <DebugAllEnabled>false</DebugAllEnabled>
+      <method v="2" />
+    </configuration>
+    <configuration name="ktzmq [build]" type="GradleRunConfiguration" factoryName="Gradle" temporary="true">
+      <ExternalSystemSettings>
+        <option name="executionName" />
+        <option name="externalProjectPath" value="$PROJECT_DIR$" />
+        <option name="externalSystemIdString" value="GRADLE" />
         <option name="scriptParameters" />
         <option name="taskDescriptions">
           <list />
@@ -234,6 +277,48 @@
         <option name="taskNames">
           <list>
             <option value="build" />
+          </list>
+        </option>
+        <option name="vmOptions" />
+      </ExternalSystemSettings>
+      <ExternalSystemDebugServerProcess>true</ExternalSystemDebugServerProcess>
+      <ExternalSystemReattachDebugProcess>true</ExternalSystemReattachDebugProcess>
+      <DebugAllEnabled>false</DebugAllEnabled>
+      <method v="2" />
+    </configuration>
+    <configuration name="ktzmq:ktzmq-jeromq [build]" type="GradleRunConfiguration" factoryName="Gradle" temporary="true">
+      <ExternalSystemSettings>
+        <option name="executionName" />
+        <option name="externalProjectPath" value="$PROJECT_DIR$/ktzmq-jeromq" />
+        <option name="externalSystemIdString" value="GRADLE" />
+        <option name="scriptParameters" />
+        <option name="taskDescriptions">
+          <list />
+        </option>
+        <option name="taskNames">
+          <list>
+            <option value="build" />
+          </list>
+        </option>
+        <option name="vmOptions" />
+      </ExternalSystemSettings>
+      <ExternalSystemDebugServerProcess>true</ExternalSystemDebugServerProcess>
+      <ExternalSystemReattachDebugProcess>true</ExternalSystemReattachDebugProcess>
+      <DebugAllEnabled>false</DebugAllEnabled>
+      <method v="2" />
+    </configuration>
+    <configuration name="ktzmq:ktzmq-libzmq [cinteropLibzmqNative]" type="GradleRunConfiguration" factoryName="Gradle" temporary="true">
+      <ExternalSystemSettings>
+        <option name="executionName" />
+        <option name="externalProjectPath" value="$PROJECT_DIR$/ktzmq-libzmq" />
+        <option name="externalSystemIdString" value="GRADLE" />
+        <option name="scriptParameters" />
+        <option name="taskDescriptions">
+          <list />
+        </option>
+        <option name="taskNames">
+          <list>
+            <option value="cinteropLibzmqNative" />
           </list>
         </option>
         <option name="vmOptions" />
@@ -245,11 +330,11 @@
     </configuration>
     <recent_temporary>
       <list>
-        <item itemvalue="Gradle.Simple" />
-        <item itemvalue="Gradle.ktzmq [dokkaHtmlPartial]" />
-        <item itemvalue="Gradle.ktzmq [dokkaHtml]" />
-        <item itemvalue="Gradle.Simple" />
-        <item itemvalue="Gradle.ktzmq:ktzmq-js [build]" />
+        <item itemvalue="Gradle.ktzmq [build]" />
+        <item itemvalue="Gradle.ktzmq:ktzmq-libzmq [cinteropLibzmqNative]" />
+        <item itemvalue="Gradle.ktzmq:ktzmq-jeromq [build]" />
+        <item itemvalue="Gradle.SelectTests.onReceiveTest" />
+        <item itemvalue="Gradle.SelectTests.onReceiveTest2" />
       </list>
     </recent_temporary>
   </component>
@@ -262,7 +347,9 @@
       <option name="presentableId" value="Default" />
       <updated>1629048565872</updated>
       <workItem from="1629048567215" duration="31688000" />
-      <workItem from="1629182776607" duration="268000" />
+      <workItem from="1629182776607" duration="22936000" />
+      <workItem from="1629284209918" duration="2546000" />
+      <workItem from="1629296035043" duration="1110000" />
     </task>
     <task id="LOCAL-00001" summary="feat: reorganize project and add naive js implementation">
       <created>1629130465708</created>
@@ -285,7 +372,14 @@
       <option name="project" value="LOCAL" />
       <updated>1629158626996</updated>
     </task>
-    <option name="localTasksCounter" value="4" />
+    <task id="LOCAL-00004" summary="ci: add libzmq package">
+      <created>1629183089294</created>
+      <option name="number" value="00004" />
+      <option name="presentableId" value="LOCAL-00004" />
+      <option name="project" value="LOCAL" />
+      <updated>1629183089294</updated>
+    </task>
+    <option name="localTasksCounter" value="5" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -338,6 +432,9 @@
   <component name="VcsManagerConfiguration">
     <MESSAGE value="feat: reorganize project and add naive js implementation" />
     <MESSAGE value="ci: add gradle workflow" />
-    <option name="LAST_COMMIT_MESSAGE" value="ci: add gradle workflow" />
+    <MESSAGE value="ci: add libzmq package" />
+    <MESSAGE value="chore: move ktzmq-jvm-jeromq to ktzmq-jeromq" />
+    <MESSAGE value="chore: rename implementations" />
+    <option name="LAST_COMMIT_MESSAGE" value="chore: rename implementations" />
   </component>
 </project>

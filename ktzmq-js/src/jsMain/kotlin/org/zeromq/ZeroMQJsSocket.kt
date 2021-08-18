@@ -1,7 +1,7 @@
 package org.zeromq
 
 import kotlinx.coroutines.await
-import zeromqjs.Socket as ZSocket
+import org.zeromq.internal.zeromqjs.Socket as ZSocket
 
 internal abstract class ZeroMQJsSocket : Socket {
 

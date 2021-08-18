@@ -1,6 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="CompilerConfiguration">
-    <bytecodeTargetLevel target="16" />
+    <bytecodeTargetLevel target="16">
+      <module name="ktzmq.ktzmq-jvm-jeromq.commonMain" target="1.8" />
+      <module name="ktzmq.ktzmq-jvm-jeromq.commonTest" target="1.8" />
+      <module name="ktzmq.ktzmq-jvm-jeromq.jvmMain" target="1.8" />
+      <module name="ktzmq.ktzmq-jvm-jeromq.jvmTest" target="1.8" />
+    </bytecodeTargetLevel>
   </component>
 </project>

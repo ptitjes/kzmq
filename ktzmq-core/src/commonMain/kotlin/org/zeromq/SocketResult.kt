@@ -15,9 +15,10 @@ sealed class SocketResult<out T> {
     fun exceptionOrNull(): Throwable? = if (this is Failure) this.cause else null
 
     internal class Success<T>(val value: T) : SocketResult<T>()
-    internal class Failure(val cause: Throwable? = null) : SocketResult<Nothing>()
+    internal class Failure(val cause: Throwable?) : SocketResult<Nothing>()
 
     companion object {
-        internal val failure = Failure()
+        fun <T> success(value: T): SocketResult<T> = Success(value)
+        fun <T> failure(cause: Throwable? = null): SocketResult<T> = Failure(cause)
     }
 }

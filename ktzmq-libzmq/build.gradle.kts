@@ -1,22 +1,9 @@
 val kotlinxCoroutinesVersion: String by project
+val jeromqVersion: String by project
 
 val mingwPath = File(System.getenv("MINGW64_DIR") ?: "C:/msys64/mingw64")
 
 kotlin {
-    jvm {
-        compilations.all {
-            kotlinOptions.jvmTarget = "1.8"
-        }
-        testRuns["test"].executionTask.configure {
-            useJUnitPlatform()
-        }
-    }
-
-    js(IR) {
-        nodejs {}
-        binaries.library()
-    }
-
     val hostOs = System.getProperty("os.name")
 
     val hostTarget = when {
@@ -26,18 +13,37 @@ kotlin {
         else -> throw GradleException("Host OS is not supported in Kotlin/Native.")
     }
 
+    hostTarget.apply {
+        compilations["main"].cinterops {
+            val libzmq by creating {
+                when (preset) {
+                    presets["macosX64"] -> includeDirs.headerFilterOnly(
+                        "/opt/local/include",
+                        "/usr/local/include"
+                    )
+                    presets["linuxX64"] -> includeDirs.headerFilterOnly(
+                        "/usr/include",
+                        "/usr/include/x86_64-linux-gnu"
+                    )
+                    presets["mingwX64"] -> includeDirs.headerFilterOnly(mingwPath.resolve("include"))
+                }
+            }
+        }
+    }
+
     sourceSets {
         all {
             languageSettings.useExperimentalAnnotation("kotlin.RequiresOptIn")
             languageSettings.useExperimentalAnnotation("kotlinx.coroutines.ExperimentalCoroutinesApi")
         }
 
-        val commonMain by getting {
+        val nativeMain by getting {
             dependencies {
+                implementation(project(":ktzmq-core"))
                 implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:$kotlinxCoroutinesVersion")
             }
         }
-        val commonTest by getting {
+        val nativeTest by getting {
             dependencies {
                 implementation(kotlin("test"))
             }
