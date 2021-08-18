@@ -1,0 +1,60 @@
+val kotlinxCoroutinesVersion: String by project
+val ktorVersion: String by project
+
+val mingwPath = File(System.getenv("MINGW64_DIR") ?: "C:/msys64/mingw64")
+
+kotlin {
+    jvm {
+        compilations.all {
+            kotlinOptions.jvmTarget = "1.8"
+        }
+        testRuns["test"].executionTask.configure {
+            useJUnitPlatform()
+        }
+    }
+
+    js(IR) {
+        nodejs {}
+        binaries.library()
+    }
+
+    val hostOs = System.getProperty("os.name")
+
+    val hostTarget = when {
+        hostOs == "Mac OS X" -> macosX64("native")
+        hostOs == "Linux" -> linuxX64("native") {
+            binaries.sharedLib()
+
+            // Just for testing
+            binaries.executable {
+                entryPoint = "org.zeromq.main"
+            }
+        }
+        hostOs.startsWith("Windows") -> mingwX64("native")
+        else -> throw GradleException("Host OS is not supported in Kotlin/Native.")
+    }
+
+    sourceSets {
+        all {
+            languageSettings.useExperimentalAnnotation("kotlin.RequiresOptIn")
+            languageSettings.useExperimentalAnnotation("kotlinx.coroutines.ExperimentalCoroutinesApi")
+        }
+
+        val commonMain by getting {
+            dependencies {
+                implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:$kotlinxCoroutinesVersion")
+                implementation("io.ktor:ktor-io:$ktorVersion")
+                implementation("io.ktor:ktor-network:$ktorVersion")
+            }
+        }
+        val commonTest by getting {
+            dependencies {
+                implementation(kotlin("test"))
+            }
+        }
+
+        val jvmMain by getting
+
+        val nativeMain by getting
+    }
+}
