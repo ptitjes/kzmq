@@ -1,6 +1,8 @@
 package org.zeromq
 
+import org.zeromq.internal.SelectorManager
+
 internal class JeroMQPublisherSocket internal constructor(
-    context: JeroMQInstance,
+    selector: SelectorManager,
     underlying: ZMQ.Socket
-) : JeroMQSocket(context, underlying), PublisherSocket
+) : JeroMQSocket(selector, underlying), PublisherSocket

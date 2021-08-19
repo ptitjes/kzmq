@@ -6,7 +6,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlin.test.Test
 
-class Simple {
+class SimpleTestsNative {
 //    @Test
 //    fun test() = runBlocking {
 //        println("Hello native")

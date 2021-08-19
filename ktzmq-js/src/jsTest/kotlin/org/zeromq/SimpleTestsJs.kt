@@ -2,26 +2,29 @@ package org.zeromq
 
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.take
+import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.launch
 import kotlin.test.Test
 import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
 
 @OptIn(DelicateCoroutinesApi::class)
-class Simple {
+class SimpleTestsJs {
 
     @Test
     fun testSimple() = runBlockingTest {
         val context = Context(JS)
-        val sent = "Hello 0MQ!"
+        val sent = "Hello 0MQ!".encodeToByteArray()
 
         val publication = launch {
             val publisher = context.createPublisher()
             publisher.bind("inproc://testSimple")
 
             delay(100)
-            publisher.send(Message(sent.encodeToByteArray()))
+            publisher.send(Message(sent))
         }
 
         val subscription = launch {
@@ -29,8 +32,7 @@ class Simple {
             subscriber.connect("inproc://testSimple")
             subscriber.subscribe("")
 
-            val received = subscriber.receive()
-                .singleOrThrow().decodeToString()
+            val received = subscriber.receive().singleOrThrow()
 
             assertEquals(sent, received)
         }
@@ -42,16 +44,14 @@ class Simple {
     @Test
     fun testFlow() = runBlockingTest {
         val context = Context(JS)
-        val intFlow: Flow<Int> = flow { for (i in 0..9) emit(i) }
+        val testFlow = flow { for (i in 0..9) emit(i.toString().encodeToByteArray()) }
 
         val publication = launch {
             val publisher = context.createPublisher()
             publisher.bind("inproc://testFlow")
 
             delay(100)
-            intFlow
-                .map { Message(it.toString().encodeToByteArray()) }
-                .collectToSocket(publisher)
+            testFlow.map { Message(it) }.collectToSocket(publisher)
         }
 
         val subscription = launch {
@@ -59,11 +59,12 @@ class Simple {
             subscriber.connect("inproc://testFlow")
             subscriber.subscribe("")
 
-            val values = subscriber.consumeAsFlow()
-                .take(10)
-                .map { it.singleOrThrow().decodeToString().toInt() }
+            val values = subscriber.consumeAsFlow().take(10).map { it.singleOrThrow() }
 
-            assertContentEquals(intFlow.toList(), values.toList())
+            assertContentEquals(
+                testFlow.map { it.decodeToString() }.toList(),
+                values.map { it.decodeToString() }.toList()
+            )
         }
 
         subscription.join()

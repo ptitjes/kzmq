@@ -3,11 +3,21 @@ package org.zeromq
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import org.zeromq.internal.SelectInterest
+import org.zeromq.internal.Selectable
+import org.zeromq.internal.SelectorManager
+import java.nio.channels.SelectableChannel
 
 internal abstract class JeroMQSocket internal constructor(
-    private val context: JeroMQInstance,
+    private val selector: SelectorManager,
     private val underlying: ZMQ.Socket
-) : Socket {
+) : Selectable(), Socket {
+
+    override val socket: ZMQ.Socket
+        get() = underlying
+
+    override val channel: SelectableChannel
+        get() = socket.base().fd ?: error("No file descriptor")
 
     override fun close() = wrappingExceptions { underlying.close() }
 
@@ -58,7 +68,7 @@ internal abstract class JeroMQSocket internal constructor(
         }
 
         trace("sendPartSuspend - slow path")
-        context.suspendUntilEvents(underlying, ZPoller.OUT)
+        selector.suspendForSelection(this, SelectInterest.WRITE)
         trace("sendPartSuspend - sending")
         sendPartImmediate(part, sendMore)
     }
@@ -97,8 +107,8 @@ internal abstract class JeroMQSocket internal constructor(
         if (part != null) return part
 
         trace("receivePartSuspend - slow path")
-        context.suspendUntilEvents(underlying, ZPoller.IN)
-        trace("receivePartSuspend - sending")
+        selector.suspendForSelection(this, SelectInterest.READ)
+        trace("receivePartSuspend - receiving")
         return receivePartImmediate() ?: error("Invalid state")
     }
 
@@ -139,10 +149,6 @@ internal abstract class JeroMQSocket internal constructor(
         block()
     } finally {
         trace("$function - after")
-    }
-
-    private fun trace(message: String) {
-        if (TRACE) println("$underlying: $message")
     }
 }
 
