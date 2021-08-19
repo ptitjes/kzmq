@@ -1,6 +1,7 @@
 package org.zeromq
 
-import org.zeromq.internal.SelectorManager
+import kotlinx.coroutines.Dispatchers
+import org.zeromq.internal.ActorSelectorManager
 
 internal const val TRACE = false
 
@@ -10,7 +11,7 @@ internal class JeroMQInstance private constructor(
 
     constructor(ioThreads: Int = 1) : this(ZContext(ioThreads))
 
-    private val selector = SelectorManager()
+    private val selector = ActorSelectorManager(Dispatchers.IO)
 
     override fun createPublisher(): PublisherSocket = wrappingExceptions {
         JeroMQPublisherSocket(selector, newSocket(SocketType.PUB))

@@ -12,8 +12,7 @@ class SelectTests {
     @Test
     fun onReceiveTest() = runBlocking {
         val context = Context(JeroMQ)
-        val data1 = "Data 1".encodeToByteArray()
-        val data2 = "Data 2".encodeToByteArray()
+        val data = (0 until 10).toList()
 
         val publisher1 = context.createPublisher()
         publisher1.bind("inproc://pub1")
@@ -30,15 +29,16 @@ class SelectTests {
         subscriber2.subscribe("")
 
         val publication = launch {
-            delay(100)
-            publisher1.send(Message(data1))
-            delay(100)
-            publisher2.send(Message(data2))
+            for (datum in data) {
+                delay(100)
+                val message = Message("$datum".encodeToByteArray())
+                (if (datum % 2 == 0) publisher1 else publisher2).send(message)
+            }
         }
 
         val subscription = launch {
             val received = mutableListOf<ByteArray>()
-            repeat(2) {
+            repeat(10) {
                 val async1 = async { subscriber1.receive() }
                 val async2 = async { subscriber2.receive() }
 
@@ -51,14 +51,9 @@ class SelectTests {
 
                 async1.cancel()
                 async2.cancel()
-
-                println(received.map(ByteArray::decodeToString))
             }
 
-            assertContentEquals(
-                listOf(data1, data2).map { it.decodeToString() },
-                received.map { it.decodeToString() }
-            )
+            assertContentEquals(data, received.map { it.decodeToString().toInt() }.sorted())
         }
 
         subscription.join()
