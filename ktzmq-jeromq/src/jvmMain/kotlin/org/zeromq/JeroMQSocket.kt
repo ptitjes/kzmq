@@ -1,10 +1,13 @@
 package org.zeromq
 
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
-internal abstract class JeroMQSocket internal constructor(private val underlying: ZMQ.Socket) :
-    Socket {
+internal abstract class JeroMQSocket internal constructor(
+    private val context: JeroMQInstance,
+    private val underlying: ZMQ.Socket
+) : Socket {
 
     override fun close() = wrappingExceptions { underlying.close() }
 
@@ -30,44 +33,84 @@ internal abstract class JeroMQSocket internal constructor(private val underlying
         wrappingExceptions { underlying.unsubscribe(topic) }
 
     suspend fun send(message: Message): Unit =
-        withContext(Dispatchers.IO) { wrappingExceptions { doSend(message, true) } }
+        wrappingExceptionsSuspend { suspendOnIO { sendSuspend(message) } }
 
     suspend fun sendCatching(message: Message): SocketResult<Unit> =
-        withContext(Dispatchers.IO) { catchingExceptions { doSend(message, true) } }
+        catchingExceptionsSuspend { suspendOnIO { sendSuspend(message) } }
 
     fun trySend(message: Message): SocketResult<Unit> =
-        catchingExceptions { doSend(message, false) }
+        catchingExceptions { sendImmediate(message) }
 
-    private fun doSend(message: Message, blocking: Boolean) {
-        val flags = if (blocking) 0 else ZMQ.DONTWAIT
-        if (message.isSingle) {
-            underlying.send(message.singleOrThrow(), flags)
-        } else {
-            val parts = message.parts
-            val partCount = parts.size
-            for ((index, part) in parts.withIndex()) {
-                underlying.send(part, flags or if (index == partCount - 1) ZMQ.SNDMORE else 0)
-            }
+    private suspend fun sendSuspend(message: Message) = traceSuspending("sendSuspend") {
+        val parts = message.parts
+        val lastIndex = parts.size - 1
+        for ((index, part) in parts.withIndex()) {
+            sendPartSuspend(part, index < lastIndex)
         }
     }
 
+    private suspend fun sendPartSuspend(part: ByteArray, sendMore: Boolean) {
+        trace("sendPartSuspend - fast path")
+        try {
+            sendPartImmediate(part, sendMore)
+            return
+        } catch (t: Throwable) {
+        }
+
+        trace("sendPartSuspend - slow path")
+        context.suspendUntilEvents(underlying, ZPoller.OUT)
+        trace("sendPartSuspend - sending")
+        sendPartImmediate(part, sendMore)
+    }
+
+    private fun sendImmediate(message: Message) = trace("sendImmediate") {
+        val parts = message.parts
+        val lastIndex = parts.size - 1
+        for ((index, part) in parts.withIndex()) {
+            sendPartImmediate(part, index < lastIndex)
+        }
+    }
+
+    private fun sendPartImmediate(part: ByteArray, sendMore: Boolean) =
+        underlying.send(part, ZMQ.DONTWAIT or if (sendMore) ZMQ.SNDMORE else 0)
+
     suspend fun receive(): Message =
-        withContext(Dispatchers.IO) { wrappingExceptions { doReceive(true) } }
+        wrappingExceptionsSuspend { suspendOnIO { receiveSuspend() } }
 
     suspend fun receiveCatching(): SocketResult<Message> =
-        withContext(Dispatchers.IO) { catchingExceptions { doReceive(true) } }
+        catchingExceptionsSuspend { suspendOnIO { receiveSuspend() } }
 
     fun tryReceive(): SocketResult<Message> =
-        catchingExceptions { doReceive(false) }
+        catchingExceptions { receiveImmediate() }
 
-    private fun doReceive(blocking: Boolean): Message {
+    private suspend fun receiveSuspend(): Message = traceSuspending("receiveSuspend") {
         val parts = mutableListOf<ByteArray>()
-        val flags = if (blocking) 0 else ZMQ.DONTWAIT
         do {
-            parts.add(underlying.recv(flags) ?: throw ZeroMQException(ZeroMQError.EAGAIN))
+            parts.add(receivePartSuspend())
         } while (underlying.hasReceiveMore())
-        return Message(*parts.toTypedArray())
+        return@traceSuspending Message(*parts.toTypedArray())
     }
+
+    private suspend fun receivePartSuspend(): ByteArray {
+        trace("receivePartSuspend - fast path")
+        val part = receivePartImmediate()
+        if (part != null) return part
+
+        trace("receivePartSuspend - slow path")
+        context.suspendUntilEvents(underlying, ZPoller.IN)
+        trace("receivePartSuspend - sending")
+        return receivePartImmediate() ?: error("Invalid state")
+    }
+
+    private fun receiveImmediate(): Message = trace("receiveImmediate") {
+        val parts = mutableListOf<ByteArray>()
+        do {
+            parts.add(receivePartImmediate() ?: error("No message received"))
+        } while (underlying.hasReceiveMore())
+        return@trace Message(*parts.toTypedArray())
+    }
+
+    private fun receivePartImmediate(): ByteArray? = underlying.recv(ZMQ.DONTWAIT)
 
     operator fun iterator(): SocketIterator = object : SocketIterator {
         var next: Message? = null
@@ -83,4 +126,25 @@ internal abstract class JeroMQSocket internal constructor(private val underlying
             return message
         }
     }
+
+    private suspend fun <T> traceSuspending(function: String, block: suspend () -> T): T = try {
+        trace("$function - before")
+        block()
+    } finally {
+        trace("$function - after")
+    }
+
+    private fun <T> trace(function: String, block: () -> T): T = try {
+        trace("$function - before")
+        block()
+    } finally {
+        trace("$function - after")
+    }
+
+    private fun trace(message: String) {
+        if (TRACE) println("$underlying: $message")
+    }
 }
+
+private suspend fun <T> suspendOnIO(block: suspend CoroutineScope.() -> T) =
+    withContext(Dispatchers.IO, block)

@@ -1,8 +1,8 @@
 package org.zeromq
 
-class Message(vararg val parts: ByteArray) {
+data class Message(val parts: List<ByteArray>) {
 
-    constructor(parts: List<ByteArray>) : this(*parts.toTypedArray())
+    constructor(vararg parts: ByteArray) : this(parts.toList())
 
     val isSingle: Boolean get() = parts.size == 1
     val isMultipart: Boolean get() = parts.size > 1

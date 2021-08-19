@@ -1,4 +1,6 @@
 package org.zeromq
 
-internal class JeroMQPublisherSocket internal constructor(underlying: ZMQ.Socket) :
-    JeroMQSocket(underlying), PublisherSocket
+internal class JeroMQPublisherSocket internal constructor(
+    context: JeroMQInstance,
+    underlying: ZMQ.Socket
+) : JeroMQSocket(context, underlying), PublisherSocket
