@@ -14,6 +14,7 @@
             <option value="$PROJECT_DIR$/ktzmq-jeromq" />
             <option value="$PROJECT_DIR$/ktzmq-js" />
             <option value="$PROJECT_DIR$/ktzmq-libzmq" />
+            <option value="$PROJECT_DIR$/ktzmq-tests" />
           </set>
         </option>
       </GradleProjectSettings>
