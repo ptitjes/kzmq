@@ -9,8 +9,8 @@ import org.zeromq.internal.SelectorManager
 import java.nio.channels.SelectableChannel
 
 internal abstract class JeroMQSocket internal constructor(
-    private val selector: SelectorManager,
-    private val underlying: ZMQ.Socket
+    protected val selector: SelectorManager,
+    protected val underlying: ZMQ.Socket
 ) : Selectable(), Socket {
 
     override val socket: ZMQ.Socket
@@ -30,17 +30,25 @@ internal abstract class JeroMQSocket internal constructor(
     override fun disconnect(endpoint: String): Unit =
         wrappingExceptions { underlying.disconnect(endpoint) }
 
-    fun subscribe(topic: ByteArray): Unit =
-        wrappingExceptions { underlying.subscribe(topic) }
+    fun subscribe(vararg topics: ByteArray): Unit = wrappingExceptions {
+        if (topics.isEmpty()) underlying.subscribe(byteArrayOf())
+        else topics.forEach { underlying.subscribe(it) }
+    }
 
-    fun subscribe(topic: String): Unit =
-        wrappingExceptions { underlying.subscribe(topic) }
+    fun subscribe(vararg topics: String): Unit = wrappingExceptions {
+        if (topics.isEmpty()) underlying.subscribe("")
+        else topics.forEach { underlying.subscribe(it) }
+    }
 
-    fun unsubscribe(topic: ByteArray): Unit =
-        wrappingExceptions { underlying.unsubscribe(topic) }
+    fun unsubscribe(vararg topics: ByteArray): Unit = wrappingExceptions {
+        if (topics.isEmpty()) underlying.unsubscribe(byteArrayOf())
+        else topics.forEach { underlying.unsubscribe(it) }
+    }
 
-    fun unsubscribe(topic: String): Unit =
-        wrappingExceptions { underlying.unsubscribe(topic) }
+    fun unsubscribe(vararg topics: String): Unit = wrappingExceptions {
+        if (topics.isEmpty()) underlying.unsubscribe("")
+        else topics.forEach { underlying.unsubscribe(it) }
+    }
 
     suspend fun send(message: Message): Unit =
         wrappingExceptionsSuspend { suspendOnIO { sendSuspend(message) } }
@@ -83,6 +91,12 @@ internal abstract class JeroMQSocket internal constructor(
 
     private fun sendPartImmediate(part: ByteArray, sendMore: Boolean) =
         underlying.send(part, ZMQ.DONTWAIT or if (sendMore) ZMQ.SNDMORE else 0)
+
+    // TODO multicastHops is a long in underlying socket
+    var multicastHops: Int by notImplementedProperty()
+    var sendBufferSize: Int by underlying::sendBufferSize
+    var sendHighWaterMark: Int by underlying::sndHWM
+    var sendTimeout: Int by underlying::sendTimeOut
 
     suspend fun receive(): Message =
         wrappingExceptionsSuspend { suspendOnIO { receiveSuspend() } }
@@ -136,6 +150,10 @@ internal abstract class JeroMQSocket internal constructor(
             return message
         }
     }
+
+    var receiveBufferSize: Int by underlying::receiveBufferSize
+    var receiveHighWaterMark: Int by underlying::rcvHWM
+    var receiveTimeout: Int by underlying::receiveTimeOut
 
     private suspend fun <T> traceSuspending(function: String, block: suspend () -> T): T = try {
         trace("$function - before")

@@ -5,4 +5,11 @@ import org.zeromq.internal.SelectorManager
 internal class JeroMQPublisherSocket internal constructor(
     selector: SelectorManager,
     underlying: ZMQ.Socket
-) : JeroMQSocket(selector, underlying), PublisherSocket
+) : JeroMQSocket(selector, underlying), PublisherSocket {
+
+    override var conflate: Boolean by underlying::conflate
+    override var invertMatching: Boolean by notImplementedProperty()
+
+    // TODO there no getter for setXpubNoDrop in underlying socket
+    override var noDrop: Boolean by notImplementedProperty()
+}

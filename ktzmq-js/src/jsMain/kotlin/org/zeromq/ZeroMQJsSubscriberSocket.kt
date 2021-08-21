@@ -1,40 +1,29 @@
 package org.zeromq
 
-import kotlinx.coroutines.await
 import org.zeromq.internal.zeromqjs.Subscriber as ZSubscriber
 
 internal class ZeroMQJsSubscriberSocket internal constructor(override val underlying: ZSubscriber = ZSubscriber()) :
-    ZeroMQJsSocket(), SubscriberSocket {
+    ZeroMQJsSocket(),
+    ReceiveSocket by ZeroMQJsReceiveSocket(underlying),
+    SubscriberSocket
+{
 
-    override fun subscribe(topic: ByteArray) {
-        underlying.subscribe(topic.decodeToString())
+    override fun subscribe(vararg topics: ByteArray) {
+        underlying.subscribe(*topics.map { it.decodeToString() }.toTypedArray())
     }
 
-    override fun subscribe(topic: String) {
-        underlying.subscribe(topic)
+    override fun subscribe(vararg topics: String) {
+        underlying.subscribe(*topics)
     }
 
-    override fun unsubscribe(topic: ByteArray) {
-        underlying.unsubscribe(topic.decodeToString())
+    override fun unsubscribe(vararg topics: ByteArray) {
+        underlying.unsubscribe(*topics.map { it.decodeToString() }.toTypedArray())
     }
 
-    override fun unsubscribe(topic: String) {
-        underlying.unsubscribe(topic)
+    override fun unsubscribe(vararg topics: String) {
+        underlying.unsubscribe(*topics)
     }
 
-    override suspend fun receive(): Message =
-        Message(underlying.receive().await().map { it.toByteArray() })
-
-    override suspend fun receiveCatching(): SocketResult<Message> = try {
-        SocketResult.success(receive())
-    } catch (t: Throwable) {
-        SocketResult.failure(t)
-    }
-
-    override fun tryReceive(): SocketResult<Message> =
-        throw NotImplementedError("tryReceive is not supported on JS target")
-
-    override fun iterator(): SocketIterator {
-        TODO("Not yet implemented")
-    }
+    override var conflate: Boolean by underlying::conflate
+    override var invertMatching: Boolean by underlying::invertMatching
 }

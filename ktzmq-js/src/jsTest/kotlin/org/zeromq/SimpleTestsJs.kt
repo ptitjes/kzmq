@@ -34,7 +34,7 @@ class SimpleTestsJs {
 
             val received = subscriber.receive().singleOrThrow()
 
-            assertEquals(sent, received)
+            assertEquals(sent.decodeToString(), received.decodeToString())
         }
 
         subscription.join()

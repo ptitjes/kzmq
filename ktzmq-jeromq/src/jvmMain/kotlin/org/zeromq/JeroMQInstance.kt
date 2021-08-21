@@ -21,5 +21,41 @@ internal class JeroMQInstance private constructor(
         JeroMQSubscriberSocket(selector, newSocket(SocketType.SUB))
     }
 
+    override fun createPair(): PairSocket {
+        TODO("Not yet implemented")
+    }
+
+    override fun createXPublisher(): XPublisherSocket {
+        TODO("Not yet implemented")
+    }
+
+    override fun createXSubscriber(): XSubscriberSocket {
+        TODO("Not yet implemented")
+    }
+
+    override fun createPush(): PushSocket {
+        TODO("Not yet implemented")
+    }
+
+    override fun createPull(): PullSocket {
+        TODO("Not yet implemented")
+    }
+
+    override fun createRequest(): RequestSocket {
+        TODO("Not yet implemented")
+    }
+
+    override fun createReply(): ReplySocket {
+        TODO("Not yet implemented")
+    }
+
+    override fun createDealer(): DealerSocket {
+        TODO("Not yet implemented")
+    }
+
+    override fun createRouter(): RouterSocket {
+        TODO("Not yet implemented")
+    }
+
     private fun newSocket(type: SocketType): ZMQ.Socket = underlying.createSocket(type)
 }

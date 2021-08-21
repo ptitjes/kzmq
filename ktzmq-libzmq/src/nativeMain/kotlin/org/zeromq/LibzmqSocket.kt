@@ -17,50 +17,44 @@ internal abstract class LibzmqSocket internal constructor(private val underlying
     override fun disconnect(endpoint: String) =
         checkNativeError(zmq_disconnect(underlying, endpoint))
 
-    fun subscribe(topic: ByteArray) {
-        val topicCString = topic.toCValues()
+    fun subscribe(vararg topics: ByteArray) {
+        if (topics.isEmpty()) subscribe(byteArrayOf().toCValues())
+        else topics.forEach { subscribe(it.toCValues()) }
+    }
+
+    fun subscribe(vararg topics: String) {
+        if (topics.isEmpty()) subscribe("".cstr)
+        else topics.forEach { subscribe(it.cstr) }
+    }
+
+    private fun subscribe(topic: CValues<ByteVar>) {
         checkNativeError(
             zmq_setsockopt(
                 underlying,
                 ZMQ_SUBSCRIBE,
-                topicCString,
-                topicCString.size.toULong()
+                topic,
+                topic.size.toULong()
             )
         )
     }
 
-    fun subscribe(topic: String) {
-        val topicCString = topic.cstr
-        checkNativeError(
-            zmq_setsockopt(
-                underlying,
-                ZMQ_SUBSCRIBE,
-                topicCString,
-                topicCString.size.toULong()
-            )
-        )
+    fun unsubscribe(vararg topics: ByteArray) {
+        if (topics.isEmpty()) unsubscribe(byteArrayOf().toCValues())
+        else topics.forEach { unsubscribe(it.toCValues()) }
     }
 
-    fun unsubscribe(topic: ByteArray) {
-        val topicCString = topic.toCValues()
-        checkNativeError(
-            zmq_setsockopt(
-                underlying,
-                ZMQ_UNSUBSCRIBE,
-                topicCString,
-                topicCString.size.toULong()
-            )
-        )
+    fun unsubscribe(vararg topics: String) {
+        if (topics.isEmpty()) unsubscribe("".cstr)
+        else topics.forEach { unsubscribe(it.cstr) }
     }
 
-    fun unsubscribe(topic: String) {
-        val topicCString = topic.cstr
+    private fun unsubscribe(topic: CValues<ByteVar>) {
         checkNativeError(
             zmq_setsockopt(
                 underlying,
                 ZMQ_UNSUBSCRIBE,
-                topicCString,
-                topicCString.size.toULong()
+                topic,
+                topic.size.toULong()
             )
         )
     }
@@ -93,6 +87,18 @@ internal abstract class LibzmqSocket internal constructor(private val underlying
         }
     }
 
+    var multicastHops: Int
+            by socketOption(underlying, ZMQ_MULTICAST_HOPS, intConverter)
+
+    var sendBufferSize: Int
+            by socketOption(underlying, ZMQ_SNDBUF, intConverter)
+
+    var sendHighWaterMark: Int
+            by socketOption(underlying, ZMQ_SNDHWM, intConverter)
+
+    var sendTimeout: Int
+            by socketOption(underlying, ZMQ_SNDTIMEO, intConverter)
+
     suspend fun receive(): Message {
         TODO("Not yet implemented")
     }
@@ -122,4 +128,13 @@ internal abstract class LibzmqSocket internal constructor(private val underlying
         checkNativeError(zmq_msg_close(msg.ptr))
         return result
     }
+
+    var receiveBufferSize: Int
+            by socketOption(underlying, ZMQ_RCVBUF, intConverter)
+
+    var receiveHighWaterMark: Int
+            by socketOption(underlying, ZMQ_RCVHWM, intConverter)
+
+    var receiveTimeout: Int
+            by socketOption(underlying, ZMQ_RCVTIMEO, intConverter)
 }

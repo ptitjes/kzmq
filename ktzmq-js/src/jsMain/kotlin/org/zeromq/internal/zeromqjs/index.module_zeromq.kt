@@ -14,17 +14,17 @@ import Buffer
 import kotlin.js.Promise
 
 external interface Writable {
-    var multicastHops: Number
-    var sendBufferSize: Number
-    var sendHighWaterMark: Number
-    var sendTimeout: Number
+    var multicastHops: Int
+    var sendBufferSize: Int
+    var sendHighWaterMark: Int
+    var sendTimeout: Int
     fun send(message: Array<Buffer>): Promise<Unit>
 }
 
 external interface Readable {
-    var receiveBufferSize: Number
-    var receiveHighWaterMark: Number
-    var receiveTimeout: Number
+    var receiveBufferSize: Int
+    var receiveHighWaterMark: Int
+    var receiveTimeout: Int
     fun receive(): Promise<Array<Buffer>>
 }
 
@@ -39,23 +39,23 @@ external interface `T$0` {
 
 external open class Pair() : Socket, Writable,
     Readable {
-    override var multicastHops: Number
-    override var sendBufferSize: Number
-    override var sendHighWaterMark: Number
-    override var sendTimeout: Number
+    override var multicastHops: Int
+    override var sendBufferSize: Int
+    override var sendHighWaterMark: Int
+    override var sendTimeout: Int
     override fun send(message: Array<Buffer>): Promise<Unit>
-    override var receiveBufferSize: Number
-    override var receiveHighWaterMark: Number
-    override var receiveTimeout: Number
+    override var receiveBufferSize: Int
+    override var receiveHighWaterMark: Int
+    override var receiveTimeout: Int
     override fun receive(): Promise<Array<Buffer>>
 }
 
 external open class Publisher() : Socket,
     Writable {
-    override var multicastHops: Number
-    override var sendBufferSize: Number
-    override var sendHighWaterMark: Number
-    override var sendTimeout: Number
+    override var multicastHops: Int
+    override var sendBufferSize: Int
+    override var sendHighWaterMark: Int
+    override var sendTimeout: Int
     override fun send(message: Array<Buffer>): Promise<Unit>
     open var noDrop: Boolean
     open var conflate: Boolean
@@ -64,9 +64,9 @@ external open class Publisher() : Socket,
 
 external open class Subscriber() : Socket,
     Readable {
-    override var receiveBufferSize: Number
-    override var receiveHighWaterMark: Number
-    override var receiveTimeout: Number
+    override var receiveBufferSize: Int
+    override var receiveHighWaterMark: Int
+    override var receiveTimeout: Int
     override fun receive(): Promise<Array<Buffer>>
     open var conflate: Boolean
     open var invertMatching: Boolean
@@ -76,14 +76,14 @@ external open class Subscriber() : Socket,
 
 external open class Request() : Socket, Readable,
     Writable {
-    override var receiveBufferSize: Number
-    override var receiveHighWaterMark: Number
-    override var receiveTimeout: Number
+    override var receiveBufferSize: Int
+    override var receiveHighWaterMark: Int
+    override var receiveTimeout: Int
     override fun receive(): Promise<Array<Buffer>>
-    override var multicastHops: Number
-    override var sendBufferSize: Number
-    override var sendHighWaterMark: Number
-    override var sendTimeout: Number
+    override var multicastHops: Int
+    override var sendBufferSize: Int
+    override var sendHighWaterMark: Int
+    override var sendTimeout: Int
     override fun send(message: Array<Buffer>): Promise<Unit>
     open var routingId: String?
     open var probeRouter: Boolean
@@ -93,28 +93,28 @@ external open class Request() : Socket, Readable,
 
 external open class Reply() : Socket, Readable,
     Writable {
-    override var receiveBufferSize: Number
-    override var receiveHighWaterMark: Number
-    override var receiveTimeout: Number
+    override var receiveBufferSize: Int
+    override var receiveHighWaterMark: Int
+    override var receiveTimeout: Int
     override fun receive(): Promise<Array<Buffer>>
-    override var multicastHops: Number
-    override var sendBufferSize: Number
-    override var sendHighWaterMark: Number
-    override var sendTimeout: Number
+    override var multicastHops: Int
+    override var sendBufferSize: Int
+    override var sendHighWaterMark: Int
+    override var sendTimeout: Int
     override fun send(message: Array<Buffer>): Promise<Unit>
     open var routingId: String?
 }
 
 external open class Dealer() : Socket, Readable,
     Writable {
-    override var receiveBufferSize: Number
-    override var receiveHighWaterMark: Number
-    override var receiveTimeout: Number
+    override var receiveBufferSize: Int
+    override var receiveHighWaterMark: Int
+    override var receiveTimeout: Int
     override fun receive(): Promise<Array<Buffer>>
-    override var multicastHops: Number
-    override var sendBufferSize: Number
-    override var sendHighWaterMark: Number
-    override var sendTimeout: Number
+    override var multicastHops: Int
+    override var sendBufferSize: Int
+    override var sendHighWaterMark: Int
+    override var sendTimeout: Int
     override fun send(message: Array<Buffer>): Promise<Unit>
     open var routingId: String?
     open var probeRouter: Boolean
@@ -123,14 +123,14 @@ external open class Dealer() : Socket, Readable,
 
 external open class Router() : Socket, Readable,
     Writable {
-    override var receiveBufferSize: Number
-    override var receiveHighWaterMark: Number
-    override var receiveTimeout: Number
+    override var receiveBufferSize: Int
+    override var receiveHighWaterMark: Int
+    override var receiveTimeout: Int
     override fun receive(): Promise<Array<Buffer>>
-    override var multicastHops: Number
-    override var sendBufferSize: Number
-    override var sendHighWaterMark: Number
-    override var sendTimeout: Number
+    override var multicastHops: Int
+    override var sendBufferSize: Int
+    override var sendHighWaterMark: Int
+    override var sendTimeout: Int
     override fun send(message: Array<Buffer>): Promise<Unit>
     open var routingId: String?
     open var mandatory: Boolean
@@ -146,32 +146,32 @@ external interface RouterConnectOptions {
 }
 
 external open class Pull() : Socket, Readable {
-    override var receiveBufferSize: Number
-    override var receiveHighWaterMark: Number
-    override var receiveTimeout: Number
+    override var receiveBufferSize: Int
+    override var receiveHighWaterMark: Int
+    override var receiveTimeout: Int
     override fun receive(): Promise<Array<Buffer>>
     open var conflate: Boolean
 }
 
 external open class Push() : Socket, Writable {
-    override var multicastHops: Number
-    override var sendBufferSize: Number
-    override var sendHighWaterMark: Number
-    override var sendTimeout: Number
+    override var multicastHops: Int
+    override var sendBufferSize: Int
+    override var sendHighWaterMark: Int
+    override var sendTimeout: Int
     override fun send(message: Array<Buffer>): Promise<Unit>
     open var conflate: Boolean
 }
 
 external open class XPublisher() : Socket,
     Readable, Writable {
-    override var receiveBufferSize: Number
-    override var receiveHighWaterMark: Number
-    override var receiveTimeout: Number
+    override var receiveBufferSize: Int
+    override var receiveHighWaterMark: Int
+    override var receiveTimeout: Int
     override fun receive(): Promise<Array<Buffer>>
-    override var multicastHops: Number
-    override var sendBufferSize: Number
-    override var sendHighWaterMark: Number
-    override var sendTimeout: Number
+    override var multicastHops: Int
+    override var sendBufferSize: Int
+    override var sendHighWaterMark: Int
+    override var sendTimeout: Int
     override fun send(message: Array<Buffer>): Promise<Unit>
     open var noDrop: Boolean
     open var manual: Boolean
@@ -181,13 +181,13 @@ external open class XPublisher() : Socket,
 
 external open class XSubscriber() : Socket,
     Readable, Writable {
-    override var receiveBufferSize: Number
-    override var receiveHighWaterMark: Number
-    override var receiveTimeout: Number
+    override var receiveBufferSize: Int
+    override var receiveHighWaterMark: Int
+    override var receiveTimeout: Int
     override fun receive(): Promise<Array<Buffer>>
-    override var multicastHops: Number
-    override var sendBufferSize: Number
-    override var sendHighWaterMark: Number
-    override var sendTimeout: Number
+    override var multicastHops: Int
+    override var sendBufferSize: Int
+    override var sendHighWaterMark: Int
+    override var sendTimeout: Int
     override fun send(message: Array<Buffer>): Promise<Unit>
 }

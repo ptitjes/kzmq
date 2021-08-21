@@ -4,52 +4,67 @@ interface SubscriberSocket : Socket, ReceiveSocket {
     override val type: Type get() = Type.SUB
 
     /**
-     * The 'ZMQ_SUBSCRIBE' option shall establish a new message filter on a 'ZMQ_SUB' socket.
-     * Newly created 'ZMQ_SUB' sockets shall filter out all incoming messages, therefore you
-     * should call this option to establish an initial message filter.
-     * <p>
-     * An empty 'option_value' of length zero shall subscribe to all incoming messages. A
-     * non-empty 'option_value' shall subscribe to all messages beginning with the specified
-     * prefix. Multiple filters may be attached to a single 'ZMQ_SUB' socket, in which case a
-     * message shall be accepted if it matches at least one filter.
+     * Establish a new message filter. Newly created [SubscriberSocket] sockets will filter out all
+     * incoming messages. Call this method to subscribe for messages beginning with the given
+     * prefix.
      *
-     * @param topic the topic to subscribe to
+     * Multiple filters may be attached to a single socket, in which case a message shall be
+     * accepted if it matches at least one filter. Subscribing without any filters shall subscribe
+     * to all incoming messages.
+     *
+     * @param topics the topics to subscribe to
      */
-    fun subscribe(topic: ByteArray)
+    fun subscribe(vararg topics: ByteArray)
 
     /**
-     * The 'ZMQ_SUBSCRIBE' option shall establish a new message filter on a 'ZMQ_SUB' socket.
-     * Newly created 'ZMQ_SUB' sockets shall filter out all incoming messages, therefore you
-     * should call this option to establish an initial message filter.
-     * <p>
-     * An empty 'option_value' of length zero shall subscribe to all incoming messages. A
-     * non-empty 'option_value' shall subscribe to all messages beginning with the specified
-     * prefix. Multiple filters may be attached to a single 'ZMQ_SUB' socket, in which case a
-     * message shall be accepted if it matches at least one filter.
+     * Establish a new message filter. Newly created [SubscriberSocket] sockets will filter out all
+     * incoming messages. Call this method to subscribe for messages beginning with the given
+     * prefix.
      *
-     * @param topic the topic to subscribe to
+     * Multiple filters may be attached to a single socket, in which case a message shall be
+     * accepted if it matches at least one filter. Subscribing without any filters shall subscribe
+     * to all incoming messages.
+     *
+     * @param topics the topics to subscribe to
      */
-    fun subscribe(topic: String)
+    fun subscribe(vararg topics: String)
 
     /**
-     * The 'ZMQ_UNSUBSCRIBE' option shall remove an existing message filter on a 'ZMQ_SUB'
-     * socket. The filter specified must match an existing filter previously established with
-     * the 'ZMQ_SUBSCRIBE' option. If the socket has several instances of the same filter
-     * attached the 'ZMQ_UNSUBSCRIBE' option shall remove only one instance, leaving the rest in
-     * place and functional.
+     * Remove an existing message filter which was previously established with [subscribe]. Stops
+     * receiving messages with the given prefix.
      *
-     * @param topic the topic to unsubscribe from
+     * Unsubscribing without any filters shall unsubscribe from the "subscribe all" filter that is
+     * added by calling [subscribe] without arguments.
+     *
+     * @param topics the topics to unsubscribe from
      */
-    fun unsubscribe(topic: ByteArray)
+    fun unsubscribe(vararg topics: ByteArray)
 
     /**
-     * The 'ZMQ_UNSUBSCRIBE' option shall remove an existing message filter on a 'ZMQ_SUB'
-     * socket. The filter specified must match an existing filter previously established with
-     * the 'ZMQ_SUBSCRIBE' option. If the socket has several instances of the same filter
-     * attached the 'ZMQ_UNSUBSCRIBE' option shall remove only one instance, leaving the rest in
-     * place and functional.
+     * Remove an existing message filter which was previously established with [subscribe]. Stops
+     * receiving messages with the given prefix.
      *
-     * @param topic the topic to unsubscribe from
+     * Unsubscribing without any filters shall unsubscribe from the "subscribe all" filter that is
+     * added by calling [subscribe] without arguments.
+     *
+     * @param topics the topics to unsubscribe from
      */
-    fun unsubscribe(topic: String)
+    fun unsubscribe(vararg topics: String)
+
+    /**
+     * If set to true, a socket shall keep only one message in its inbound/outbound queue: the last
+     * message to be received/sent. Ignores any high watermark options. Does not support multi-part
+     * messages – in particular, only one part of it is kept in the socket internal queue.
+     *
+     * See [ZMQ_CONFLATE](http://api.zeromq.org/master#zmq-getsockopt)
+     */
+    var conflate: Boolean
+
+    /**
+     * Causes messages to be sent to all connected sockets except those subscribed to a prefix that
+     * matches the message.
+     *
+     * See [ZMQ_INVERT_MATCHING](http://api.zeromq.org/master#zmq-getsockopt)
+     */
+    var invertMatching: Boolean
 }
