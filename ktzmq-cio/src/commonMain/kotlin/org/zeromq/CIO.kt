@@ -2,8 +2,8 @@ package org.zeromq
 
 import kotlin.coroutines.CoroutineContext
 
-object JeroMQ : Engine {
-    override val name = "jeromq"
+object CIO : Engine {
+    override val name = "cio"
     override fun createInstance(coroutineContext: CoroutineContext): EngineInstance =
-        JeroMQInstance()
+        CIOInstance(coroutineContext)
 }

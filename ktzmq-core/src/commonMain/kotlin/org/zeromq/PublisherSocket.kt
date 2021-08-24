@@ -1,7 +1,6 @@
 package org.zeromq
 
 interface PublisherSocket : Socket, SendSocket {
-    override val type: Type get() = Type.PUB
 
     /**
      * If set to `true`, a socket shall keep only one message in its inbound/outbound queue: the

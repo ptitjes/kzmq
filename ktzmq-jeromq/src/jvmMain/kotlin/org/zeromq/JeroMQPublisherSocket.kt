@@ -5,7 +5,7 @@ import org.zeromq.internal.SelectorManager
 internal class JeroMQPublisherSocket internal constructor(
     selector: SelectorManager,
     underlying: ZMQ.Socket
-) : JeroMQSocket(selector, underlying), PublisherSocket {
+) : JeroMQSocket(selector, underlying, Type.PUB), PublisherSocket {
 
     override var conflate: Boolean by underlying::conflate
     override var invertMatching: Boolean by notImplementedProperty()

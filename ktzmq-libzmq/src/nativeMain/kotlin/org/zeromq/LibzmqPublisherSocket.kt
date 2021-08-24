@@ -6,7 +6,7 @@ import org.zeromq.internal.libzmq.ZMQ_INVERT_MATCHING
 import org.zeromq.internal.libzmq.ZMQ_XPUB_NODROP
 
 internal class LibzmqPublisherSocket internal constructor(underlying: COpaquePointer?) :
-    LibzmqSocket(underlying), PublisherSocket {
+    LibzmqSocket(underlying, Type.PUB), PublisherSocket {
 
     override var conflate: Boolean
             by socketOption(underlying, ZMQ_CONFLATE, booleanConverter)

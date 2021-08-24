@@ -5,7 +5,7 @@ import org.zeromq.internal.zeromqjs.Publisher as ZPublisher
 internal class ZeroMQJsPublisherSocket internal constructor(
     override val underlying: ZPublisher = ZPublisher()
 ) :
-    ZeroMQJsSocket(),
+    ZeroMQJsSocket(Type.PUB),
     SendSocket by ZeroMQJsSendSocket(underlying),
     PublisherSocket {
 

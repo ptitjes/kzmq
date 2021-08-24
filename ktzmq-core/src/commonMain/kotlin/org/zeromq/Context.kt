@@ -1,7 +1,16 @@
 package org.zeromq
 
-class Context(engine: Engine) : SocketFactory {
-    private val instance: EngineInstance = engine.createInstance()
+import kotlinx.coroutines.CoroutineScope
+import kotlin.coroutines.CoroutineContext
+
+fun CoroutineScope.Context(engine: Engine) = Context(coroutineContext, engine)
+
+class Context internal constructor(
+    coroutineContext: CoroutineContext,
+    engine: Engine
+) : SocketFactory {
+
+    private val instance: EngineInstance = engine.createInstance(coroutineContext)
 
     override fun createPair(): PairSocket = instance.createPair()
     override fun createPublisher(): PublisherSocket = instance.createPublisher()

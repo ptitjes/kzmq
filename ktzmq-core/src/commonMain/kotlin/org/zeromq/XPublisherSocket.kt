@@ -1,7 +1,6 @@
 package org.zeromq
 
 interface XPublisherSocket : Socket, SendSocket {
-    override val type: Type get() = Type.XPUB
 
     /**
      * Sets the socket behaviour to return an error if the high watermark is reached and the

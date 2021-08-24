@@ -1,7 +1,6 @@
 package org.zeromq
 
 interface DealerSocket : Socket, SendSocket, ReceiveSocket {
-    override val type: Type get() = Type.DEALER
 
     /**
      * If set to `true`, a socket shall keep only one message in its inbound/outbound queue: the

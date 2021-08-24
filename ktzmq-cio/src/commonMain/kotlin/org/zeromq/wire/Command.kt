@@ -31,7 +31,23 @@ internal data class ErrorCommand(val reason: String) : Command {
     override val name = CommandName.READY
 }
 
-internal enum class PropertyName(propertyName: String) {
+internal data class SubscribeCommand(val topic: ByteArray) : Command {
+    override val name = CommandName.SUBSCRIBE
+}
+
+internal data class CancelCommand(val topic: ByteArray) : Command {
+    override val name = CommandName.CANCEL
+}
+
+internal data class PingCommand(val ttl: UShort, val context: ByteArray) : Command {
+    override val name = CommandName.PING
+}
+
+internal data class PongCommand(val context: ByteArray) : Command {
+    override val name = CommandName.PONG
+}
+
+internal enum class PropertyName(val propertyName: String) {
     SOCKET_TYPE("Socket-Type"),
     IDENTITY("Identity"),
     RESOURCE("Resource");
@@ -40,7 +56,7 @@ internal enum class PropertyName(propertyName: String) {
 
     companion object {
         fun find(string: String): PropertyName? {
-            return values().find { it.name.lowercase() == string.lowercase() }
+            return values().find { it.propertyName.lowercase() == string.lowercase() }
         }
     }
 }

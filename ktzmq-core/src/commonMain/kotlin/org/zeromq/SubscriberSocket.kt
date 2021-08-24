@@ -1,7 +1,6 @@
 package org.zeromq
 
 interface SubscriberSocket : Socket, ReceiveSocket {
-    override val type: Type get() = Type.SUB
 
     /**
      * Establish a new message filter. Newly created [SubscriberSocket] sockets will filter out all

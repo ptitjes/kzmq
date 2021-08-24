@@ -1,10 +1,10 @@
 package org.zeromq.tests.utils
 
 import org.zeromq.Engine
-import org.zeromq.JeroMQ
+import org.zeromq.CIO
 import java.util.*
 
-actual val engines: List<Engine> = listOf(JeroMQ)
+actual val engines: List<Engine> = listOf(CIO)
 
 actual val OS_NAME: String
     get() {

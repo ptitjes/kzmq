@@ -23,6 +23,17 @@ interface Socket {
     suspend fun bind(endpoint: String)
 
     /**
+     * Unbinds to the endpoint.
+     *
+     * The endpoint argument is a string consisting of two parts as follows: transport ://address. The
+     * transport part specifies the underlying transport protocol to use. The meaning of the address
+     * part is specific to the underlying transport protocol selected.
+     *
+     * @param endpoint the endpoint to unbind from
+     */
+    suspend fun unbind(endpoint: String)
+
+    /**
      * Connects the socket to an endpoint and then accepts incoming connections on that endpoint.
      *
      * The endpoint is a string consisting of a transport :// followed by an address. The transport
@@ -31,12 +42,12 @@ interface Socket {
      *
      * @param endpoint the endpoint to connect to
      */
-    fun connect(endpoint: String)
+    suspend fun connect(endpoint: String)
 
     /**
      * Disconnecting a socket from an endpoint.
      *
      * @param endpoint the endpoint to disconnect from
      */
-    fun disconnect(endpoint: String)
+    suspend fun disconnect(endpoint: String)
 }

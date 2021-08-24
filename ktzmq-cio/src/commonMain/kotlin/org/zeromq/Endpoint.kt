@@ -2,7 +2,11 @@ package org.zeromq
 
 internal sealed interface Endpoint
 
-internal data class TCPEndpoint(val hostname: String, val port: Int, val path: String?) : Endpoint
+internal data class TCPEndpoint(
+    val hostname: String,
+    val port: Int,
+    val path: String? = null
+) : Endpoint
 
 private const val TCP_PREFIX = "tcp://"
 

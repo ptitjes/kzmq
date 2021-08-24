@@ -3,7 +3,7 @@ package org.zeromq
 import kotlinx.coroutines.await
 import org.zeromq.internal.zeromqjs.Socket as ZSocket
 
-internal abstract class ZeroMQJsSocket : Socket {
+internal abstract class ZeroMQJsSocket(override val type: Type) : Socket {
 
     internal abstract val underlying: ZSocket
 
@@ -14,11 +14,14 @@ internal abstract class ZeroMQJsSocket : Socket {
     override suspend fun bind(endpoint: String) =
         underlying.bind(endpoint).await()
 
-    override fun connect(endpoint: String) {
+    override suspend fun unbind(endpoint: String) =
+        underlying.unbind(endpoint).await()
+
+    override suspend fun connect(endpoint: String) {
         underlying.connect(endpoint)
     }
 
-    override fun disconnect(endpoint: String) {
+    override suspend fun disconnect(endpoint: String) {
         underlying.disconnect(endpoint)
     }
 }

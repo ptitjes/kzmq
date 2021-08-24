@@ -1,7 +1,6 @@
 package org.zeromq
 
 interface RouterSocket : Socket, SendSocket, ReceiveSocket {
-    override val type: Type get() = Type.ROUTER
 
     /**
      * The identity of this socket when connecting to a [RouterSocket].

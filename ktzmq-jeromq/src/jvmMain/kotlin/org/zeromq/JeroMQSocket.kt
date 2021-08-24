@@ -9,8 +9,9 @@ import org.zeromq.internal.SelectorManager
 import java.nio.channels.SelectableChannel
 
 internal abstract class JeroMQSocket internal constructor(
-    protected val selector: SelectorManager,
-    protected val underlying: ZMQ.Socket
+    private val selector: SelectorManager,
+    private val underlying: ZMQ.Socket,
+    override val type: Type
 ) : Selectable(), Socket {
 
     override val socket: ZMQ.Socket
@@ -24,10 +25,13 @@ internal abstract class JeroMQSocket internal constructor(
     override suspend fun bind(endpoint: String): Unit =
         wrappingExceptions { underlying.bind(endpoint) }
 
-    override fun connect(endpoint: String): Unit =
+    override suspend fun unbind(endpoint: String): Unit =
+        wrappingExceptions { underlying.unbind(endpoint) }
+
+    override suspend fun connect(endpoint: String): Unit =
         wrappingExceptions { underlying.connect(endpoint) }
 
-    override fun disconnect(endpoint: String): Unit =
+    override suspend fun disconnect(endpoint: String): Unit =
         wrappingExceptions { underlying.disconnect(endpoint) }
 
     fun subscribe(vararg topics: ByteArray): Unit = wrappingExceptions {

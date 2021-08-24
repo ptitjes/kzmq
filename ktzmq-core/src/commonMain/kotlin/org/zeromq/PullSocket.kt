@@ -1,7 +1,6 @@
 package org.zeromq
 
 interface PullSocket : Socket, ReceiveSocket {
-    override val type: Type get() = Type.PULL
 
     /**
      * If set to `true`, a socket shall keep only one message in its inbound/outbound queue: the

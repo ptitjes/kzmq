@@ -3,10 +3,9 @@ package org.zeromq
 import org.zeromq.internal.zeromqjs.Subscriber as ZSubscriber
 
 internal class ZeroMQJsSubscriberSocket internal constructor(override val underlying: ZSubscriber = ZSubscriber()) :
-    ZeroMQJsSocket(),
+    ZeroMQJsSocket(Type.SUB),
     ReceiveSocket by ZeroMQJsReceiveSocket(underlying),
-    SubscriberSocket
-{
+    SubscriberSocket {
 
     override fun subscribe(vararg topics: ByteArray) {
         underlying.subscribe(*topics.map { it.decodeToString() }.toTypedArray())

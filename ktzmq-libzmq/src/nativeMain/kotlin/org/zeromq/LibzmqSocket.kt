@@ -3,18 +3,23 @@ package org.zeromq
 import kotlinx.cinterop.*
 import org.zeromq.internal.libzmq.*
 
-internal abstract class LibzmqSocket internal constructor(private val underlying: COpaquePointer?) :
-    Socket {
+internal abstract class LibzmqSocket internal constructor(
+    private val underlying: COpaquePointer?,
+    override val type: Type
+) : Socket {
 
     override fun close() = checkNativeError(zmq_close(underlying))
 
     override suspend fun bind(endpoint: String) =
         checkNativeError(zmq_bind(underlying, endpoint))
 
-    override fun connect(endpoint: String) =
+    override suspend fun unbind(endpoint: String) =
+        checkNativeError(zmq_unbind(underlying, endpoint))
+
+    override suspend fun connect(endpoint: String) =
         checkNativeError(zmq_connect(underlying, endpoint))
 
-    override fun disconnect(endpoint: String) =
+    override suspend fun disconnect(endpoint: String) =
         checkNativeError(zmq_disconnect(underlying, endpoint))
 
     fun subscribe(vararg topics: ByteArray) {
