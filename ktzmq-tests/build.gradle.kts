@@ -31,8 +31,8 @@ kotlin {
 
     sourceSets {
         all {
-            languageSettings.useExperimentalAnnotation("kotlin.RequiresOptIn")
-            languageSettings.useExperimentalAnnotation("kotlinx.coroutines.ExperimentalCoroutinesApi")
+            languageSettings.optIn("kotlin.RequiresOptIn")
+            languageSettings.optIn("kotlinx.coroutines.ExperimentalCoroutinesApi")
         }
 
         val commonMain by getting {
@@ -50,8 +50,6 @@ kotlin {
 
         val jvmMain by getting {
             dependencies {
-                api("org.junit.jupiter:junit-jupiter-api:$junitVersion")
-
                 implementation(project(":ktzmq-jeromq"))
                 implementation(project(":ktzmq-cio"))
             }

@@ -20,10 +20,6 @@ subprojects {
     group = "org.zeromq"
     version = projectVersion
 
-    repositories {
-        mavenCentral()
-    }
-
     apply(plugin = "kotlin-multiplatform")
     apply(plugin = "kotlinx-atomicfu")
     apply(plugin = "org.jetbrains.dokka")

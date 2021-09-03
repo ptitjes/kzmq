@@ -4,6 +4,12 @@ pluginManagement {
     }
 }
 
+dependencyResolutionManagement {
+    repositories {
+        mavenCentral()
+    }
+}
+
 rootProject.name = "ktzmq"
 
 include(":ktzmq-core")
