@@ -68,6 +68,7 @@ kotlin {
         val nativeMain by getting {
             dependencies {
                 implementation(project(":ktzmq-libzmq"))
+                implementation(project(":ktzmq-cio"))
             }
         }
         val nativeTest by getting {

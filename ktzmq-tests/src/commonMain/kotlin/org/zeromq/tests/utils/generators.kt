@@ -1,5 +1,6 @@
 package org.zeromq.tests.utils
 
+import org.zeromq.Message
 import kotlin.random.Random
 
 private val characters =
@@ -11,7 +12,7 @@ enum class Protocol {
     TCP,
 }
 
-fun randomAddress(protocol: Protocol = Protocol.INPROC): String {
+fun randomAddress(protocol: Protocol = Protocol.TCP): String {
     return when (protocol) {
         Protocol.INPROC -> "inproc://${randomAddressSuffix()}"
         Protocol.IPC -> "ipc:///tmp/${randomAddressSuffix()}"
@@ -22,3 +23,6 @@ fun randomAddress(protocol: Protocol = Protocol.INPROC): String {
 private fun randomAddressSuffix() = List(16) { characters.random() }.joinToString("")
 
 private fun randomTcpPort() = Random.nextInt(49152, 65536)
+
+fun generateMessages(messageCount: Int) =
+    List(messageCount) { Message("message-$it".encodeToByteArray()) }

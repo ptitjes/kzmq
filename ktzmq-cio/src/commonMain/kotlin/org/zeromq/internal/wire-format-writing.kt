@@ -1,10 +1,10 @@
 @file:OptIn(ExperimentalUnsignedTypes::class)
 
-package org.zeromq.wire
+package org.zeromq.internal
 
 import io.ktor.utils.io.*
 import io.ktor.utils.io.core.*
-import org.zeromq.Message
+import org.zeromq.*
 
 internal const val NULL: UByte = 0x00u
 
@@ -66,10 +66,9 @@ private fun BytePacketBuilder.writeMechanism(mechanism: Mechanism) {
 }
 
 internal suspend fun ByteWriteChannel.writeCommandOrMessage(commandOrMessage: CommandOrMessage) {
-    if (commandOrMessage.isCommand) {
-        writeCommand(commandOrMessage.commandOrThrow())
-    } else {
-        writeMessage(commandOrMessage.messageOrThrow())
+    when (commandOrMessage) {
+        is CommandCase -> writeCommand(commandOrMessage.command)
+        is MessageCase -> writeMessage(commandOrMessage.message)
     }
 }
 
@@ -150,32 +149,19 @@ private fun BytePacketBuilder.writeShortString(bytes: ByteArray) {
     writeFully(bytes)
 }
 
-private suspend fun ByteWriteChannel.writeMessage(message: Message) {
+private suspend fun ByteWriteChannel.writeMessage(message: Message) = writePacket {
     val parts = message.parts
     val lastIndex = parts.size - 1
     for ((index, part) in parts.withIndex()) {
         val hasMore = index < lastIndex
-        writePacket {
-            writeMessagePart(hasMore, part)
-        }
+        writeMessagePart(hasMore, part)
     }
 }
 
 private fun BytePacketBuilder.writeMessagePart(hasMore: Boolean, part: ByteArray) {
-    writeMessagePart(hasMore) {
-        writeFully(part)
-    }
-}
-
-private fun BytePacketBuilder.writeMessagePart(
-    hasMore: Boolean,
-    builder: BytePacketBuilder.() -> Unit
-) {
-    val messageBody = buildPacket(0, builder)
-
     val messageFlag: UByte = if (hasMore) FLAG_MORE else NULL
-    writeFrameHeader(messageFlag, messageBody.remaining)
-    writePacket(messageBody)
+    writeFrameHeader(messageFlag, part.size.toLong())
+    writeFully(part)
 }
 
 private fun BytePacketBuilder.writeFrameHeader(

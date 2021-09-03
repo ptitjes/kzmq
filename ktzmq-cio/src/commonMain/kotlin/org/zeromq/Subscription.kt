@@ -1,12 +1,52 @@
 package org.zeromq
 
-internal class Subscription(val topic: ByteArray) {
+import org.zeromq.internal.*
 
-    fun isMatchedBy(messagePart: ByteArray): Boolean {
-        for ((index, byte) in topic.withIndex()) {
-            if (messagePart[index] != byte) return false
+internal class Subscriptions {
+    // TODO Implement this as a byte trie of nodes of type map<PeerMailbox, count>
+    private val allSubscriptions = hashMapOf<PeerMailbox, SubscriptionList>()
+
+    fun add(peerMailbox: PeerMailbox, topic: ByteArray) {
+        val subscriptions = allSubscriptions.getOrPut(peerMailbox) { SubscriptionList() }
+        subscriptions.add(topic)
+    }
+
+    fun remove(peerMailbox: PeerMailbox, topic: ByteArray) {
+        val subscriptions = allSubscriptions[peerMailbox]
+        subscriptions?.remove(topic)
+    }
+
+    suspend fun forEachMatching(message: Message, block: suspend (PeerMailbox) -> Unit) {
+        val firstPart = message.firstOrThrow()
+        for ((peerMailbox, subscriptions) in allSubscriptions) {
+            if (subscriptions.hasPrefixOf(firstPart)) block(peerMailbox)
         }
-        return true
+    }
+}
+
+private class SubscriptionList {
+    private val subscriptions = mutableListOf<Subscription>()
+
+    fun add(topic: ByteArray) {
+        subscriptions.add(Subscription(topic))
+    }
+
+    fun remove(topic: ByteArray) {
+        subscriptions.remove(Subscription(topic))
+    }
+
+    fun hasPrefixOf(part: ByteArray): Boolean {
+        for (subscription in subscriptions) {
+            if (subscription.isPrefixOf(part)) return true
+        }
+        return false
+    }
+}
+
+private class Subscription(val topic: ByteArray) {
+
+    fun isPrefixOf(part: ByteArray): Boolean {
+        return topic.isPrefixOf(part)
     }
 
     override fun equals(other: Any?): Boolean {
@@ -25,4 +65,11 @@ internal class Subscription(val topic: ByteArray) {
     override fun toString(): String {
         return "Subscription(topic=${topic.contentToString()})"
     }
+}
+
+private fun ByteArray.isPrefixOf(part: ByteArray): Boolean {
+    for ((index, byte) in this.withIndex()) {
+        if (part[index] != byte) return false
+    }
+    return true
 }

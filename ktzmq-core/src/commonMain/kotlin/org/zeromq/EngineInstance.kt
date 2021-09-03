@@ -1,3 +1,5 @@
 package org.zeromq
 
-interface EngineInstance: SocketFactory
+interface EngineInstance: SocketFactory {
+    fun close()
+}

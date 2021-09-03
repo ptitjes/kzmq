@@ -1,20 +1,24 @@
-package org.zeromq.wire
+package org.zeromq.internal
 
 import io.ktor.utils.io.*
-import org.zeromq.Type
+import org.zeromq.*
 
 internal suspend fun nullMechanismHandshake(
     socketType: Type,
     isServer: Boolean,
     input: ByteReadChannel,
     output: ByteWriteChannel
-) {
-    if (isServer) {
+): Map<PropertyName, ByteArray> {
+    return if (isServer) {
+        log { "----- Expecting READY command" }
         val properties = expectReadyCommand(input)
-        validateSocketType(properties, socketType)
+        log { "----- Sending READY command" }
         output.sendReadyCommand(socketType)
+        properties
     } else {
+        log { "----- Sending READY command" }
         output.sendReadyCommand(socketType)
+        log { "----- Expecting READY command" }
         expectReadyCommand(input)
     }
 }
@@ -34,16 +38,3 @@ private suspend fun ByteWriteChannel.sendReadyCommand(socketType: Type) {
         )
     )
 }
-
-private fun validateSocketType(
-    properties: Map<PropertyName, ByteArray>,
-    socketType: Type
-) {
-    val socketTypeProperty = (properties[PropertyName.SOCKET_TYPE]
-        ?: protocolError("No socket type property in metadata"))
-    val peerSocketType = findSocketType(socketTypeProperty.decodeToString())
-    if (peerSocketType != socketType) protocolError("Invalid socket type")
-}
-
-private fun findSocketType(socketTypeString: String): Type? =
-    Type.values().find { it.name == socketTypeString.uppercase() }

@@ -7,19 +7,27 @@ internal class ZeroMQJsSubscriberSocket internal constructor(override val underl
     ReceiveSocket by ZeroMQJsReceiveSocket(underlying),
     SubscriberSocket {
 
-    override fun subscribe(vararg topics: ByteArray) {
+    override suspend fun subscribe() {
+        underlying.subscribe()
+    }
+
+    override suspend fun subscribe(vararg topics: ByteArray) {
         underlying.subscribe(*topics.map { it.decodeToString() }.toTypedArray())
     }
 
-    override fun subscribe(vararg topics: String) {
+    override suspend fun subscribe(vararg topics: String) {
         underlying.subscribe(*topics)
     }
 
-    override fun unsubscribe(vararg topics: ByteArray) {
+    override suspend fun unsubscribe() {
+        underlying.unsubscribe()
+    }
+
+    override suspend fun unsubscribe(vararg topics: ByteArray) {
         underlying.unsubscribe(*topics.map { it.decodeToString() }.toTypedArray())
     }
 
-    override fun unsubscribe(vararg topics: String) {
+    override suspend fun unsubscribe(vararg topics: String) {
         underlying.unsubscribe(*topics)
     }
 

@@ -1,4 +1,4 @@
-package org.zeromq.wire
+package org.zeromq.internal
 
 internal class InvalidReadFrame(
     override val message: String,

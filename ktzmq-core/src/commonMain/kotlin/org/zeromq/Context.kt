@@ -1,16 +1,26 @@
 package org.zeromq
 
 import kotlinx.coroutines.CoroutineScope
+import kotlin.coroutines.AbstractCoroutineContextElement
 import kotlin.coroutines.CoroutineContext
+import kotlin.coroutines.EmptyCoroutineContext
 
-fun CoroutineScope.Context(engine: Engine) = Context(coroutineContext, engine)
+fun CoroutineScope.Context(
+    engine: Engine,
+    additionalContext: CoroutineContext = EmptyCoroutineContext
+): Context {
+    val newContext = coroutineContext + additionalContext
+    return Context(newContext, engine)
+}
 
 class Context internal constructor(
-    coroutineContext: CoroutineContext,
-    engine: Engine
-) : SocketFactory {
+    private val coroutineContext: CoroutineContext,
+    private val engine: Engine
+) : AbstractCoroutineContextElement(Context), SocketFactory {
 
     private val instance: EngineInstance = engine.createInstance(coroutineContext)
+
+    fun close() = instance.close()
 
     override fun createPair(): PairSocket = instance.createPair()
     override fun createPublisher(): PublisherSocket = instance.createPublisher()
@@ -23,4 +33,9 @@ class Context internal constructor(
     override fun createReply(): ReplySocket = instance.createReply()
     override fun createDealer(): DealerSocket = instance.createDealer()
     override fun createRouter(): RouterSocket = instance.createRouter()
+
+    /**
+     * Key for [Context] instance in the coroutine context.
+     */
+    public companion object Key : CoroutineContext.Key<Context>
 }

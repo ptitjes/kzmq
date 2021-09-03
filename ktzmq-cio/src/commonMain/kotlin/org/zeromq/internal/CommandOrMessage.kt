@@ -1,6 +1,6 @@
-package org.zeromq.wire
+package org.zeromq.internal
 
-import org.zeromq.Message
+import org.zeromq.*
 
 internal sealed interface CommandOrMessage {
 
@@ -9,7 +9,7 @@ internal sealed interface CommandOrMessage {
 
     fun commandOrThrow(): Command = when (this) {
         is CommandCase -> this.command
-        is MessageCase -> error("Not a message")
+        is MessageCase -> error("Not a command")
     }
 
     fun messageOrThrow(): Message = when (this) {
@@ -17,11 +17,11 @@ internal sealed interface CommandOrMessage {
         is CommandCase -> error("Not a message")
     }
 
-    private data class CommandCase(val command: Command) : CommandOrMessage
-    private data class MessageCase(val message: Message) : CommandOrMessage
-
     companion object {
         operator fun invoke(command: Command): CommandOrMessage = CommandCase(command)
         operator fun invoke(message: Message): CommandOrMessage = MessageCase(message)
     }
 }
+
+internal data class CommandCase(val command: Command) : CommandOrMessage
+internal data class MessageCase(val message: Message) : CommandOrMessage

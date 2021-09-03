@@ -1,4 +1,4 @@
-package org.zeromq.wire
+package org.zeromq.internal
 
 internal open class ProtocolError(
     override val message: String,

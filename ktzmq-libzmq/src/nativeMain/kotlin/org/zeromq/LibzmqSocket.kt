@@ -1,6 +1,7 @@
 package org.zeromq
 
 import kotlinx.cinterop.*
+import kotlinx.coroutines.selects.SelectClause1
 import org.zeromq.internal.libzmq.*
 
 internal abstract class LibzmqSocket internal constructor(
@@ -10,24 +11,28 @@ internal abstract class LibzmqSocket internal constructor(
 
     override fun close() = checkNativeError(zmq_close(underlying))
 
-    override suspend fun bind(endpoint: String) =
+    override fun bind(endpoint: String) =
         checkNativeError(zmq_bind(underlying, endpoint))
 
-    override suspend fun unbind(endpoint: String) =
+    override fun unbind(endpoint: String) =
         checkNativeError(zmq_unbind(underlying, endpoint))
 
-    override suspend fun connect(endpoint: String) =
+    override fun connect(endpoint: String) =
         checkNativeError(zmq_connect(underlying, endpoint))
 
-    override suspend fun disconnect(endpoint: String) =
+    override fun disconnect(endpoint: String) =
         checkNativeError(zmq_disconnect(underlying, endpoint))
 
-    fun subscribe(vararg topics: ByteArray) {
+    suspend fun subscribe() {
+        subscribe(byteArrayOf().toCValues())
+    }
+
+    suspend fun subscribe(vararg topics: ByteArray) {
         if (topics.isEmpty()) subscribe(byteArrayOf().toCValues())
         else topics.forEach { subscribe(it.toCValues()) }
     }
 
-    fun subscribe(vararg topics: String) {
+    suspend fun subscribe(vararg topics: String) {
         if (topics.isEmpty()) subscribe("".cstr)
         else topics.forEach { subscribe(it.cstr) }
     }
@@ -43,12 +48,16 @@ internal abstract class LibzmqSocket internal constructor(
         )
     }
 
-    fun unsubscribe(vararg topics: ByteArray) {
+    suspend fun unsubscribe() {
+        unsubscribe(byteArrayOf().toCValues())
+    }
+
+    suspend fun unsubscribe(vararg topics: ByteArray) {
         if (topics.isEmpty()) unsubscribe(byteArrayOf().toCValues())
         else topics.forEach { unsubscribe(it.toCValues()) }
     }
 
-    fun unsubscribe(vararg topics: String) {
+    suspend fun unsubscribe(vararg topics: String) {
         if (topics.isEmpty()) unsubscribe("".cstr)
         else topics.forEach { unsubscribe(it.cstr) }
     }
@@ -115,6 +124,8 @@ internal abstract class LibzmqSocket internal constructor(
     fun tryReceive(): SocketResult<Message> {
         TODO("Not yet implemented")
     }
+
+    val onReceive: SelectClause1<Message> get() = TODO()
 
     fun iterator(): SocketIterator {
         TODO("Not yet implemented")

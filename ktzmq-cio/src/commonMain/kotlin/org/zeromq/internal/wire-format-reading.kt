@@ -1,8 +1,7 @@
-package org.zeromq.wire
+package org.zeromq.internal
 
 import io.ktor.utils.io.*
-import io.ktor.utils.io.core.*
-import org.zeromq.Message
+import org.zeromq.*
 
 internal suspend fun ByteReadChannel.readGreetingPart1(): Int {
     if (readByte().toUByte() != signatureHeadByte) invalidFrame("Invalid signature header byte")
@@ -88,6 +87,13 @@ private suspend fun ByteReadChannel.readMessagePartContent(flags: UByte): ByteAr
 
     // FIXME casting to int for now
     return readBytes(size.toInt())
+//    return readMessagePartBody(size.toInt())
+}
+
+private suspend fun ByteReadChannel.readMessagePartBody(size: Int): ByteArray {
+    val bytes = borrowBuffer()
+    readFully(bytes, 0, size)
+    return bytes
 }
 
 private suspend fun ByteReadChannel.readProperties(dataSize: Long): Map<PropertyName, ByteArray> {

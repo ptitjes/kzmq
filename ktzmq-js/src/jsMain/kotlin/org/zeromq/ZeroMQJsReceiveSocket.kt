@@ -1,6 +1,7 @@
 package org.zeromq
 
 import kotlinx.coroutines.await
+import kotlinx.coroutines.selects.SelectClause1
 import org.zeromq.internal.zeromqjs.Readable
 
 class ZeroMQJsReceiveSocket(private val underlying: Readable) : ReceiveSocket {
@@ -15,7 +16,10 @@ class ZeroMQJsReceiveSocket(private val underlying: Readable) : ReceiveSocket {
     }
 
     override fun tryReceive(): SocketResult<Message> =
-        throw NotImplementedError("tryReceive is not supported on JS target")
+        throw NotImplementedError("Not supported on ZeroMQ.JS engine")
+
+    override val onReceive: SelectClause1<Message>
+        get() = throw NotImplementedError("Not supported on ZeroMQ.JS engine")
 
     override fun iterator(): SocketIterator {
         TODO("Not yet implemented")

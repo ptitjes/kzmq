@@ -2,6 +2,7 @@ package org.zeromq
 
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.selects.SelectClause1
 import kotlinx.coroutines.withContext
 import org.zeromq.internal.SelectInterest
 import org.zeromq.internal.Selectable
@@ -22,34 +23,42 @@ internal abstract class JeroMQSocket internal constructor(
 
     override fun close() = wrappingExceptions { underlying.close() }
 
-    override suspend fun bind(endpoint: String): Unit =
+    override fun bind(endpoint: String): Unit =
         wrappingExceptions { underlying.bind(endpoint) }
 
-    override suspend fun unbind(endpoint: String): Unit =
+    override fun unbind(endpoint: String): Unit =
         wrappingExceptions { underlying.unbind(endpoint) }
 
-    override suspend fun connect(endpoint: String): Unit =
+    override fun connect(endpoint: String): Unit =
         wrappingExceptions { underlying.connect(endpoint) }
 
-    override suspend fun disconnect(endpoint: String): Unit =
+    override fun disconnect(endpoint: String): Unit =
         wrappingExceptions { underlying.disconnect(endpoint) }
 
-    fun subscribe(vararg topics: ByteArray): Unit = wrappingExceptions {
+    suspend fun subscribe(): Unit = wrappingExceptions {
+        underlying.subscribe(byteArrayOf())
+    }
+
+    suspend fun subscribe(vararg topics: ByteArray): Unit = wrappingExceptions {
         if (topics.isEmpty()) underlying.subscribe(byteArrayOf())
         else topics.forEach { underlying.subscribe(it) }
     }
 
-    fun subscribe(vararg topics: String): Unit = wrappingExceptions {
+    suspend fun subscribe(vararg topics: String): Unit = wrappingExceptions {
         if (topics.isEmpty()) underlying.subscribe("")
         else topics.forEach { underlying.subscribe(it) }
     }
 
-    fun unsubscribe(vararg topics: ByteArray): Unit = wrappingExceptions {
+    suspend fun unsubscribe(): Unit = wrappingExceptions {
+        underlying.unsubscribe(byteArrayOf())
+    }
+
+    suspend fun unsubscribe(vararg topics: ByteArray): Unit = wrappingExceptions {
         if (topics.isEmpty()) underlying.unsubscribe(byteArrayOf())
         else topics.forEach { underlying.unsubscribe(it) }
     }
 
-    fun unsubscribe(vararg topics: String): Unit = wrappingExceptions {
+    suspend fun unsubscribe(vararg topics: String): Unit = wrappingExceptions {
         if (topics.isEmpty()) underlying.unsubscribe("")
         else topics.forEach { underlying.unsubscribe(it) }
     }
@@ -110,6 +119,9 @@ internal abstract class JeroMQSocket internal constructor(
 
     fun tryReceive(): SocketResult<Message> =
         catchingExceptions { receiveImmediate() }
+
+    val onReceive: SelectClause1<Message> get() =
+        throw NotImplementedError("Not supported on JeroMQ engine")
 
     private suspend fun receiveSuspend(): Message = traceSuspending("receiveSuspend") {
         val parts = mutableListOf<ByteArray>()

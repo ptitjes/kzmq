@@ -1,4 +1,4 @@
-package org.zeromq.wire
+package org.zeromq.internal
 
 internal sealed interface Command {
     val name: CommandName

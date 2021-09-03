@@ -10,6 +10,10 @@ internal class LibzmqInstance private constructor(private val underlying: COpaqu
         if (zmq_ctx_set(this.underlying, ZMQ_IO_THREADS, ioThreads) != 0) throwNativeError()
     }
 
+    override fun close() {
+        if (zmq_ctx_term(underlying) != 0) throwNativeError()
+    }
+
     override fun createPublisher(): PublisherSocket {
         return LibzmqPublisherSocket(zmq_socket(underlying, ZMQ_PUB) ?: throwNativeError())
     }

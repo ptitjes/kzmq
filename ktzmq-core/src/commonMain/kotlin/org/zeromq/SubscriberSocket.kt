@@ -3,8 +3,18 @@ package org.zeromq
 interface SubscriberSocket : Socket, ReceiveSocket {
 
     /**
-     * Establish a new message filter. Newly created [SubscriberSocket] sockets will filter out all
-     * incoming messages. Call this method to subscribe for messages beginning with the given
+     * Establishes a new message filter. Newly created [SubscriberSocket] sockets will filter out
+     * all incoming messages. Call this method to subscribe to all incoming messages.
+     *
+     * Multiple filters may be attached to a single socket, in which case a message shall be
+     * accepted if it matches at least one filter. Subscribing without any filters shall subscribe
+     * to all incoming messages.
+     */
+    suspend fun subscribe()
+
+    /**
+     * Establishes a new message filter. Newly created [SubscriberSocket] sockets will filter out
+     * all incoming messages. Call this method to subscribe for messages beginning with the given
      * prefix.
      *
      * Multiple filters may be attached to a single socket, in which case a message shall be
@@ -13,11 +23,11 @@ interface SubscriberSocket : Socket, ReceiveSocket {
      *
      * @param topics the topics to subscribe to
      */
-    fun subscribe(vararg topics: ByteArray)
+    suspend fun subscribe(vararg topics: ByteArray)
 
     /**
-     * Establish a new message filter. Newly created [SubscriberSocket] sockets will filter out all
-     * incoming messages. Call this method to subscribe for messages beginning with the given
+     * Establishes a new message filter. Newly created [SubscriberSocket] sockets will filter out
+     * all incoming messages. Call this method to subscribe for messages beginning with the given
      * prefix.
      *
      * Multiple filters may be attached to a single socket, in which case a message shall be
@@ -26,29 +36,36 @@ interface SubscriberSocket : Socket, ReceiveSocket {
      *
      * @param topics the topics to subscribe to
      */
-    fun subscribe(vararg topics: String)
+    suspend fun subscribe(vararg topics: String)
 
     /**
-     * Remove an existing message filter which was previously established with [subscribe]. Stops
-     * receiving messages with the given prefix.
+     * Removes the "subscribe all" message filter which was previously established with
+     * [subscribe].
+     *
+     * Unsubscribing without any filters shall unsubscribe from the "subscribe all" filter that is
+     * added by calling [subscribe] without arguments.
+     */
+    suspend fun unsubscribe()
+
+    /**
+     * Removes the specified existing message filter previously established with [subscribe].
      *
      * Unsubscribing without any filters shall unsubscribe from the "subscribe all" filter that is
      * added by calling [subscribe] without arguments.
      *
      * @param topics the topics to unsubscribe from
      */
-    fun unsubscribe(vararg topics: ByteArray)
+    suspend fun unsubscribe(vararg topics: ByteArray)
 
     /**
-     * Remove an existing message filter which was previously established with [subscribe]. Stops
-     * receiving messages with the given prefix.
+     * Removes the specified existing message filter previously established with [subscribe].
      *
      * Unsubscribing without any filters shall unsubscribe from the "subscribe all" filter that is
      * added by calling [subscribe] without arguments.
      *
      * @param topics the topics to unsubscribe from
      */
-    fun unsubscribe(vararg topics: String)
+    suspend fun unsubscribe(vararg topics: String)
 
     /**
      * If set to true, a socket shall keep only one message in its inbound/outbound queue: the last

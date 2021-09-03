@@ -1,20 +1,19 @@
 package org.zeromq
 
 import io.ktor.network.selector.*
-import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.isActive
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.selects.select
-import org.zeromq.wire.*
-import kotlin.coroutines.CoroutineContext
+import kotlinx.coroutines.*
+import kotlinx.coroutines.channels.*
+import kotlinx.coroutines.selects.*
+import org.zeromq.internal.*
+import kotlin.coroutines.*
 
 /**
  * An implementation of the [SUB socket](https://rfc.zeromq.org/spec/29/).
  *
  * ## The Publish-Subscribe Pattern
  *
- * The implementation SHOULD follow http://rfc.zeromq.org/spec:29/PUBSUB for the semantics of PUB,
- * XPUB, SUB and XSUB sockets.
+ * The implementation SHOULD follow [http://rfc.zeromq.org/spec:29/PUBSUB] for the semantics of
+ * PUB, XPUB, SUB and XSUB sockets.
  *
  * When using ZMTP, message filtering SHALL happen at the publisher side (the PUB or XPUB socket).
  * To create a subscription, the SUB or XSUB peer SHALL send a SUBSCRIBE command, which has this
@@ -73,47 +72,55 @@ import kotlin.coroutines.CoroutineContext
  */
 internal class CIOSubscriberSocket(
     coroutineContext: CoroutineContext,
-    selectorManager: SelectorManager
-) : CIOSocket(coroutineContext, selectorManager, Type.SUB),
+    selectorManager: SelectorManager,
+) : CIOSocket(coroutineContext, selectorManager, Type.SUB, setOf(Type.PUB)),
     CIOReceiveSocket,
     SubscriberSocket {
 
-    private var subscriptions = mutableListOf<Subscription>()
+    override fun createPeerMessageHandler(): MessageHandler = NoopMessageHandler
+
+    override val receiveChannel = Channel<Message>()
+
+    private var subscriptions = mutableListOf<ByteArray>()
     private var lateSubscriptionCommands = Channel<Command>(10)
 
-    override val receiveChannel = Channel<Message>(1000)
-
-    private val rawSockets = hashSetOf<RawSocket>()
-
     init {
-        launch {
+        launch(CoroutineName("zmq-subscriber")) {
+            val peerMailboxes = hashSetOf<PeerMailbox>()
+
             while (isActive) {
                 select<Unit> {
-                    rawSocketActions.onReceive { (kind, rawSocket) ->
+                    peerEvents.onReceive { (kind, peerMailbox) ->
                         when (kind) {
-                            RawSocketActionKind.ADDITION -> {
-                                rawSockets.add(rawSocket)
+                            PeerEventKind.ADDITION -> {
+                                peerMailboxes.add(peerMailbox)
+                                log { "peer added $peerMailbox" }
 
                                 for (subscription in subscriptions) {
-                                    rawSocket.sendChannel.send(
-                                        CommandOrMessage(SubscribeCommand(subscription.topic))
+                                    log { "sending subscription ${subscription.contentToString()} to $peerMailbox" }
+                                    peerMailbox.sendChannel.send(
+                                        CommandOrMessage(SubscribeCommand(subscription))
                                     )
+                                    log { "sent subscription ${subscription.contentToString()} to $peerMailbox" }
                                 }
                             }
-                            RawSocketActionKind.REMOVAL -> {
-                                rawSockets.remove(rawSocket)
+                            PeerEventKind.REMOVAL -> {
+                                peerMailboxes.remove(peerMailbox)
+                                log { "peer removed $peerMailbox" }
                             }
                         }
                     }
 
                     lateSubscriptionCommands.onReceive { command ->
-                        for (rawSocket in rawSockets) {
-                            rawSocket.sendChannel.send(CommandOrMessage(command))
+                        for (peerMailbox in peerMailboxes) {
+                            log { "sending late subscription $command to $peerMailbox" }
+                            peerMailbox.sendChannel.send(CommandOrMessage(command))
                         }
                     }
 
-                    for (rawSocket in rawSockets) {
-                        rawSocket.receiveChannel.onReceive { commandOrMessage ->
+                    for (peerMailbox in peerMailboxes) {
+                        peerMailbox.receiveChannel.onReceive { commandOrMessage ->
+                            log { "receiving $commandOrMessage from $peerMailbox" }
                             val message = commandOrMessage.messageOrThrow()
                             receiveChannel.send(message)
                         }
@@ -123,48 +130,57 @@ internal class CIOSubscriberSocket(
         }
     }
 
-    override fun subscribe(vararg topics: ByteArray) {
+    override suspend fun subscribe() {
+        subscribe(listOf())
+    }
+
+    override suspend fun subscribe(vararg topics: ByteArray) {
         subscribe(topics.toList())
     }
 
-    override fun subscribe(vararg topics: String) {
+    override suspend fun subscribe(vararg topics: String) {
         subscribe(topics.map { it.encodeToByteArray() })
     }
 
-    private fun subscribe(topics: List<ByteArray>) {
-        for (topic in topics) {
-            val subscription = Subscription(topic)
-            subscriptions.add(subscription)
-        }
+    private suspend fun subscribe(topics: List<ByteArray>) {
+        val effectiveTopics = topics.ifEmpty { listOf(byteArrayOf()) }
 
-        for (topic in topics) {
-            lateSubscriptionCommands.trySend(SubscribeCommand(topic))
+        subscriptions.addAll(effectiveTopics)
+
+        for (topic in effectiveTopics) {
+            lateSubscriptionCommands.send(SubscribeCommand(topic))
         }
     }
 
-    override fun unsubscribe(vararg topics: ByteArray) {
+    override suspend fun unsubscribe() {
+        unsubscribe(listOf())
+    }
+
+    override suspend fun unsubscribe(vararg topics: ByteArray) {
         unsubscribe(topics.toList())
     }
 
-    override fun unsubscribe(vararg topics: String) {
+    override suspend fun unsubscribe(vararg topics: String) {
         unsubscribe(topics.map { it.encodeToByteArray() })
     }
 
-    private fun unsubscribe(topics: List<ByteArray>) {
-        val removedSubscriptions = mutableListOf<Subscription>()
-        for (topic in topics) {
-            val subscription = Subscription(topic)
-            if (subscriptions.remove(subscription)) removedSubscriptions += subscription
+    private suspend fun unsubscribe(topics: List<ByteArray>) {
+        val effectiveTopics = topics.ifEmpty { listOf(byteArrayOf()) }
+
+        val removedTopics = mutableListOf<ByteArray>()
+        for (topic in effectiveTopics) {
+            if (subscriptions.remove(topic)) removedTopics += topic
         }
 
-        for (topic in topics) {
-            lateSubscriptionCommands.trySend(CancelCommand(topic))
+        for (topic in removedTopics) {
+            lateSubscriptionCommands.send(CancelCommand(topic))
         }
     }
 
     override var conflate: Boolean
         get() = TODO("Not yet implemented")
         set(value) {}
+
     override var invertMatching: Boolean
         get() = TODO("Not yet implemented")
         set(value) {}

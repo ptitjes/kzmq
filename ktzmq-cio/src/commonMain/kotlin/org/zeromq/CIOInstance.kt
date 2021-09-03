@@ -2,27 +2,34 @@ package org.zeromq
 
 import io.ktor.network.selector.*
 import io.ktor.util.*
-import kotlinx.coroutines.CoroutineScope
-import kotlin.coroutines.CoroutineContext
-
-internal const val TRACE = false
+import kotlinx.coroutines.*
+import kotlin.coroutines.*
 
 internal class CIOInstance internal constructor(
-    override val coroutineContext: CoroutineContext,
-) : EngineInstance, CoroutineScope {
+    private val coroutineContext: CoroutineContext,
+) : EngineInstance {
+
+    private val job = SupervisorJob()
+    private val handler = CoroutineExceptionHandler { _, throwable -> throwable.printStackTrace() }
+    private val childContext = coroutineContext + job + handler
 
     @OptIn(InternalAPI::class)
-    private val selectorManager = SelectorManager(coroutineContext)
+    private val selectorManager = SelectorManager(childContext)
 
-    override fun createPair(): PairSocket =
-        CIOPairSocket(coroutineContext, selectorManager)
+    override fun close() {
+        selectorManager.close()
+        job.cancel()
+    }
 
-    override fun createPublisher(): PublisherSocket {
+    override fun createPair(): PairSocket {
         TODO("Not yet implemented")
     }
 
+    override fun createPublisher(): PublisherSocket =
+        CIOPublisherSocket(childContext, selectorManager)
+
     override fun createSubscriber(): SubscriberSocket =
-        CIOSubscriberSocket(coroutineContext, selectorManager)
+        CIOSubscriberSocket(childContext, selectorManager)
 
     override fun createXPublisher(): XPublisherSocket {
         TODO("Not yet implemented")
@@ -32,13 +39,11 @@ internal class CIOInstance internal constructor(
         TODO("Not yet implemented")
     }
 
-    override fun createPush(): PushSocket {
-        TODO("Not yet implemented")
-    }
+    override fun createPush(): PushSocket =
+        CIOPushSocket(childContext, selectorManager)
 
-    override fun createPull(): PullSocket {
-        TODO("Not yet implemented")
-    }
+    override fun createPull(): PullSocket =
+        CIOPullSocket(childContext, selectorManager)
 
     override fun createRequest(): RequestSocket {
         TODO("Not yet implemented")

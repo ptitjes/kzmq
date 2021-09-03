@@ -1,10 +1,12 @@
 package org.zeromq
 
-import kotlinx.coroutines.channels.ReceiveChannel
+import kotlinx.coroutines.channels.*
+import org.zeromq.internal.*
 
 internal interface CIOReceiveSocket : ReceiveSocket {
 
     val receiveChannel: ReceiveChannel<Message>
+    val socketOptions: SocketOptions
 
     override suspend fun receive(): Message = receiveChannel.receive()
 
@@ -19,6 +21,8 @@ internal interface CIOReceiveSocket : ReceiveSocket {
         return if (result.isSuccess) SocketResult.success(result.getOrThrow())
         else SocketResult.failure(result.exceptionOrNull())
     }
+
+    override val onReceive get() = receiveChannel.onReceive
 
     override operator fun iterator(): SocketIterator = object : SocketIterator {
         var nextMessage: Message? = null
@@ -38,9 +42,13 @@ internal interface CIOReceiveSocket : ReceiveSocket {
     override var receiveBufferSize: Int
         get() = TODO("Not yet implemented")
         set(value) {}
+
     override var receiveHighWaterMark: Int
-        get() = TODO("Not yet implemented")
-        set(value) {}
+        get() = socketOptions.receiveQueueSize
+        set(value) {
+            socketOptions.receiveQueueSize = value
+        }
+
     override var receiveTimeout: Int
         get() = TODO("Not yet implemented")
         set(value) {}

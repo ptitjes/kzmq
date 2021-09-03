@@ -1,5 +1,7 @@
 package org.zeromq
 
+import kotlinx.coroutines.selects.SelectClause1
+
 interface ReceiveSocket {
     /**
      * Waits for the next message to become available on the socket. Reads a message immediately if
@@ -24,6 +26,8 @@ interface ReceiveSocket {
      * @return the message received.
      */
     fun tryReceive(): SocketResult<Message>
+
+    val onReceive: SelectClause1<Message>
 
     /**
      * Returns a new iterator to receive messages from this socket using a for loop. Iteration

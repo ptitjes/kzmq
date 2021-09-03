@@ -13,6 +13,11 @@ internal class JeroMQInstance private constructor(
 
     private val selector = ActorSelectorManager(Dispatchers.IO)
 
+    override fun close() {
+        selector.close()
+        underlying.close()
+    }
+
     override fun createPublisher(): PublisherSocket = wrappingExceptions {
         JeroMQPublisherSocket(selector, newSocket(SocketType.PUB))
     }

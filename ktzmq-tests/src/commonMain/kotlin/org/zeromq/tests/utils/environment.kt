@@ -1,10 +1,7 @@
 package org.zeromq.tests.utils
 
-import kotlinx.coroutines.DelicateCoroutinesApi
-import kotlinx.coroutines.cancel
-import kotlinx.coroutines.launch
-import org.zeromq.Context
-import org.zeromq.Engine
+import kotlinx.coroutines.*
+import org.zeromq.*
 
 expect val engines: List<Engine>
 
@@ -12,52 +9,68 @@ expect val OS_NAME: String
 
 fun contextTests(
     skipEngines: List<String> = emptyList(),
-    block: suspend TestContextBuilder.() -> Unit
+    block: suspend TestContextBuilder.() -> Unit,
 ) {
-    for (testedEngine in engines) {
-        for (skipEngine in skipEngines) {
-            val skipEngineArray = skipEngine.lowercase().split(":")
+    val skipEnginesLowerCase = skipEngines.map { it.lowercase() }.toSet()
 
-            val (platform, engine) = when (skipEngineArray.size) {
-                2 -> skipEngineArray[0] to skipEngineArray[1]
-                1 -> "*" to skipEngineArray[0]
-                else -> throw IllegalStateException("Wrong skip engine format, expected 'engine' or 'platform:engine'")
-            }
+    val filteredEngines = engines.filter { engine ->
+        val name = engine.name.lowercase()
+        !skipEnginesLowerCase.any { it.contains(name) }
+    }
 
-            val platformShouldBeSkipped = "*" == platform || OS_NAME == platform
-            val engineShouldBeSkipped = "*" == engine || testedEngine.name.lowercase() == engine
+    val enginePairs = filteredEngines.flatMap { engine1 -> filteredEngines.map { engine2 -> engine1 to engine2 } }
 
-            if (platformShouldBeSkipped && engineShouldBeSkipped) return
+    val failures = mutableListOf<TestFailure>()
+    for (engines in enginePairs) {
+        val result = runCatching {
+            testWithEngines(engines, block)
         }
 
-        if (skipEngines.map { it.lowercase() }.contains(testedEngine.name.lowercase())) return
+        if (result.isFailure) {
+            failures += TestFailure(engines.toString(), result.exceptionOrNull()!!)
+        }
+    }
 
-        testWithEngine(testedEngine, block)
+    if (failures.isEmpty()) return
+    error(failures.joinToString("\n"))
+}
+
+private class TestFailure(val name: String, val cause: Throwable) {
+    override fun toString(): String = buildString {
+        appendLine("Test failed with engines: $name")
+        appendLine(cause)
+        for (stackLine in cause.stackTraceToString().lines()) {
+            appendLine("\t$stackLine")
+        }
     }
 }
 
-/**
- * Perform test with selected engine.
- */
 @OptIn(DelicateCoroutinesApi::class)
-fun testWithEngine(
-    engine: Engine,
-    block: suspend TestContextBuilder.() -> Unit
+fun testWithEngines(
+    engines: Pair<Engine, Engine>,
+    block: suspend TestContextBuilder.() -> Unit,
 ) = testSuspend {
     val builder = TestContextBuilder().apply { block() }
 
-    val context = Context(engine)
+    withTimeout(builder.timeoutSeconds * 1000L) {
+        val (engine1, engine2) = engines
+        val contexts = Context(engine1) to Context(engine2)
 
-    val job = launch {
-        this.(builder.test)(context)
-    }
+        val job = launch(start = CoroutineStart.LAZY) {
+            this.(builder.test)(contexts)
+        }
 
-    try {
-        job.join()
-    } catch (cause: Throwable) {
-        job.cancel("Test failed", cause)
-        throw cause
-    } finally {
-        builder.after(context)
+        try {
+            job.join()
+        } catch (cause: Throwable) {
+            job.cancel("Test failed", cause)
+            throw cause
+        } finally {
+            builder.after(contexts)
+
+            val (ctx1, ctx2) = contexts
+            ctx1.close()
+            ctx2.close()
+        }
     }
 }
