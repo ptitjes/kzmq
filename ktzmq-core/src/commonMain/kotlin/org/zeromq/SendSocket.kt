@@ -33,7 +33,7 @@ interface SendSocket {
      * Sets the time-to-live field in every multicast packet sent from this socket. The default is
      * 1 which means that the multicast packets don't leave the local network.
      *
-     * See [ZMQ_MULTICAST_HOPS](http://api.zeromq.org/master#zmq-getsockopt)
+     * See [ZMQ_MULTICAST_HOPS](http://api.zeromq.org/master:zmq-getsockopt)
      */
     var multicastHops: Int
 
@@ -41,7 +41,7 @@ interface SendSocket {
      * Underlying kernel transmit buffer size in bytes. A value of -1 means leave the OS default
      * unchanged.
      *
-     * See [ZMQ_SNDBUF](http://api.zeromq.org/master#zmq-getsockopt)
+     * See [ZMQ_SNDBUF](http://api.zeromq.org/master:zmq-getsockopt)
      */
     var sendBufferSize: Int
 
@@ -54,7 +54,7 @@ interface SendSocket {
      * the socket type, ØMQ shall take appropriate action such as blocking or dropping sent
      * messages.
      *
-     * See [ZMQ_SNDHWM](http://api.zeromq.org/master#zmq-getsockopt)
+     * See [ZMQ_SNDHWM](http://api.zeromq.org/master:zmq-getsockopt)
      */
     var sendHighWaterMark: Int
 
@@ -64,7 +64,7 @@ interface SendSocket {
      * asynchronously until the message is sent. For all other values, it will try to send the
      * message for that amount of time before rejecting.
      *
-     * See [ZMQ_SNDTIMEO](http://api.zeromq.org/master#zmq-getsockopt)
+     * See [ZMQ_SNDTIMEO](http://api.zeromq.org/master:zmq-getsockopt)
      */
     var sendTimeout: Int
 }

@@ -8,7 +8,7 @@ interface PublisherSocket : Socket, SendSocket {
      * multi-part messages – in particular, only one part of it is kept in the socket internal
      * queue.
      *
-     * See [ZMQ_CONFLATE](http://api.zeromq.org/master#zmq-getsockopt)
+     * See [ZMQ_CONFLATE](http://api.zeromq.org/master:zmq-getsockopt)
      */
     var conflate: Boolean
 
@@ -16,7 +16,7 @@ interface PublisherSocket : Socket, SendSocket {
      * Causes messages to be sent to all connected sockets except those subscribed to a prefix that
      * matches the message.
      *
-     * See [ZMQ_INVERT_MATCHING](http://api.zeromq.org/master#zmq-getsockopt)
+     * See [ZMQ_INVERT_MATCHING](http://api.zeromq.org/master:zmq-getsockopt)
      */
     var invertMatching: Boolean
 
@@ -25,7 +25,7 @@ interface PublisherSocket : Socket, SendSocket {
      * message could not be sent. The default is to drop the message silently when the peer high
      * watermark is reached.
      *
-     * See [ZMQ_XPUB_NODROP](http://api.zeromq.org/master#zmq-getsockopt)
+     * See [ZMQ_XPUB_NODROP](http://api.zeromq.org/master:zmq-getsockopt)
      */
     var noDrop: Boolean
 }

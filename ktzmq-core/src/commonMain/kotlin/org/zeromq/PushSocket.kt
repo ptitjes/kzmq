@@ -8,7 +8,7 @@ interface PushSocket : Socket, SendSocket {
      * multi-part messages – in particular, only one part of it is kept in the socket internal
      * queue.
      *
-     * See [ZMQ_CONFLATE](http://api.zeromq.org/master#zmq-getsockopt)
+     * See [ZMQ_CONFLATE](http://api.zeromq.org/master:zmq-getsockopt)
      */
     var conflate: Boolean
 }

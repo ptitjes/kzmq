@@ -5,7 +5,7 @@ interface RequestSocket : Socket, SendSocket, ReceiveSocket {
     /**
      * The identity of this socket when connecting to a [RouterSocket].
      *
-     * See [ZMQ_ROUTING_ID](http://api.zeromq.org/master#zmq-getsockopt)
+     * See [ZMQ_ROUTING_ID](http://api.zeromq.org/master:zmq-getsockopt)
      */
     var routingId: String?
 
@@ -18,7 +18,7 @@ interface RequestSocket : Socket, SendSocket, ReceiveSocket {
      * Warning: Do not set this option on a socket that talks to any other socket type except
      * [RouterSocket], because the results are undefined.
      *
-     * See [ZMQ_PROBE_ROUTER](http://api.zeromq.org/master#zmq-getsockopt)
+     * See [ZMQ_PROBE_ROUTER](http://api.zeromq.org/master:zmq-getsockopt)
      */
     var probeRouter: Boolean
 
@@ -29,7 +29,7 @@ interface RequestSocket : Socket, SendSocket, ReceiveSocket {
      * the full message is `[<request id>, null, user frames...]`. The [RequestSocket] will discard
      * all incoming messages that don't begin with these two frames.
      *
-     * See [ZMQ_REQ_CORRELATE](http://api.zeromq.org/master#zmq-getsockopt)
+     * See [ZMQ_REQ_CORRELATE](http://api.zeromq.org/master:zmq-getsockopt)
      */
     var correlate: Boolean
 
@@ -43,7 +43,7 @@ interface RequestSocket : Socket, SendSocket, ReceiveSocket {
      * replies. Otherwise, a late reply to an aborted request can be reported as the reply to the
      * superseding request.
      *
-     * See [ZMQ_REQ_RELAXED](http://api.zeromq.org/master#zmq-getsockopt)
+     * See [ZMQ_REQ_RELAXED](http://api.zeromq.org/master:zmq-getsockopt)
      */
     var relaxed: Boolean
 }

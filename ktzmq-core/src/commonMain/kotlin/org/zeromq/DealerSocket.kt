@@ -8,14 +8,14 @@ interface DealerSocket : Socket, SendSocket, ReceiveSocket {
      * multi-part messages – in particular, only one part of it is kept in the socket internal
      * queue.
      *
-     * See [ZMQ_CONFLATE](http://api.zeromq.org/master#zmq-getsockopt)
+     * See [ZMQ_CONFLATE](http://api.zeromq.org/master:zmq-getsockopt)
      */
     var conflate: Boolean
 
     /**
      * The identity of this socket when connecting to a [RouterSocket].
      *
-     * See [ZMQ_ROUTING_ID](http://api.zeromq.org/master#zmq-getsockopt)
+     * See [ZMQ_ROUTING_ID](http://api.zeromq.org/master:zmq-getsockopt)
      */
     var routingId: String?
 
@@ -28,7 +28,7 @@ interface DealerSocket : Socket, SendSocket, ReceiveSocket {
      * Warning: Do not set this option on a socket that talks to any other socket type except
      * [RouterSocket], because the results are undefined.
      *
-     * See [ZMQ_PROBE_ROUTER](http://api.zeromq.org/master#zmq-getsockopt)
+     * See [ZMQ_PROBE_ROUTER](http://api.zeromq.org/master:zmq-getsockopt)
      */
     var probeRouter: Boolean
 }

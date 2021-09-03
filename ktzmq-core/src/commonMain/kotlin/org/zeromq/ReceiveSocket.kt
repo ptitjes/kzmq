@@ -37,7 +37,7 @@ interface ReceiveSocket {
      * Underlying kernel receive buffer size in bytes. A value of -1 means leave the OS default
      * unchanged.
      *
-     * See [ZMQ_RCVBUF](http://api.zeromq.org/master#zmq-getsockopt)
+     * See [ZMQ_RCVBUF](http://api.zeromq.org/master:zmq-getsockopt)
      */
     var receiveBufferSize: Int
 
@@ -50,7 +50,7 @@ interface ReceiveSocket {
      * the socket type, ØMQ shall take appropriate action such as blocking or dropping sent
      * messages.
      *
-     * See [ZMQ_RCVHWM](http://api.zeromq.org/master#zmq-getsockopt)
+     * See [ZMQ_RCVHWM](http://api.zeromq.org/master:zmq-getsockopt)
      */
     var receiveHighWaterMark: Int
 
@@ -60,7 +60,7 @@ interface ReceiveSocket {
      * will wait asynchronously until a message is available. For all other values, it will wait
      * for a message for that amount of time before rejecting.
      *
-     * See [ZMQ_RCVTIMEO](http://api.zeromq.org/master#zmq-getsockopt)
+     * See [ZMQ_RCVTIMEO](http://api.zeromq.org/master:zmq-getsockopt)
      */
     var receiveTimeout: Int
 }

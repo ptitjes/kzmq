@@ -55,7 +55,7 @@ interface SubscriberSocket : Socket, ReceiveSocket {
      * message to be received/sent. Ignores any high watermark options. Does not support multi-part
      * messages – in particular, only one part of it is kept in the socket internal queue.
      *
-     * See [ZMQ_CONFLATE](http://api.zeromq.org/master#zmq-getsockopt)
+     * See [ZMQ_CONFLATE](http://api.zeromq.org/master:zmq-getsockopt)
      */
     var conflate: Boolean
 
@@ -63,7 +63,7 @@ interface SubscriberSocket : Socket, ReceiveSocket {
      * Causes messages to be sent to all connected sockets except those subscribed to a prefix that
      * matches the message.
      *
-     * See [ZMQ_INVERT_MATCHING](http://api.zeromq.org/master#zmq-getsockopt)
+     * See [ZMQ_INVERT_MATCHING](http://api.zeromq.org/master:zmq-getsockopt)
      */
     var invertMatching: Boolean
 }
