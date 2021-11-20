@@ -1,7 +1,7 @@
 package org.zeromq.tests.utils
 
-import kotlinx.coroutines.CoroutineScope
-import org.zeromq.Context
+import kotlinx.coroutines.*
+import org.zeromq.*
 
 class TestContextBuilder(
     var test: suspend CoroutineScope.(contexts: Pair<Context, Context>) -> Unit = {},

@@ -1,8 +1,7 @@
 package org.zeromq.tests.utils
 
-import kotlinx.coroutines.CoroutineScope
-import kotlin.coroutines.CoroutineContext
-import kotlin.coroutines.EmptyCoroutineContext
+import kotlinx.coroutines.*
+import kotlin.coroutines.*
 
 expect fun testSuspend(
     context: CoroutineContext = EmptyCoroutineContext,

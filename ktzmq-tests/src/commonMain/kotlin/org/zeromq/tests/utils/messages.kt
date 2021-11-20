@@ -1,6 +1,6 @@
 package org.zeromq.tests.utils
 
-import org.zeromq.Message
+import org.zeromq.*
 
 object MessageComparator : Comparator<Message> {
     override fun compare(a: Message, b: Message): Int {

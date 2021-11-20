@@ -1,6 +1,6 @@
 package org.zeromq
 
-import kotlin.reflect.KProperty
+import kotlin.reflect.*
 
 internal fun <T> notImplementedProperty() = NotImplementedPropertyDelegate<T>()
 

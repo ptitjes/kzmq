@@ -115,6 +115,7 @@ internal class CIOPublisherSocket(
                             when (val command = commandOrMessage.commandOrThrow()) {
                                 is SubscribeCommand -> subscriptions.add(peerMailbox, command.topic)
                                 is CancelCommand -> subscriptions.remove(peerMailbox, command.topic)
+                                else -> protocolError("Expected SUBSCRIBE or CANCEL, but got ${command.name}")
                             }
                         }
                     }

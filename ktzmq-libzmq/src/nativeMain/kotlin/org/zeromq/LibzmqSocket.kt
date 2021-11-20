@@ -1,7 +1,7 @@
 package org.zeromq
 
 import kotlinx.cinterop.*
-import kotlinx.coroutines.selects.SelectClause1
+import kotlinx.coroutines.selects.*
 import org.zeromq.internal.libzmq.*
 
 internal abstract class LibzmqSocket internal constructor(

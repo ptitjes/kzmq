@@ -1,7 +1,7 @@
 package org.zeromq.tests.utils
 
 import kotlinx.coroutines.*
-import kotlin.coroutines.CoroutineContext
+import kotlin.coroutines.*
 
 val testScope = MainScope()
 

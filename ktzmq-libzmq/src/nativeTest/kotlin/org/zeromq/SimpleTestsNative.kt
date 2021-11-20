@@ -1,11 +1,5 @@
 package org.zeromq
 
-import kotlinx.cinterop.toKString
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
-import kotlin.test.Test
-
 class SimpleTestsNative {
 //    @Test
 //    fun test() = runBlocking {

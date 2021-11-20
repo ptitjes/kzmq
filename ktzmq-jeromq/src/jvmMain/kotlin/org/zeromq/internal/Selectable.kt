@@ -1,10 +1,8 @@
 package org.zeromq.internal
 
-import kotlinx.atomicfu.atomic
-import org.zeromq.TRACE
-import org.zeromq.ZMQ
-import java.nio.channels.SelectableChannel
-import java.nio.channels.SelectionKey
+import kotlinx.atomicfu.*
+import org.zeromq.*
+import java.nio.channels.*
 
 internal abstract class Selectable {
 

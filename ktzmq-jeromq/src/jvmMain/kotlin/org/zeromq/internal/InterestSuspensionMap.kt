@@ -1,7 +1,7 @@
 package org.zeromq.internal
 
-import kotlinx.atomicfu.atomic
-import kotlinx.coroutines.CancellableContinuation
+import kotlinx.atomicfu.*
+import kotlinx.coroutines.*
 
 internal class InterestSuspensionsMap {
 

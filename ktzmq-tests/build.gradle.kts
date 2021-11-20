@@ -75,3 +75,10 @@ kotlin {
         }
     }
 }
+
+tasks.getByName<Test>("jvmTest") {
+    val javaToolchains = project.extensions.getByType<JavaToolchainService>()
+    javaLauncher.set(javaToolchains.launcherFor {
+        languageVersion.set(JavaLanguageVersion.of(16))
+    })
+}

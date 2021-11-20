@@ -3,8 +3,8 @@ package org.zeromq
 import kotlinx.cinterop.*
 import org.zeromq.internal.libzmq.zmq_getsockopt
 import org.zeromq.internal.libzmq.zmq_setsockopt
-import platform.posix.size_tVar
-import kotlin.reflect.KProperty
+import platform.posix.*
+import kotlin.reflect.*
 
 internal fun <V : CPrimitiveVar, T> socketOption(
     socket: COpaquePointer?,

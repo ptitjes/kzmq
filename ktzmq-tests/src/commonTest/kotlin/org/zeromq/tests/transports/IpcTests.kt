@@ -5,18 +5,19 @@ import org.zeromq.*
 import org.zeromq.tests.utils.*
 import kotlin.test.*
 
+@Ignore
 class IpcTests {
 
     @Test
     fun bindConnectTest() = contextTests(skipEngines = listOf("jeromq")) {
-        test { (context) ->
+        test { (ctx1, ctx2) ->
             val address = randomAddress(Protocol.IPC)
             val sent = Message("Hello 0MQ!".encodeToByteArray())
 
-            val push = context.createPush()
+            val push = ctx1.createPush()
             push.bind(address)
 
-            val pull = context.createPull()
+            val pull = ctx2.createPull()
             pull.connect(address)
 
             launch {
@@ -32,14 +33,14 @@ class IpcTests {
 
     @Test
     fun connectBindTest() = contextTests(skipEngines = listOf("jeromq")) {
-        test { (context) ->
+        test { (ctx1, ctx2) ->
             val address = randomAddress(Protocol.IPC)
             val sent = Message("Hello 0MQ!".encodeToByteArray())
 
-            val push = context.createPush()
+            val push = ctx1.createPush()
             push.connect(address)
 
-            val pull = context.createPull()
+            val pull = ctx2.createPull()
             pull.bind(address)
 
             launch {

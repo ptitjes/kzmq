@@ -1,9 +1,7 @@
 package org.zeromq
 
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.MainScope
-import kotlinx.coroutines.promise
-import kotlin.coroutines.CoroutineContext
+import kotlinx.coroutines.*
+import kotlin.coroutines.*
 
 val testScope = MainScope()
 val testCoroutineContext: CoroutineContext = testScope.coroutineContext

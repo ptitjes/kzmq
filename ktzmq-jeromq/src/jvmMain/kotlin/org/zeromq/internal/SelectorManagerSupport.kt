@@ -3,14 +3,10 @@
 */
 package org.zeromq.internal
 
-import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.suspendCancellableCoroutine
-import java.nio.channels.CancelledKeyException
-import java.nio.channels.SelectionKey
-import java.nio.channels.Selector
-import java.nio.channels.spi.SelectorProvider
-import kotlin.coroutines.resume
-import kotlin.coroutines.resumeWithException
+import kotlinx.coroutines.*
+import java.nio.channels.*
+import java.nio.channels.spi.*
+import kotlin.coroutines.*
 
 /**
  * Base class for NIO selector managers

@@ -7,18 +7,19 @@ import org.zeromq.*
 import org.zeromq.tests.utils.*
 import kotlin.test.*
 
+@Ignore
 class PushPullTests {
 
     @Test
-    fun bindConnectTest() = contextTests(skipEngines = listOf("jeromq")) {
-        test { (context) ->
+    fun bindConnectTest() = contextTests {
+        test { (ctx1, ctx2) ->
             val address = randomAddress()
             val sent = Message("Hello 0MQ!".encodeToByteArray())
 
-            val push = context.createPush()
+            val push = ctx1.createPush()
             push.bind(address)
 
-            val pull = context.createPull()
+            val pull = ctx2.createPull()
             pull.connect(address)
 
             launch {
@@ -33,15 +34,15 @@ class PushPullTests {
     }
 
     @Test
-    fun connectBindTest() = contextTests(skipEngines = listOf("jeromq")) {
-        test { (context) ->
+    fun connectBindTest() = contextTests {
+        test { (ctx1, ctx2) ->
             val address = randomAddress()
             val sent = Message("Hello 0MQ!".encodeToByteArray())
 
-            val push = context.createPush()
+            val push = ctx1.createPush()
             push.connect(address)
 
-            val pull = context.createPull()
+            val pull = ctx2.createPull()
             pull.bind(address)
 
             launch {
@@ -56,16 +57,16 @@ class PushPullTests {
     }
 
     @Test
-    fun flowTest() = contextTests(skipEngines = listOf("jeromq")) {
-        test { (context) ->
+    fun flowTest() = contextTests {
+        test { (ctx1, ctx2) ->
             val address = randomAddress()
             val messageCount = 10
             val sent = generateMessages(messageCount).asFlow()
 
-            val push = context.createPush()
+            val push = ctx1.createPush()
             push.bind(address)
 
-            val pull = context.createPull()
+            val pull = ctx2.createPull()
             pull.connect(address)
 
             launch {
@@ -81,23 +82,23 @@ class PushPullTests {
 
     @Test
     fun selectTest() = contextTests(skipEngines = listOf("jeromq")) {
-        test { (context) ->
+        test { (ctx1, ctx2) ->
             val address1 = randomAddress()
             val address2 = randomAddress()
 
             val messageCount = 10
             val sent = generateMessages(messageCount)
 
-            val push1 = context.createPush()
+            val push1 = ctx1.createPush()
             push1.bind(address1)
 
-            val push2 = context.createPush()
+            val push2 = ctx1.createPush()
             push2.bind(address2)
 
-            val pull1 = context.createPull()
+            val pull1 = ctx2.createPull()
             pull1.connect(address1)
 
-            val pull2 = context.createPull()
+            val pull2 = ctx2.createPull()
             pull2.connect(address2)
 
             launch {

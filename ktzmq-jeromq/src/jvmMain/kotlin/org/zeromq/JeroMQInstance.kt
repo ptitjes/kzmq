@@ -1,12 +1,12 @@
 package org.zeromq
 
-import kotlinx.coroutines.Dispatchers
-import org.zeromq.internal.ActorSelectorManager
+import kotlinx.coroutines.*
+import org.zeromq.internal.*
 
 internal const val TRACE = false
 
 internal class JeroMQInstance private constructor(
-    private val underlying: ZContext
+    private val underlying: ZContext,
 ) : EngineInstance {
 
     constructor(ioThreads: Int = 1) : this(ZContext(ioThreads))
@@ -38,12 +38,12 @@ internal class JeroMQInstance private constructor(
         TODO("Not yet implemented")
     }
 
-    override fun createPush(): PushSocket {
-        TODO("Not yet implemented")
+    override fun createPush(): PushSocket = wrappingExceptions {
+        JeroMQPushSocket(selector, newSocket(SocketType.PUSH))
     }
 
-    override fun createPull(): PullSocket {
-        TODO("Not yet implemented")
+    override fun createPull(): PullSocket = wrappingExceptions {
+        JeroMQPullSocket(selector, newSocket(SocketType.PULL))
     }
 
     override fun createRequest(): RequestSocket {

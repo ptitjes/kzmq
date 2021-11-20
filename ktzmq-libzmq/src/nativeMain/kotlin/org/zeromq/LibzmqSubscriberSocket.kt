@@ -1,6 +1,6 @@
 package org.zeromq
 
-import kotlinx.cinterop.COpaquePointer
+import kotlinx.cinterop.*
 import org.zeromq.internal.libzmq.ZMQ_CONFLATE
 import org.zeromq.internal.libzmq.ZMQ_INVERT_MATCHING
 

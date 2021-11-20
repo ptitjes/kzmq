@@ -1,8 +1,7 @@
 package temp
 
 import kotlinx.coroutines.*
-import org.zeromq.SocketType
-import org.zeromq.ZContext
+import org.zeromq.*
 
 fun main(): Unit = runBlocking {
     val context = ZContext()

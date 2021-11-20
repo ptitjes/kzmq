@@ -1,7 +1,7 @@
 package org.zeromq.tests.utils
 
-import org.zeromq.Message
-import kotlin.random.Random
+import org.zeromq.*
+import kotlin.random.*
 
 private val characters =
     listOf('_') + ('a'..'z').toList() + ('A'..'Z').toList() + ('0'..'9').toList()

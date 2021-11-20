@@ -1,8 +1,7 @@
 package org.zeromq.tests.utils
 
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.runBlocking
-import kotlin.coroutines.CoroutineContext
+import kotlinx.coroutines.*
+import kotlin.coroutines.*
 
 /**
  * Test runner for jvm suspend tests.

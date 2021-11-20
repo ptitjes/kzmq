@@ -1,6 +1,6 @@
 package org.zeromq
 
-import kotlinx.cinterop.COpaquePointer
+import kotlinx.cinterop.*
 import org.zeromq.internal.libzmq.*
 
 internal class LibzmqInstance private constructor(private val underlying: COpaquePointer?) :

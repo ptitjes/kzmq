@@ -1,7 +1,6 @@
 package org.zeromq.tests.utils
 
-import org.zeromq.Engine
-import org.zeromq.JS
+import org.zeromq.*
 
 // TODO fix JS testSuspend()
 actual val engines: List<Engine> = listOf()

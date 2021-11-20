@@ -1,6 +1,6 @@
 package org.zeromq
 
-import kotlin.js.JsName
+import kotlin.js.*
 
 enum class Type(@JsName("__type") val type: Int) {
     /**

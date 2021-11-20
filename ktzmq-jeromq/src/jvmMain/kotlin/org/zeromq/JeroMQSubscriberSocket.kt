@@ -1,6 +1,6 @@
 package org.zeromq
 
-import org.zeromq.internal.SelectorManager
+import org.zeromq.internal.*
 
 internal class JeroMQSubscriberSocket internal constructor(
     selector: SelectorManager,

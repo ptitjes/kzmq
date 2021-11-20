@@ -1,13 +1,9 @@
 package org.zeromq
 
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.selects.SelectClause1
-import kotlinx.coroutines.withContext
-import org.zeromq.internal.SelectInterest
-import org.zeromq.internal.Selectable
-import org.zeromq.internal.SelectorManager
-import java.nio.channels.SelectableChannel
+import kotlinx.coroutines.*
+import kotlinx.coroutines.selects.*
+import org.zeromq.internal.*
+import java.nio.channels.*
 
 internal abstract class JeroMQSocket internal constructor(
     private val selector: SelectorManager,

@@ -1,6 +1,6 @@
 package org.zeromq
 
-import kotlin.coroutines.CoroutineContext
+import kotlin.coroutines.*
 
 object JS : Engine {
     override val name = "zeromq.js"

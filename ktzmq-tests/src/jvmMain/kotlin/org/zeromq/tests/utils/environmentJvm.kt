@@ -1,8 +1,6 @@
 package org.zeromq.tests.utils
 
-import org.zeromq.Engine
-import org.zeromq.CIO
-import org.zeromq.JeroMQ
+import org.zeromq.*
 import java.util.*
 
 actual val engines: List<Engine> = listOf(CIO, JeroMQ)

@@ -1,8 +1,7 @@
 package org.zeromq
 
 import Buffer
-import org.khronos.webgl.Int8Array
-import org.khronos.webgl.Uint8Array
+import org.khronos.webgl.*
 
 fun ByteArray.toBuffer(): Buffer {
     val int8Array: Int8Array = this.unsafeCast<Int8Array>()

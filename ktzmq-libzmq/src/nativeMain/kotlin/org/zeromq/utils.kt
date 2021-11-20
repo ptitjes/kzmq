@@ -1,6 +1,6 @@
 package org.zeromq
 
-import platform.posix.errno
+import platform.posix.*
 
 internal fun checkNativeError(result: Int) {
     if (result == -1) throwNativeError()

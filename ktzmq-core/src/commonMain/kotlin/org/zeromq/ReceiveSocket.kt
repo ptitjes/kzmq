@@ -1,6 +1,6 @@
 package org.zeromq
 
-import kotlinx.coroutines.selects.SelectClause1
+import kotlinx.coroutines.selects.*
 
 interface ReceiveSocket {
     /**

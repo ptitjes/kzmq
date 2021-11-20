@@ -1,7 +1,7 @@
 package org.zeromq
 
-import kotlinx.coroutines.await
-import org.zeromq.internal.zeromqjs.Writable
+import kotlinx.coroutines.*
+import org.zeromq.internal.zeromqjs.*
 
 class ZeroMQJsSendSocket(private val underlying: Writable) : SendSocket {
 
