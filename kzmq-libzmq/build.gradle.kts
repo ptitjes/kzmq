@@ -44,7 +44,7 @@ kotlin {
 
         val nativeMain by getting {
             dependencies {
-                implementation(project(":ktzmq-core"))
+                implementation(project(":kzmq-core"))
                 implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:$kotlinxCoroutinesVersion")
             }
         }

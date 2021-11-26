@@ -1,8 +1,0 @@
-<component name="ArtifactManager">
-  <artifact type="jar" name="ktzmq-js-js-0.1-SNAPSHOT">
-    <output-path>$PROJECT_DIR$/ktzmq-js/build/libs</output-path>
-    <root id="archive" name="ktzmq-js-js-0.1-SNAPSHOT.jar">
-      <element id="module-output" name="ktzmq.ktzmq-js.jsMain" />
-    </root>
-  </artifact>
-</component>

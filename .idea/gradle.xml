@@ -10,12 +10,12 @@
           <set>
             <option value="$PROJECT_DIR$" />
             <option value="$PROJECT_DIR$/buildSrc" />
-            <option value="$PROJECT_DIR$/ktzmq-cio" />
-            <option value="$PROJECT_DIR$/ktzmq-core" />
-            <option value="$PROJECT_DIR$/ktzmq-jeromq" />
-            <option value="$PROJECT_DIR$/ktzmq-js" />
-            <option value="$PROJECT_DIR$/ktzmq-libzmq" />
-            <option value="$PROJECT_DIR$/ktzmq-tests" />
+            <option value="$PROJECT_DIR$/kzmq-cio" />
+            <option value="$PROJECT_DIR$/kzmq-core" />
+            <option value="$PROJECT_DIR$/kzmq-jeromq" />
+            <option value="$PROJECT_DIR$/kzmq-js" />
+            <option value="$PROJECT_DIR$/kzmq-libzmq" />
+            <option value="$PROJECT_DIR$/kzmq-tests" />
           </set>
         </option>
       </GradleProjectSettings>

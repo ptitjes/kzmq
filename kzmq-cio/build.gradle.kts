@@ -33,7 +33,7 @@ kotlin {
                 implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:$kotlinxCoroutinesVersion")
                 implementation("io.ktor:ktor-io:$ktorVersion")
                 implementation("io.ktor:ktor-network:$ktorVersion")
-                implementation(project(":ktzmq-core"))
+                implementation(project(":kzmq-core"))
             }
         }
         val commonTest by getting {

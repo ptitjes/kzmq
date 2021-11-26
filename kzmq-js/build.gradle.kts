@@ -4,17 +4,11 @@
  */
 
 val kotlinxCoroutinesVersion: String by project
-val kotlinxAtomicFuVersion: String by project
 val jeromqVersion: String by project
 
 kotlin {
-    jvm {
-        compilations.all {
-            kotlinOptions.jvmTarget = "1.8"
-        }
-        testRuns["test"].executionTask.configure {
-            useJUnitPlatform()
-        }
+    js(IR) {
+        nodejs {}
     }
 
     sourceSets {
@@ -23,14 +17,14 @@ kotlin {
             languageSettings.optIn("kotlinx.coroutines.ExperimentalCoroutinesApi")
         }
 
-        val jvmMain by getting {
+        val jsMain by getting {
             dependencies {
-                implementation(project(":ktzmq-core"))
+                implementation(project(":kzmq-core"))
                 implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:$kotlinxCoroutinesVersion")
-                implementation("org.zeromq:jeromq:$jeromqVersion")
+                implementation(npm("zeromq", "6.0.0-beta.6"))
             }
         }
-        val jvmTest by getting {
+        val jsTest by getting {
             dependencies {
                 implementation(kotlin("test"))
             }

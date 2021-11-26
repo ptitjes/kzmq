@@ -61,7 +61,7 @@ kotlin {
                 implementation("io.kotest:kotest-framework-datatest:$kotestVersion")
                 implementation("io.kotest:kotest-assertions-core:$kotestVersion")
 
-                implementation(project(":ktzmq-core"))
+                implementation(project(":kzmq-core"))
             }
         }
         val commonTest by getting {
@@ -72,8 +72,8 @@ kotlin {
 
         val jvmMain by getting {
             dependencies {
-                implementation(project(":ktzmq-jeromq"))
-                implementation(project(":ktzmq-cio"))
+                implementation(project(":kzmq-jeromq"))
+                implementation(project(":kzmq-cio"))
             }
         }
         val jvmTest by getting {
@@ -84,7 +84,7 @@ kotlin {
 
         val jsMain by getting {
             dependencies {
-                implementation(project(":ktzmq-js"))
+                implementation(project(":kzmq-js"))
             }
         }
         val jsTest by getting {
@@ -94,8 +94,8 @@ kotlin {
             findByName("commonMain")?.let { dependsOn(it) }
 
             dependencies {
-                implementation(project(":ktzmq-libzmq"))
-                implementation(project(":ktzmq-cio"))
+                implementation(project(":kzmq-libzmq"))
+                implementation(project(":kzmq-cio"))
             }
         }
         val nativeTest by creating {

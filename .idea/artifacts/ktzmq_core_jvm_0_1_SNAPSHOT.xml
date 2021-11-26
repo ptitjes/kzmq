@@ -1,8 +1,0 @@
-<component name="ArtifactManager">
-  <artifact type="jar" name="ktzmq-core-jvm-0.1-SNAPSHOT">
-    <output-path>$PROJECT_DIR$/ktzmq-core/build/libs</output-path>
-    <root id="archive" name="ktzmq-core-jvm-0.1-SNAPSHOT.jar">
-      <element id="module-output" name="ktzmq.ktzmq-core.jvmMain" />
-    </root>
-  </artifact>
-</component>

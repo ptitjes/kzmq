@@ -17,11 +17,11 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "ktzmq"
+rootProject.name = "kzmq"
 
-include(":ktzmq-core")
-include(":ktzmq-js")
-include(":ktzmq-jeromq")
-include(":ktzmq-libzmq")
-include(":ktzmq-cio")
-include(":ktzmq-tests")
+include(":kzmq-core")
+include(":kzmq-js")
+include(":kzmq-jeromq")
+include(":kzmq-libzmq")
+include(":kzmq-cio")
+include(":kzmq-tests")
