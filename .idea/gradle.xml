@@ -9,6 +9,7 @@
         <option name="modules">
           <set>
             <option value="$PROJECT_DIR$" />
+            <option value="$PROJECT_DIR$/buildSrc" />
             <option value="$PROJECT_DIR$/ktzmq-cio" />
             <option value="$PROJECT_DIR$/ktzmq-core" />
             <option value="$PROJECT_DIR$/ktzmq-jeromq" />

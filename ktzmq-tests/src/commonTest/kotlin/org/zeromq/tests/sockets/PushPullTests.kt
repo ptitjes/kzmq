@@ -1,105 +1,92 @@
 package org.zeromq.tests.sockets
 
+import io.kotest.core.spec.style.*
+import io.kotest.matchers.*
+import io.kotest.matchers.collections.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.selects.*
 import org.zeromq.*
 import org.zeromq.tests.utils.*
-import kotlin.test.*
 
-@Ignore
-class PushPullTests {
+class PushPullTests : FunSpec({
 
-    @Test
-    fun bindConnectTest() = contextTests {
-        test { (ctx1, ctx2) ->
-            val address = randomAddress()
-            val sent = Message("Hello 0MQ!".encodeToByteArray())
+    withEngines("bind-connect").config(skipEngines = listOf("jeromq")) { (ctx1, ctx2) ->
+        val address = randomAddress()
+        val message = Message("Hello 0MQ!".encodeToByteArray())
 
-            val push = ctx1.createPush()
-            push.bind(address)
+        val push = ctx1.createPush()
+        push.bind(address)
 
-            val pull = ctx2.createPull()
-            pull.connect(address)
+        val pull = ctx2.createPull()
+        pull.connect(address)
 
-            launch {
-                val received = pull.receive()
-                assertEquals(sent, received)
-            }
-
-            launch {
-                push.send(sent)
-            }
-        }
+        push.send(message)
+        pull.receive() shouldBe message
     }
 
-    @Test
-    fun connectBindTest() = contextTests {
-        test { (ctx1, ctx2) ->
-            val address = randomAddress()
-            val sent = Message("Hello 0MQ!".encodeToByteArray())
+    withEngines("connect-bind").config(skipEngines = listOf("jeromq")) { (ctx1, ctx2) ->
+        val address = randomAddress()
+        val message = Message("Hello 0MQ!".encodeToByteArray())
 
-            val push = ctx1.createPush()
-            push.connect(address)
+        val push = ctx1.createPush()
+        push.connect(address)
 
-            val pull = ctx2.createPull()
-            pull.bind(address)
+        val pull = ctx2.createPull()
+        pull.bind(address)
 
-            launch {
-                val received = pull.receive()
-                assertEquals(sent, received)
-            }
-
-            launch {
-                push.send(sent)
-            }
-        }
+        push.send(message)
+        pull.receive() shouldBe message
     }
 
-    @Test
-    fun flowTest() = contextTests {
-        test { (ctx1, ctx2) ->
-            val address = randomAddress()
-            val messageCount = 10
-            val sent = generateMessages(messageCount).asFlow()
+    withEngines("flow").config(skipEngines = listOf("jeromq")) { (ctx1, ctx2) ->
+        val address = randomAddress()
+        val messageCount = 10
+        val sent = generateMessages(messageCount).asFlow()
 
-            val push = ctx1.createPush()
-            push.bind(address)
+        val push = ctx1.createPush()
+        push.bind(address)
 
-            val pull = ctx2.createPull()
-            pull.connect(address)
+        val pull = ctx2.createPull()
+        pull.connect(address)
 
-            launch {
-                val received = pull.consumeAsFlow().take(messageCount)
-                assertContentEquals(sent.toList(), received.toList())
-            }
-
+        coroutineScope {
             launch {
                 sent.collectToSocket(push)
             }
+
+            launch {
+                val received = pull.consumeAsFlow().take(messageCount)
+                received.toList() shouldContainExactly sent.toList()
+            }
         }
     }
 
-    @Test
-    fun selectTest() = contextTests(skipEngines = listOf("jeromq")) {
-        test { (ctx1, ctx2) ->
-            val address1 = randomAddress()
-            val address2 = randomAddress()
+    withEngines("select").config(skipEngines = listOf("jeromq")) { (ctx1, ctx2) ->
+        val address1 = randomAddress()
+        val address2 = randomAddress()
 
-            val messageCount = 10
-            val sent = generateMessages(messageCount)
+        val messageCount = 10
+        val sent = generateMessages(messageCount)
 
-            val push1 = ctx1.createPush()
-            push1.bind(address1)
+        val push1 = ctx1.createPush()
+        push1.bind(address1)
 
-            val push2 = ctx1.createPush()
-            push2.bind(address2)
+        val push2 = ctx1.createPush()
+        push2.bind(address2)
 
-            val pull1 = ctx2.createPull()
-            pull1.connect(address1)
+        val pull1 = ctx2.createPull()
+        pull1.connect(address1)
 
-            val pull2 = ctx2.createPull()
-            pull2.connect(address2)
+        val pull2 = ctx2.createPull()
+        pull2.connect(address2)
+
+        coroutineScope {
+            launch {
+                for ((index, message) in sent.withIndex()) {
+                    (if (index % 2 == 0) push1 else push2).send(message)
+                }
+            }
 
             launch {
                 val received = mutableListOf<Message>()
@@ -109,14 +96,8 @@ class PushPullTests {
                         pull2.onReceive { it }
                     }
                 }
-                assertContentEquals(sent, received.sortedWith(MessageComparator))
-            }
-
-            launch {
-                for ((index, message) in sent.withIndex()) {
-                    (if (index % 2 == 0) push1 else push2).send(message)
-                }
+                received.sortedWith(MessageComparator) shouldContainExactly sent
             }
         }
     }
-}
+})

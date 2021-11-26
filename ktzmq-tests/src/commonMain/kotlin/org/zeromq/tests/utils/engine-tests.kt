@@ -1,36 +1,14 @@
-package org.zeromq.tests
+package org.zeromq.tests.utils
 
 import io.kotest.core.*
 import io.kotest.core.names.*
-import io.kotest.core.spec.style.*
 import io.kotest.core.spec.style.scopes.*
 import io.kotest.core.test.*
 import io.kotest.core.test.config.*
 import io.kotest.datatest.*
-import io.kotest.matchers.*
 import org.zeromq.*
-import org.zeromq.tests.utils.*
 import kotlin.time.*
 import kotlin.time.Duration.Companion.seconds
-
-@OptIn(ExperimentalTime::class)
-class IpcTests : FunSpec({
-
-    withEngines("bind-connect") { (ctx1, ctx2) ->
-        val address = randomAddress(Protocol.IPC)
-        val message = Message("Hello 0MQ!".encodeToByteArray())
-
-        val push = ctx1.createPush()
-        push.bind(address)
-
-        val pull = ctx2.createPull()
-        pull.connect(address)
-
-        push.send(message)
-        pull.receive() shouldBe message
-    }
-})
-
 
 typealias EngineTest = suspend ContainerScope.(Pair<Context, Context>) -> Unit
 

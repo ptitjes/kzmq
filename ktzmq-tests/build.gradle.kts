@@ -52,6 +52,9 @@ kotlin {
         val commonMain by getting {
             dependencies {
                 implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:$kotlinxCoroutinesVersion")
+                implementation("io.kotest:kotest-framework-engine:$kotestVersion")
+                implementation("io.kotest:kotest-framework-datatest:$kotestVersion")
+                implementation("io.kotest:kotest-assertions-core:$kotestVersion")
 
                 implementation(project(":ktzmq-core"))
             }
@@ -59,8 +62,6 @@ kotlin {
         val commonTest by getting {
             dependencies {
                 implementation(kotlin("test"))
-                implementation("io.kotest:kotest-framework-engine:$kotestVersion")
-                implementation("io.kotest:kotest-framework-datatest:$kotestVersion")
             }
         }
 

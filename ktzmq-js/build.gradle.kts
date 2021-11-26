@@ -4,7 +4,6 @@ val jeromqVersion: String by project
 kotlin {
     js(IR) {
         nodejs {}
-        binaries.library()
     }
 
     sourceSets {

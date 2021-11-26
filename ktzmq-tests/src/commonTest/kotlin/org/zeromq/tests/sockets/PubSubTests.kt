@@ -1,5 +1,8 @@
 package org.zeromq.tests.sockets
 
+import io.kotest.core.spec.style.*
+import io.kotest.matchers.*
+import io.kotest.matchers.collections.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.selects.*
@@ -8,136 +11,97 @@ import org.zeromq.tests.utils.*
 import kotlin.test.*
 
 @Ignore
-class PubSubTests {
+class PubSubTests : FunSpec({
 
-    private fun pubSubTest(testBlock: suspend CoroutineScope.(sockets: Pair<PublisherSocket, SubscriberSocket>) -> Unit) =
-        contextTests {
-            test { (ctx1, ctx2) ->
-                val pub = ctx1.createPublisher()
-                val sub = ctx2.createSubscriber()
+    withEngines("bind-connect").config(skipEngines = listOf("jeromq")) { (ctx1, ctx2) ->
+        val address = randomAddress()
+        val message = Message("Hello 0MQ!".encodeToByteArray())
 
-                try {
-                    val address = randomAddress()
+        val publisher = ctx1.createPublisher()
+        publisher.bind(address)
 
-                    pub.bind(address)
-                    sub.connect(address)
-
-                    sub.subscribe("")
-
-                    waitForSubscriptions()
-
-                    testBlock(pub to sub)
-
-                } finally {
-                    pub.close()
-                    sub.close()
-                }
-            }
-        }
-
-    @Test
-    fun bindConnectTest() = pubSubTest { (pub, sub) ->
-        val sent = Message("Hello 0MQ!".encodeToByteArray())
+        val subscriber = ctx2.createSubscriber()
+        subscriber.connect(address)
+        subscriber.subscribe("")
 
         waitForSubscriptions()
 
-        launch {
-            val received = sub.receive()
-            assertEquals(sent, received)
-        }
-
-        launch {
-            pub.send(sent)
-        }
+        publisher.send(message)
+        subscriber.receive() shouldBe message
     }
 
-    @Test
-    fun connectBindTest() = contextTests(skipEngines = listOf("cio")) {
-        test { (ctx1, ctx2) ->
-            val address = randomAddress()
-            val sent = Message("Hello 0MQ!".encodeToByteArray())
-            println("----------------------- 0")
+    withEngines("connect-bind").config(skipEngines = listOf("jeromq")) { (ctx1, ctx2) ->
+        val address = randomAddress()
+        val message = Message("Hello 0MQ!".encodeToByteArray())
 
-            val publisher = ctx1.createPublisher()
-            publisher.connect(address)
-            println("----------------------- 1")
+        val publisher = ctx1.createPublisher()
+        publisher.connect(address)
 
-            val subscriber = ctx2.createSubscriber()
-            subscriber.bind(address)
-            println("----------------------- 2")
+        val subscriber = ctx2.createSubscriber()
+        subscriber.bind(address)
+        subscriber.subscribe("")
 
-            subscriber.subscribe("")
+        waitForSubscriptions()
 
-            println("----------------------- 3")
-
-            waitForSubscriptions()
-
-            launch {
-                println("----------------------- 5.0")
-                val received = subscriber.receive()
-                println("----------------------- 5.1")
-                assertEquals(sent, received)
-            }
-
-            launch {
-                println("----------------------- 4.0")
-                publisher.send(sent)
-                println("----------------------- 4.1")
-            }
-        }
+        publisher.send(message)
+        subscriber.receive() shouldBe message
     }
 
-    @Test
-    fun flowTest() = contextTests {
-        test { (ctx1, ctx2) ->
-            val address = randomAddress()
-            val messageCount = 10
-            val sent = generateMessages(messageCount).asFlow()
+    withEngines("flow").config(skipEngines = listOf("jeromq")) { (ctx1, ctx2) ->
+        val address = randomAddress()
+        val messageCount = 10
+        val sent = generateMessages(messageCount).asFlow()
 
-            val publisher = ctx1.createPublisher()
-            publisher.bind(address)
+        val publisher = ctx1.createPublisher()
+        publisher.bind(address)
 
-            val subscriber = ctx2.createSubscriber()
-            subscriber.connect(address)
-            subscriber.subscribe("")
+        val subscriber = ctx2.createSubscriber()
+        subscriber.connect(address)
+        subscriber.subscribe("")
 
-            waitForSubscriptions()
+        waitForSubscriptions()
 
-            launch {
-                val received = subscriber.consumeAsFlow().take(messageCount)
-                assertContentEquals(sent.toList(), received.toList())
-            }
-
+        coroutineScope {
             launch {
                 sent.collectToSocket(publisher)
             }
+
+            launch {
+                val received = subscriber.consumeAsFlow().take(messageCount)
+                received.toList() shouldContainExactly sent.toList()
+            }
         }
     }
 
-    @Test
-    fun selectTest() = contextTests(skipEngines = listOf("jeromq")) {
-        test { (ctx1, ctx2) ->
-            val address1 = randomAddress()
-            val address2 = randomAddress()
+    withEngines("select").config(skipEngines = listOf("jeromq")) { (ctx1, ctx2) ->
+        val address1 = randomAddress()
+        val address2 = randomAddress()
 
-            val messageCount = 10
-            val sent = generateMessages(messageCount)
+        val messageCount = 10
+        val sent = generateMessages(messageCount)
 
-            val publisher1 = ctx1.createPublisher()
-            publisher1.bind(address1)
+        val publisher1 = ctx1.createPublisher()
+        publisher1.bind(address1)
 
-            val publisher2 = ctx1.createPublisher()
-            publisher2.bind(address2)
+        val publisher2 = ctx1.createPublisher()
+        publisher2.bind(address2)
 
-            val subscriber1 = ctx2.createSubscriber()
-            subscriber1.connect(address1)
-            subscriber1.subscribe("")
+        val subscriber1 = ctx2.createSubscriber()
+        subscriber1.connect(address1)
+        subscriber1.subscribe("")
 
-            val subscriber2 = ctx2.createSubscriber()
-            subscriber2.connect(address2)
-            subscriber2.subscribe("")
+        val subscriber2 = ctx2.createSubscriber()
+        subscriber2.connect(address2)
+        subscriber2.subscribe("")
 
-            waitForSubscriptions()
+        waitForSubscriptions()
+
+        coroutineScope {
+            launch {
+                for ((index, message) in sent.withIndex()) {
+                    (if (index % 2 == 0) publisher1 else publisher2).send(message)
+                }
+            }
 
             launch {
                 val received = mutableListOf<Message>()
@@ -147,16 +111,10 @@ class PubSubTests {
                         subscriber2.onReceive { it }
                     }
                 }
-                assertContentEquals(sent, received.sortedWith(MessageComparator))
-            }
-
-            launch {
-                for ((index, message) in sent.withIndex()) {
-                    (if (index % 2 == 0) publisher1 else publisher2).send(message)
-                }
+                received.sortedWith(MessageComparator) shouldContainExactly sent
             }
         }
     }
+})
 
-    private suspend fun waitForSubscriptions() = delay(200)
-}
+private suspend fun waitForSubscriptions() = delay(200)

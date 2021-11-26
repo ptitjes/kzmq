@@ -14,7 +14,6 @@ kotlin {
 
     js(IR) {
         nodejs {}
-        binaries.library()
     }
 
     val hostOs = System.getProperty("os.name")
