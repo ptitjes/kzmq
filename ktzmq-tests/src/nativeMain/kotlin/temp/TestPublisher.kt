@@ -1,19 +1,20 @@
-package org.zeromq
+package temp
 
 import kotlinx.coroutines.*
+import org.zeromq.*
 
 fun main(): Unit = runBlocking {
-    val dispatcher = newSingleThreadContext("IO")
-    val context = Context(CIO, coroutineContext + dispatcher)
+    val handler = CoroutineExceptionHandler { _, throwable -> throwable.printStackTrace() }
+    val context = Context(CIO, coroutineContext + handler)
 
     context.publishEverySecond("Publisher") {
-        connect("tcp://localhost:9990")
+        connect("ipc:///tmp/zmq-test")
     }
 }
 
 private suspend fun Context.publishEverySecond(
     name: String,
-    configure: suspend PublisherSocket.() -> Unit
+    configure: PublisherSocket.() -> Unit
 ) {
     with(createPublisher()) {
         configure()

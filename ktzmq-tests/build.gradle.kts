@@ -2,6 +2,11 @@ description = "Common tests for engines"
 
 val kotlinxCoroutinesVersion: String by project
 val junitVersion: String by project
+val kotestVersion: String by project
+
+plugins {
+    id("io.kotest.multiplatform")
+}
 
 val mingwPath = File(System.getenv("MINGW64_DIR") ?: "C:/msys64/mingw64")
 
@@ -16,25 +21,34 @@ kotlin {
     }
 
     js(IR) {
-        nodejs {}
-        binaries.library()
+        nodejs()
     }
 
     val hostOs = System.getProperty("os.name")
 
     val hostTarget = when {
-        hostOs == "Mac OS X" -> macosX64("native")
-        hostOs == "Linux" -> linuxX64("native")
-        hostOs.startsWith("Windows") -> mingwX64("native")
+        hostOs == "Mac OS X" -> macosX64()
+        hostOs == "Linux" -> linuxX64()
+        hostOs.startsWith("Windows") -> mingwX64()
         else -> throw GradleException("Host OS is not supported in Kotlin/Native.")
     }
 
-    sourceSets {
-        all {
-            languageSettings.optIn("kotlin.RequiresOptIn")
-            languageSettings.optIn("kotlinx.coroutines.ExperimentalCoroutinesApi")
+    hostTarget.apply {
+        binaries.executable("test-publisher") {
+            entryPoint = "temp.TestPublisher"
+            freeCompilerArgs += "-Xdisable-phases=EscapeAnalysis"
         }
+        binaries.executable("test-subscriber") {
+            entryPoint = "temp.TestSubscriber"
+            freeCompilerArgs += "-Xdisable-phases=EscapeAnalysis"
+        }
+        binaries.executable("test-throughput") {
+            entryPoint = "temp.TestThroughput"
+            freeCompilerArgs += "-Xdisable-phases=EscapeAnalysis"
+        }
+    }
 
+    sourceSets {
         val commonMain by getting {
             dependencies {
                 implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:$kotlinxCoroutinesVersion")
@@ -45,6 +59,8 @@ kotlin {
         val commonTest by getting {
             dependencies {
                 implementation(kotlin("test"))
+                implementation("io.kotest:kotest-framework-engine:$kotestVersion")
+                implementation("io.kotest:kotest-framework-datatest:$kotestVersion")
             }
         }
 
@@ -55,6 +71,9 @@ kotlin {
             }
         }
         val jvmTest by getting {
+            dependencies {
+                implementation("io.kotest:kotest-runner-junit5:$kotestVersion")
+            }
         }
 
         val jsMain by getting {
@@ -65,13 +84,28 @@ kotlin {
         val jsTest by getting {
         }
 
-        val nativeMain by getting {
+        val nativeMain by creating {
+            findByName("commonMain")?.let { dependsOn(it) }
+
             dependencies {
                 implementation(project(":ktzmq-libzmq"))
                 implementation(project(":ktzmq-cio"))
             }
         }
-        val nativeTest by getting {
+        val nativeTest by creating {
+            findByName("commonTest")?.let { dependsOn(it) }
+        }
+
+        hostTarget.let {
+            getByName("${it.name}Main").dependsOn(nativeMain)
+            getByName("${it.name}Test").dependsOn(nativeTest)
+        }
+
+        all {
+            languageSettings.optIn("kotlin.RequiresOptIn")
+            languageSettings.optIn("kotlinx.coroutines.ExperimentalCoroutinesApi")
+            languageSettings.optIn("kotlin.time.ExperimentalTime")
+            languageSettings.optIn("kotlin.experimental.ExperimentalTypeInference")
         }
     }
 }

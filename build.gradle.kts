@@ -2,15 +2,19 @@ buildscript {
     val kotlinVersion: String by project
     val kotlinxAtomicFuVersion: String by project
     val dokkaVersion: String by project
+    val kotestPluginVersion: String by project
 
     repositories {
         mavenCentral()
+        gradlePluginPortal()
     }
 
     dependencies {
         classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlinVersion")
         classpath("org.jetbrains.kotlinx:atomicfu-gradle-plugin:$kotlinxAtomicFuVersion")
         classpath("org.jetbrains.dokka:dokka-gradle-plugin:$dokkaVersion")
+
+        classpath("io.kotest:kotest-framework-multiplatform-plugin-gradle:$kotestPluginVersion")
     }
 }
 
