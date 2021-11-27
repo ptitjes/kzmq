@@ -5,7 +5,7 @@
 
 package org.zeromq
 
-internal const val TRACE = true
+internal const val TRACE = false
 
 internal class JeroMQInstance private constructor(
     private val underlying: ZContext,
