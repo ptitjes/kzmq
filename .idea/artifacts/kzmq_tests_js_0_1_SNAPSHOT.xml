@@ -1,0 +1,8 @@
+<component name="ArtifactManager">
+  <artifact type="jar" name="kzmq-tests-js-0.1-SNAPSHOT">
+    <output-path>$PROJECT_DIR$/kzmq-tests/build/libs</output-path>
+    <root id="archive" name="kzmq-tests-js-0.1-SNAPSHOT.jar">
+      <element id="module-output" name="kzmq.kzmq-tests.jsMain" />
+    </root>
+  </artifact>
+</component>

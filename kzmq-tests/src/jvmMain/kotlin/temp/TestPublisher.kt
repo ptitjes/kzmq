@@ -10,10 +10,12 @@ import org.zeromq.*
 
 fun main(): Unit = runBlocking {
     val handler = CoroutineExceptionHandler { _, throwable -> throwable.printStackTrace() }
-    val context = Context(CIO, coroutineContext + handler)
+    val context = Context(JeroMQ, coroutineContext + handler)
 
     context.publishEverySecond("Publisher") {
-        connect("ipc:///tmp/zmq-test")
+//        connect("ipc:///tmp/zmq-test")
+//        connect("tcp://localhost:9999")
+        bind("tcp://localhost:9999")
     }
 }
 

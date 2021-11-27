@@ -18,7 +18,7 @@ import kotlin.test.*
 @Ignore
 class PubSubTests : FunSpec({
 
-    withEngines("bind-connect").config(skipEngines = listOf("jeromq")) { (ctx1, ctx2) ->
+    withEngines("bind-connect") { (ctx1, ctx2) ->
         val address = randomAddress()
         val message = Message("Hello 0MQ!".encodeToByteArray())
 
@@ -31,10 +31,13 @@ class PubSubTests : FunSpec({
 
         waitForSubscriptions()
 
-        publisher.send(message)
-        subscriber.receive() shouldBe message
+        coroutineScope {
+            launch { publisher.send(message) }
+            launch { subscriber.receive() shouldBe message }
+        }
     }
 
+    // TODO Figure out why this test is failing with JeroMQ
     withEngines("connect-bind").config(skipEngines = listOf("jeromq")) { (ctx1, ctx2) ->
         val address = randomAddress()
         val message = Message("Hello 0MQ!".encodeToByteArray())
@@ -48,11 +51,13 @@ class PubSubTests : FunSpec({
 
         waitForSubscriptions()
 
-        publisher.send(message)
-        subscriber.receive() shouldBe message
+        coroutineScope {
+            launch { publisher.send(message) }
+            launch { subscriber.receive() shouldBe message }
+        }
     }
 
-    withEngines("flow").config(skipEngines = listOf("jeromq")) { (ctx1, ctx2) ->
+    withEngines("flow") { (ctx1, ctx2) ->
         val address = randomAddress()
         val messageCount = 10
         val sent = generateMessages(messageCount).asFlow()

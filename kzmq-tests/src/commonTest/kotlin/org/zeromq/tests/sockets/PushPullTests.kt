@@ -16,7 +16,7 @@ import org.zeromq.tests.utils.*
 
 class PushPullTests : FunSpec({
 
-    withEngines("bind-connect").config(skipEngines = listOf("jeromq")) { (ctx1, ctx2) ->
+    withEngines("bind-connect") { (ctx1, ctx2) ->
         val address = randomAddress()
         val message = Message("Hello 0MQ!".encodeToByteArray())
 
@@ -30,7 +30,7 @@ class PushPullTests : FunSpec({
         pull.receive() shouldBe message
     }
 
-    withEngines("connect-bind").config(skipEngines = listOf("jeromq")) { (ctx1, ctx2) ->
+    withEngines("connect-bind") { (ctx1, ctx2) ->
         val address = randomAddress()
         val message = Message("Hello 0MQ!".encodeToByteArray())
 
@@ -44,7 +44,7 @@ class PushPullTests : FunSpec({
         pull.receive() shouldBe message
     }
 
-    withEngines("flow").config(skipEngines = listOf("jeromq")) { (ctx1, ctx2) ->
+    withEngines("flow") { (ctx1, ctx2) ->
         val address = randomAddress()
         val messageCount = 10
         val sent = generateMessages(messageCount).asFlow()

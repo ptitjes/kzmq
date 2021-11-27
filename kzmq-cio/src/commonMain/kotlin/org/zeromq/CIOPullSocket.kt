@@ -48,7 +48,7 @@ import kotlin.coroutines.*
 internal class CIOPullSocket(
     coroutineContext: CoroutineContext,
     selectorManager: SelectorManager
-) : CIOSocket(coroutineContext, selectorManager, Type.SUB, setOf(Type.PUB)),
+) : CIOSocket(coroutineContext, selectorManager, Type.PULL, setOf(Type.PUSH)),
     CIOReceiveSocket,
     PullSocket {
 

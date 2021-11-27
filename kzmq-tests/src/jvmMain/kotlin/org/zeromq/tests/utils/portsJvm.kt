@@ -5,7 +5,13 @@
 
 package org.zeromq.tests.utils
 
-import java.net.*
+import io.ktor.network.selector.*
+import io.ktor.network.sockets.*
+
+private val TEST_SELECTOR_MANAGER = SelectorManager()
 
 actual fun findOpenPort(): Int =
-    ServerSocket(0, 0).use { tmpSocket -> return tmpSocket.localPort }
+    aSocket(TEST_SELECTOR_MANAGER).tcp().bind().use {
+        val inetAddress = it.localAddress as? InetSocketAddress ?: error("Expected inet socket address")
+        inetAddress.port
+    }

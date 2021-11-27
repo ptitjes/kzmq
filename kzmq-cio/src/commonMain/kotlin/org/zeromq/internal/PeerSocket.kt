@@ -130,7 +130,7 @@ private fun validateSocketType(
     val socketTypeProperty = (properties[PropertyName.SOCKET_TYPE]
         ?: protocolError("No socket type property in metadata"))
     val peerSocketType = findSocketType(socketTypeProperty.decodeToString())
-    if (!peerSocketTypes.contains(peerSocketType)) protocolError("Invalid socket type")
+    if (!peerSocketTypes.contains(peerSocketType)) protocolError("Invalid socket type: $peerSocketType")
 }
 
 private fun findSocketType(socketTypeString: String): Type? =

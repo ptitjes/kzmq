@@ -14,7 +14,6 @@ fun main(): Unit = runBlocking {
     launch {
         val publisher = context.createSocket(SocketType.PUB)
         publisher.connect("tcp://localhost:9990")
-        publisher.sndHWM = 1000
 
         var i = 0
         while (true) {
@@ -26,14 +25,14 @@ fun main(): Unit = runBlocking {
         }
     }
 
-//    launch {
-//        val subscriber = context.createSocket(SocketType.SUB)
-//        subscriber.bind("tcp://localhost:9990")
-//        subscriber.subscribe("")
-//
-//        while (true) {
-//            val str = withContext(Dispatchers.IO) { subscriber.recvStr() }
-//            println("Received: $str")
-//        }
-//    }
+    launch {
+        val subscriber = context.createSocket(SocketType.SUB)
+        subscriber.bind("tcp://localhost:9990")
+        subscriber.subscribe("")
+
+        while (true) {
+            val str = withContext(Dispatchers.IO) { subscriber.recvStr() }
+            println("Received: $str")
+        }
+    }
 }

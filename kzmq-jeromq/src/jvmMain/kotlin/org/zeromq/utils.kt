@@ -5,26 +5,30 @@
 
 package org.zeromq
 
-internal fun <T> wrappingExceptions(block: () -> T): T = try {
+import kotlinx.coroutines.*
+
+internal suspend fun <T> suspendOnIO(block: suspend CoroutineScope.() -> T) =
+    withContext(Dispatchers.IO, block)
+
+internal inline fun <T> wrapping(block: () -> T): T = try {
     block()
 } catch (e: ZMQException) {
     throw ZeroMQException(e.errorCode, e)
 }
 
-internal fun <T> catchingExceptions(block: () -> T): SocketResult<T> = try {
+internal inline fun <T> catching(block: () -> T): SocketResult<T> = try {
     SocketResult.success(block())
 } catch (e: ZMQException) {
     SocketResult.failure(e)
 }
 
-internal suspend fun <T> wrappingExceptionsSuspend(block: suspend () -> T): T = try {
+internal inline fun <T> trace(function: String, block: () -> T): T = try {
+    trace("$function - before")
     block()
-} catch (e: ZMQException) {
-    throw ZeroMQException(e.errorCode, e)
+} finally {
+    trace("$function - after")
 }
 
-internal suspend fun <T> catchingExceptionsSuspend(block: suspend () -> T): SocketResult<T> = try {
-    SocketResult.success(block())
-} catch (e: ZMQException) {
-    SocketResult.failure(e)
+internal fun trace(message: String) {
+    if (TRACE) println(message)
 }

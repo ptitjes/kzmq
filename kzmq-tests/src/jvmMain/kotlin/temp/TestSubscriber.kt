@@ -10,10 +10,12 @@ import org.zeromq.*
 
 fun main(): Unit = runBlocking {
     val handler = CoroutineExceptionHandler { _, throwable -> throwable.printStackTrace() }
-    val context = Context(CIO, coroutineContext + handler)
+    val context = Context(JeroMQ, coroutineContext + handler)
 
     context.pull {
-        bind("ipc:///tmp/zmq-test")
+//        bind("ipc:///tmp/zmq-test")
+//        bind("tcp://localhost:9999")
+        connect("tcp://localhost:9999")
     }
 }
 
@@ -22,7 +24,7 @@ private suspend fun Context.pull(
 ) {
     with(createSubscriber()) {
         configure()
-        subscribe()
+        subscribe("")
 
         for (message in this) {
             val data = message.singleOrThrow().decodeToString()

@@ -7,6 +7,7 @@ description = "Common tests for engines"
 
 val kotlinxCoroutinesVersion: String by project
 val junitVersion: String by project
+val ktorVersion: String by project
 val kotestVersion: String by project
 
 plugins {
@@ -74,6 +75,8 @@ kotlin {
             dependencies {
                 implementation(project(":kzmq-jeromq"))
                 implementation(project(":kzmq-cio"))
+
+                implementation("io.ktor:ktor-network:$ktorVersion")
             }
         }
         val jvmTest by getting {
@@ -96,6 +99,8 @@ kotlin {
             dependencies {
                 implementation(project(":kzmq-libzmq"))
                 implementation(project(":kzmq-cio"))
+
+                implementation("io.ktor:ktor-network:$ktorVersion")
             }
         }
         val nativeTest by creating {

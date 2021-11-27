@@ -5,75 +5,50 @@
 
 package org.zeromq
 
-import kotlinx.coroutines.*
 import kotlinx.coroutines.selects.*
-import org.zeromq.internal.*
-import java.nio.channels.*
 
+@Suppress("RedundantSuspendModifier")
 internal abstract class JeroMQSocket internal constructor(
-    private val selector: SelectorManager,
     private val underlying: ZMQ.Socket,
-    override val type: Type
-) : Selectable(), Socket {
+    override val type: Type,
+) : Socket {
 
-    override val socket: ZMQ.Socket
-        get() = underlying
+    override fun close() = wrapping { underlying.close() }
 
-    override val channel: SelectableChannel
-        get() = socket.base().fd ?: error("No file descriptor")
+    override fun bind(endpoint: String): Unit = wrapping { underlying.bind(endpoint) }
+    override fun unbind(endpoint: String): Unit = wrapping { underlying.unbind(endpoint) }
+    override fun connect(endpoint: String): Unit = wrapping { underlying.connect(endpoint) }
+    override fun disconnect(endpoint: String): Unit = wrapping { underlying.disconnect(endpoint) }
 
-    override fun close() = wrappingExceptions { underlying.close() }
+    suspend fun subscribe(): Unit = wrapping { underlying.subscribe(byteArrayOf()) }
 
-    override fun bind(endpoint: String): Unit =
-        wrappingExceptions { underlying.bind(endpoint) }
-
-    override fun unbind(endpoint: String): Unit =
-        wrappingExceptions { underlying.unbind(endpoint) }
-
-    override fun connect(endpoint: String): Unit =
-        wrappingExceptions { underlying.connect(endpoint) }
-
-    override fun disconnect(endpoint: String): Unit =
-        wrappingExceptions { underlying.disconnect(endpoint) }
-
-    suspend fun subscribe(): Unit = wrappingExceptions {
-        underlying.subscribe(byteArrayOf())
-    }
-
-    suspend fun subscribe(vararg topics: ByteArray): Unit = wrappingExceptions {
+    suspend fun subscribe(vararg topics: ByteArray): Unit = wrapping {
         if (topics.isEmpty()) underlying.subscribe(byteArrayOf())
         else topics.forEach { underlying.subscribe(it) }
     }
 
-    suspend fun subscribe(vararg topics: String): Unit = wrappingExceptions {
+    suspend fun subscribe(vararg topics: String): Unit = wrapping {
         if (topics.isEmpty()) underlying.subscribe("")
         else topics.forEach { underlying.subscribe(it) }
     }
 
-    suspend fun unsubscribe(): Unit = wrappingExceptions {
-        underlying.unsubscribe(byteArrayOf())
-    }
+    suspend fun unsubscribe(): Unit = wrapping { underlying.unsubscribe(byteArrayOf()) }
 
-    suspend fun unsubscribe(vararg topics: ByteArray): Unit = wrappingExceptions {
+    suspend fun unsubscribe(vararg topics: ByteArray): Unit = wrapping {
         if (topics.isEmpty()) underlying.unsubscribe(byteArrayOf())
         else topics.forEach { underlying.unsubscribe(it) }
     }
 
-    suspend fun unsubscribe(vararg topics: String): Unit = wrappingExceptions {
+    suspend fun unsubscribe(vararg topics: String): Unit = wrapping {
         if (topics.isEmpty()) underlying.unsubscribe("")
         else topics.forEach { underlying.unsubscribe(it) }
     }
 
-    suspend fun send(message: Message): Unit =
-        wrappingExceptionsSuspend { suspendOnIO { sendSuspend(message) } }
+    suspend fun send(message: Message): Unit = wrapping { sendSuspend(message) }
+    suspend fun sendCatching(message: Message): SocketResult<Unit> = catching { sendSuspend(message) }
+    fun trySend(message: Message): SocketResult<Unit> = catching { sendImmediate(message) }
 
-    suspend fun sendCatching(message: Message): SocketResult<Unit> =
-        catchingExceptionsSuspend { suspendOnIO { sendSuspend(message) } }
-
-    fun trySend(message: Message): SocketResult<Unit> =
-        catchingExceptions { sendImmediate(message) }
-
-    private suspend fun sendSuspend(message: Message) = traceSuspending("sendSuspend") {
+    private suspend fun sendSuspend(message: Message) = trace("sendSuspend") {
         val parts = message.parts
         val lastIndex = parts.size - 1
         for ((index, part) in parts.withIndex()) {
@@ -82,17 +57,7 @@ internal abstract class JeroMQSocket internal constructor(
     }
 
     private suspend fun sendPartSuspend(part: ByteArray, sendMore: Boolean) {
-        trace("sendPartSuspend - fast path")
-        try {
-            sendPartImmediate(part, sendMore)
-            return
-        } catch (t: Throwable) {
-        }
-
-        trace("sendPartSuspend - slow path")
-        selector.suspendForSelection(this, SelectInterest.WRITE)
-        trace("sendPartSuspend - sending")
-        sendPartImmediate(part, sendMore)
+        suspendOnIO { underlying.send(part, if (sendMore) ZMQ.SNDMORE else 0) }
     }
 
     private fun sendImmediate(message: Message) = trace("sendImmediate") {
@@ -103,8 +68,9 @@ internal abstract class JeroMQSocket internal constructor(
         }
     }
 
-    private fun sendPartImmediate(part: ByteArray, sendMore: Boolean) =
+    private fun sendPartImmediate(part: ByteArray, sendMore: Boolean) {
         underlying.send(part, ZMQ.DONTWAIT or if (sendMore) ZMQ.SNDMORE else 0)
+    }
 
     // TODO multicastHops is a long in underlying socket
     var multicastHops: Int by notImplementedProperty()
@@ -112,35 +78,23 @@ internal abstract class JeroMQSocket internal constructor(
     var sendHighWaterMark: Int by underlying::sndHWM
     var sendTimeout: Int by underlying::sendTimeOut
 
-    suspend fun receive(): Message =
-        wrappingExceptionsSuspend { suspendOnIO { receiveSuspend() } }
+    suspend fun receive(): Message = wrapping { receiveSuspend() }
+    suspend fun receiveCatching(): SocketResult<Message> = catching { receiveSuspend() }
+    fun tryReceive(): SocketResult<Message> = catching { receiveImmediate() }
 
-    suspend fun receiveCatching(): SocketResult<Message> =
-        catchingExceptionsSuspend { suspendOnIO { receiveSuspend() } }
+    val onReceive: SelectClause1<Message>
+        get() = throw NotImplementedError("Not supported on JeroMQ engine")
 
-    fun tryReceive(): SocketResult<Message> =
-        catchingExceptions { receiveImmediate() }
-
-    val onReceive: SelectClause1<Message> get() =
-        throw NotImplementedError("Not supported on JeroMQ engine")
-
-    private suspend fun receiveSuspend(): Message = traceSuspending("receiveSuspend") {
+    private suspend fun receiveSuspend(): Message = trace("receiveSuspend") {
         val parts = mutableListOf<ByteArray>()
         do {
             parts.add(receivePartSuspend())
         } while (underlying.hasReceiveMore())
-        return@traceSuspending Message(*parts.toTypedArray())
+        return Message(*parts.toTypedArray())
     }
 
     private suspend fun receivePartSuspend(): ByteArray {
-        trace("receivePartSuspend - fast path")
-        val part = receivePartImmediate()
-        if (part != null) return part
-
-        trace("receivePartSuspend - slow path")
-        selector.suspendForSelection(this, SelectInterest.READ)
-        trace("receivePartSuspend - receiving")
-        return receivePartImmediate() ?: error("Invalid state")
+        return suspendOnIO { underlying.recv(0) }
     }
 
     private fun receiveImmediate(): Message = trace("receiveImmediate") {
@@ -148,10 +102,12 @@ internal abstract class JeroMQSocket internal constructor(
         do {
             parts.add(receivePartImmediate() ?: error("No message received"))
         } while (underlying.hasReceiveMore())
-        return@trace Message(*parts.toTypedArray())
+        return Message(*parts.toTypedArray())
     }
 
-    private fun receivePartImmediate(): ByteArray? = underlying.recv(ZMQ.DONTWAIT)
+    private fun receivePartImmediate(): ByteArray? {
+        return underlying.recv(ZMQ.DONTWAIT)
+    }
 
     operator fun iterator(): SocketIterator = object : SocketIterator {
         var next: Message? = null
@@ -171,21 +127,4 @@ internal abstract class JeroMQSocket internal constructor(
     var receiveBufferSize: Int by underlying::receiveBufferSize
     var receiveHighWaterMark: Int by underlying::rcvHWM
     var receiveTimeout: Int by underlying::receiveTimeOut
-
-    private suspend fun <T> traceSuspending(function: String, block: suspend () -> T): T = try {
-        trace("$function - before")
-        block()
-    } finally {
-        trace("$function - after")
-    }
-
-    private fun <T> trace(function: String, block: () -> T): T = try {
-        trace("$function - before")
-        block()
-    } finally {
-        trace("$function - after")
-    }
 }
-
-private suspend fun <T> suspendOnIO(block: suspend CoroutineScope.() -> T) =
-    withContext(Dispatchers.IO, block)

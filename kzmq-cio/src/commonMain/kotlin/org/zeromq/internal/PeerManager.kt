@@ -72,6 +72,7 @@ internal class PeerManager(
                     notifyUnavailable(mailbox)
                 }
             } catch (t: Throwable) {
+                log { "Peer disconnected [${t.message}]" }
             } finally {
                 socket.close()
             }
@@ -101,6 +102,7 @@ internal class PeerManager(
                         peerSocket.handleInitialization(false, peerSocketTypes)
                         peerSocket.handleTraffic()
                     } catch (t: Throwable) {
+                        log { "Failed to connect [${t.message}]" }
                     } finally {
                         socket?.close()
                     }

@@ -17,8 +17,11 @@ fun main(): Unit = runBlocking {
 
         var i = 0
         while (true) {
-            val msg = Message("$i".encodeToByteArray())
+            val str = "$i"
+            val msg = Message(str.encodeToByteArray())
             publisher.send(msg)
+            println("Sent: $str")
+            delay(1000)
             i++
         }
     }
@@ -30,7 +33,8 @@ fun main(): Unit = runBlocking {
 
         while (true) {
             val msg = subscriber.receive()
-            println(msg.singleOrThrow().decodeToString())
+            val str = msg.singleOrThrow().decodeToString()
+            println("Received: $str")
         }
     }
 }

@@ -51,7 +51,7 @@ import kotlin.coroutines.*
 internal class CIOPushSocket(
     coroutineContext: CoroutineContext,
     selectorManager: SelectorManager
-) : CIOSocket(coroutineContext, selectorManager, Type.PUB, setOf(Type.SUB)),
+) : CIOSocket(coroutineContext, selectorManager, Type.PUSH, setOf(Type.PULL)),
     CIOSendSocket,
     PushSocket {
 

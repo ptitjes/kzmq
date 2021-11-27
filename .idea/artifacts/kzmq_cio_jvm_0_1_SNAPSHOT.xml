@@ -1,0 +1,8 @@
+<component name="ArtifactManager">
+  <artifact type="jar" name="kzmq-cio-jvm-0.1-SNAPSHOT">
+    <output-path>$PROJECT_DIR$/kzmq-cio/build/libs</output-path>
+    <root id="archive" name="kzmq-cio-jvm-0.1-SNAPSHOT.jar">
+      <element id="module-output" name="kzmq.kzmq-cio.jvmMain" />
+    </root>
+  </artifact>
+</component>

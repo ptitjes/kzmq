@@ -20,10 +20,10 @@ typealias EngineTest = suspend ContainerScope.(Pair<Context, Context>) -> Unit
 fun <T : RootScope> T.withEngines(name: String, test: EngineTest) =
     withEngines(name).config(test = test)
 
-fun <T : RootScope> T.withEngines(name: String): EngineTestWithConfigBuilder<T> =
-    EngineTestWithConfigBuilder<T>(name, false, this)
+fun <T : RootScope> T.withEngines(name: String): EngineTestBuilder<T> =
+    EngineTestBuilder<T>(name, false, this)
 
-class EngineTestWithConfigBuilder<T>(
+class EngineTestBuilder<T>(
     private val name: String,
     private val disabled: Boolean,
     private val context: RootScope,

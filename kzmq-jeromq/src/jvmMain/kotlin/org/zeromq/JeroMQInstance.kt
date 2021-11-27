@@ -5,10 +5,7 @@
 
 package org.zeromq
 
-import kotlinx.coroutines.*
-import org.zeromq.internal.*
-
-internal const val TRACE = false
+internal const val TRACE = true
 
 internal class JeroMQInstance private constructor(
     private val underlying: ZContext,
@@ -16,19 +13,16 @@ internal class JeroMQInstance private constructor(
 
     constructor(ioThreads: Int = 1) : this(ZContext(ioThreads))
 
-    private val selector = ActorSelectorManager(Dispatchers.IO)
-
     override fun close() {
-        selector.close()
         underlying.close()
     }
 
-    override fun createPublisher(): PublisherSocket = wrappingExceptions {
-        JeroMQPublisherSocket(selector, newSocket(SocketType.PUB))
+    override fun createPublisher(): PublisherSocket = wrapping {
+        JeroMQPublisherSocket(newSocket(SocketType.PUB))
     }
 
-    override fun createSubscriber(): SubscriberSocket = wrappingExceptions {
-        JeroMQSubscriberSocket(selector, newSocket(SocketType.SUB))
+    override fun createSubscriber(): SubscriberSocket = wrapping {
+        JeroMQSubscriberSocket(newSocket(SocketType.SUB))
     }
 
     override fun createPair(): PairSocket {
@@ -43,12 +37,12 @@ internal class JeroMQInstance private constructor(
         TODO("Not yet implemented")
     }
 
-    override fun createPush(): PushSocket = wrappingExceptions {
-        JeroMQPushSocket(selector, newSocket(SocketType.PUSH))
+    override fun createPush(): PushSocket = wrapping {
+        JeroMQPushSocket(newSocket(SocketType.PUSH))
     }
 
-    override fun createPull(): PullSocket = wrappingExceptions {
-        JeroMQPullSocket(selector, newSocket(SocketType.PULL))
+    override fun createPull(): PullSocket = wrapping {
+        JeroMQPullSocket(newSocket(SocketType.PULL))
     }
 
     override fun createRequest(): RequestSocket {
