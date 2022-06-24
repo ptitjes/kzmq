@@ -8,12 +8,13 @@ package temp
 import kotlinx.coroutines.*
 import org.zeromq.*
 
-fun main(): Unit = runBlocking {
+fun mainSubscriber(): Unit = runBlocking {
     val handler = CoroutineExceptionHandler { _, throwable -> throwable.printStackTrace() }
     val context = Context(CIO, coroutineContext + handler)
 
     context.pull {
-        bind("ipc:///tmp/zmq-test")
+//        bind("ipc:///tmp/zmq-test")
+        connect("tcp://localhost:9999")
     }
 }
 

@@ -40,17 +40,10 @@ kotlin {
     }
 
     hostTarget.apply {
-        binaries.executable("test-publisher") {
-            entryPoint = "temp.TestPublisher"
-            freeCompilerArgs += "-Xdisable-phases=EscapeAnalysis"
-        }
-        binaries.executable("test-subscriber") {
-            entryPoint = "temp.TestSubscriber"
-            freeCompilerArgs += "-Xdisable-phases=EscapeAnalysis"
-        }
-        binaries.executable("test-throughput") {
-            entryPoint = "temp.TestThroughput"
-            freeCompilerArgs += "-Xdisable-phases=EscapeAnalysis"
+        binaries {
+            executable("test-publisher") { entryPoint = "temp.mainPublisher" }
+            executable("test-subscriber") { entryPoint = "temp.mainSubscriber" }
+            executable("test-throughput") { entryPoint = "temp.mainThroughput" }
         }
     }
 

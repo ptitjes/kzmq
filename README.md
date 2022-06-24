@@ -17,7 +17,7 @@ The following tables might help you choose a backend engine depending on your ne
 
 ## Targets
 
-|               | CIO           | JeroMQ        | ZeroMQ.JS     | Libzmq        |
+| Target/Engine | CIO           | JeroMQ        | ZeroMQ.JS     | Libzmq        |
 |---------------|:-------------:|:-------------:|:-------------:|:-------------:|
 | JVM           | Y             | Y             |               |               |
 | Node.JS       |               |               | Y             |               |
@@ -25,19 +25,19 @@ The following tables might help you choose a backend engine depending on your ne
 
 ## Transports
 
-|               | CIO           | JeroMQ        | ZeroMQ.JS     | Libzmq        |
-|---------------|:-------------:|:-------------:|:-------------:|:-------------:|
-| TCP           | Y             | Y             | Y             | Y             |
-| IPC           | Y (♭)         |               | Y             | Y             |
+| Transport/Engine | CIO           | JeroMQ        | ZeroMQ.JS     | Libzmq        |
+|------------------|:-------------:|:-------------:|:-------------:|:-------------:|
+| TCP              | Y             | Y             | Y             | Y             |
+| IPC              | Y (♭)         |               | Y             | Y             |
 
 (♭) Supported on Native. Requires JVM >= 16 for the JVM target.
 
 ## Protocol Version
 
-|               | CIO           | JeroMQ        | ZeroMQ.JS     | Libzmq        |
-|---------------|:-------------:|:-------------:|:-------------:|:-------------:|
-| ZMTP 3.0      | Y             | Y             | Y             | Y             |
-| ZMTP 3.1      | Y (♭)         |               |               | Y (♭)         |
+| Protocol/Engine | CIO           | JeroMQ        | ZeroMQ.JS     | Libzmq        |
+|-----------------|:-------------:|:-------------:|:-------------:|:-------------:|
+| ZMTP 3.0        | Y             | Y             | Y             | Y             |
+| ZMTP 3.1        | Y (♭)         |               |               | Y (♭)         |
 
 (♭) New ZMTP 3.1 sockets are not yet supported
 

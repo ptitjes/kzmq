@@ -7,32 +7,30 @@ package temp
 
 import kotlinx.coroutines.*
 import org.zeromq.*
+import kotlin.system.*
 
-fun main(): Unit = runBlocking {
-    val dispatcher = Dispatchers.IO
+fun mainThroughput(): Unit = runBlocking {
     val handler = CoroutineExceptionHandler { _, throwable -> throwable.printStackTrace() }
-    val context = Context(CIO, coroutineContext + handler + dispatcher)
+    val context = Context(CIO, handler + newFixedThreadPoolContext(4, "MyContext"))
 
     val messageSize = 100
     val messageCount = 10_000_000
     val message = Message(ByteArray(messageSize))
 
-    withContext(dispatcher) {
-        val pushJob = launch {
-            context.push(message, messageCount) { connect("tcp://localhost:9990") }
-        }
-        val pullJob = launch {
-            context.pull(messageCount) { bind("tcp://localhost:9990") }
-        }
-        pullJob.join()
-        pushJob.cancelAndJoin()
+    val pushJob = launch {
+        context.push(message, messageCount) { connect("tcp://localhost:9990") }
     }
+    val pullJob = launch {
+        context.pull(messageCount) { bind("tcp://localhost:9990") }
+    }
+    pullJob.join()
+    pushJob.cancelAndJoin()
 }
 
 private suspend fun Context.push(
     message: Message,
     messageCount: Int,
-    configure: PushSocket.() -> Unit
+    configure: PushSocket.() -> Unit,
 ) {
     var sent = 0
     with(createPush()) {
@@ -47,24 +45,22 @@ private suspend fun Context.push(
 
 private suspend fun Context.pull(
     messageCount: Int,
-    configure: PullSocket.() -> Unit
+    configure: PullSocket.() -> Unit,
 ) {
     var received = 0
-    val start = System.currentTimeMillis()
 
-    try {
+    val time = measureTimeMillis {
         with(createPull()) {
             configure()
 
             while (received < messageCount) {
                 val message = receive()
-//                releaseMessage(message)
+//              releaseMessage(message)
                 received++
             }
         }
-    } finally {
-        val time = (System.currentTimeMillis() - start).toDouble() / 1_000
-        val throughput = received / time
-        println("Received $received messages in $time seconds ($throughput messages/s)")
     }
+    val seconds = time.toDouble() / 1_000
+    val throughput = received / seconds
+    println("Received $received messages in $seconds seconds ($throughput messages/s)")
 }
