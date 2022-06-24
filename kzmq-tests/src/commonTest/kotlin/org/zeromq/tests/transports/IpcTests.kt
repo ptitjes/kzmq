@@ -7,9 +7,11 @@ package org.zeromq.tests.transports
 
 import io.kotest.core.spec.style.*
 import io.kotest.matchers.*
+import kotlinx.coroutines.*
 import org.zeromq.*
 import org.zeromq.tests.utils.*
 
+@Suppress("unused")
 class IpcTests : FunSpec({
 
     withEngines("bind-connect").config(skipEngines = listOf("jeromq")) { (ctx1, ctx2) ->
@@ -22,8 +24,10 @@ class IpcTests : FunSpec({
         val pull = ctx2.createPull()
         pull.connect(address)
 
-        push.send(message)
-        pull.receive() shouldBe message
+        coroutineScope {
+            launch { push.send(message) }
+            launch { pull.receive() shouldBe message }
+        }
     }
 
     withEngines("connect-bind").config(skipEngines = listOf("jeromq")) { (ctx1, ctx2) ->
@@ -36,7 +40,9 @@ class IpcTests : FunSpec({
         val pull = ctx2.createPull()
         pull.bind(address)
 
-        push.send(message)
-        pull.receive() shouldBe message
+        coroutineScope {
+            launch { push.send(message) }
+            launch { pull.receive() shouldBe message }
+        }
     }
 })

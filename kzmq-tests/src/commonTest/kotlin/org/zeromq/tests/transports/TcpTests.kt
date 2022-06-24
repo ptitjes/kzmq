@@ -11,6 +11,7 @@ import kotlinx.coroutines.*
 import org.zeromq.*
 import org.zeromq.tests.utils.*
 
+@Suppress("unused")
 class TcpTests : FunSpec({
 
     withEngines("bind-connect") { (ctx1, ctx2) ->

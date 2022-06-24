@@ -14,6 +14,7 @@ import kotlinx.coroutines.selects.*
 import org.zeromq.*
 import org.zeromq.tests.utils.*
 
+@Suppress("unused")
 class PushPullTests : FunSpec({
 
     withEngines("bind-connect") { (ctx1, ctx2) ->

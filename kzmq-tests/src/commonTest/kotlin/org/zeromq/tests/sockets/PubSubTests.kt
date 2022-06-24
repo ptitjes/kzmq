@@ -13,9 +13,8 @@ import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.selects.*
 import org.zeromq.*
 import org.zeromq.tests.utils.*
-import kotlin.test.*
 
-@Ignore
+@Suppress("unused")
 class PubSubTests : FunSpec({
 
     withEngines("bind-connect") { (ctx1, ctx2) ->
@@ -122,6 +121,36 @@ class PubSubTests : FunSpec({
                     }
                 }
                 received.sortedWith(MessageComparator) shouldContainExactly sent
+            }
+        }
+    }
+
+    withEngines("subscription filter") { (ctx1, ctx2) ->
+        val address = randomAddress()
+
+        val sent = listOf("prefixed data", "non-prefixed data", "prefix is good")
+        val expected = sent.filter { it.startsWith("prefix") }
+
+        val publisher = ctx1.createPublisher()
+        publisher.bind(address)
+
+        val subscriber = ctx2.createSubscriber()
+        subscriber.connect(address)
+        subscriber.subscribe("prefix")
+
+        waitForSubscriptions()
+
+        coroutineScope {
+            launch {
+                sent.forEach { publisher.send(Message(it.encodeToByteArray())) }
+            }
+
+            launch {
+                val received = mutableListOf<String>()
+                repeat(2) {
+                    received += subscriber.receive().singleOrThrow().decodeToString()
+                }
+                received shouldContainExactly expected
             }
         }
     }

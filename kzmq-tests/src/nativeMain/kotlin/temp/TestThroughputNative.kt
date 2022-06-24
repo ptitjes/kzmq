@@ -7,6 +7,7 @@ package temp
 
 import kotlinx.coroutines.*
 import org.zeromq.*
+import org.zeromq.internal.*
 import kotlin.system.*
 
 fun mainThroughput(): Unit = runBlocking {
@@ -55,7 +56,7 @@ private suspend fun Context.pull(
 
             while (received < messageCount) {
                 val message = receive()
-//              releaseMessage(message)
+                releaseMessage(message)
                 received++
             }
         }

@@ -11,48 +11,9 @@ import io.ktor.utils.io.*
 import io.ktor.utils.io.core.*
 import org.zeromq.*
 
-internal const val NULL: UByte = 0x00u
-
-internal const val signatureHeadByte: UByte = 0xffu
-internal const val signatureTrailByte: UByte = 0x7fu
-
-internal const val MAJOR_VERSION = 3
-internal const val MINOR_VERSION = 1
-
-internal const val AS_CLIENT: UByte = 0x00u
-internal const val AS_SERVER: UByte = 0x01u
-
-internal const val FLAG_MORE: UByte = 0x01u
-internal const val FLAG_LONG_SIZE: UByte = 0x02u
-internal const val FLAG_COMMAND: UByte = 0x04u
-
-private val signature =
-    ubyteArrayOf(
-        signatureHeadByte,
-        NULL,
-        NULL,
-        NULL,
-        NULL,
-        NULL,
-        NULL,
-        NULL,
-        NULL,
-        signatureTrailByte
-    )
-
-internal enum class Mechanism {
-    NULL,
-    PLAIN,
-    CURVE;
-
-    val bytes: ByteArray = name.encodeToByteArray()
-}
-
-private val filler = UByteArray(31) { NULL }
-
 internal suspend fun ByteWriteChannel.writeGreetingPart1() =
     writePacket {
-        writeFully(signature)
+        writeFully(SIGNATURE)
         writeUByte(MAJOR_VERSION.toUByte())
     }
 
@@ -61,7 +22,7 @@ internal suspend fun ByteWriteChannel.writeGreetingPart2(mechanism: Mechanism, a
         writeUByte(MINOR_VERSION.toUByte())
         writeMechanism(mechanism)
         writeUByte(if (asServer) AS_SERVER else AS_CLIENT)
-        writeFully(filler)
+        writeFully(FILLER)
     }
 
 private fun BytePacketBuilder.writeMechanism(mechanism: Mechanism) {
@@ -129,20 +90,20 @@ internal suspend fun ByteWriteChannel.writeCommand(command: PongCommand) = write
 
 private fun BytePacketBuilder.writeCommand(
     commandName: CommandName,
-    dataBuilder: BytePacketBuilder.() -> Unit
+    dataBuilder: BytePacketBuilder.() -> Unit,
 ) {
     val commandBody = buildPacket {
         writeShortString(commandName.bytes)
         dataBuilder()
     }
 
-    writeFrameHeader(FLAG_COMMAND, commandBody.remaining)
+    writeFrameHeader(ZmqFlags.command, commandBody.remaining)
     writePacket(commandBody)
 }
 
 private fun BytePacketBuilder.writeProperty(
     propertyName: PropertyName,
-    valueBytes: ByteArray
+    valueBytes: ByteArray,
 ) {
     writeShortString(propertyName.bytes)
     writeInt(valueBytes.size)
@@ -164,20 +125,22 @@ private suspend fun ByteWriteChannel.writeMessage(message: Message) = writePacke
 }
 
 private fun BytePacketBuilder.writeMessagePart(hasMore: Boolean, part: ByteArray) {
-    val messageFlag: UByte = if (hasMore) FLAG_MORE else NULL
-    writeFrameHeader(messageFlag, part.size.toLong())
+    val flags = if (hasMore) ZmqFlags.more else ZmqFlags.none
+    writeFrameHeader(flags, part.size.toLong())
     writeFully(part)
 }
 
-private fun BytePacketBuilder.writeFrameHeader(
-    flags: UByte,
-    size: Long
-) {
+private fun BytePacketBuilder.writeFrameHeader(flags: ZmqFlags, size: Long) {
     if (size <= 255) {
-        writeUByte(flags)
+        writeZmqFlags(flags)
         writeUByte(size.toUByte())
     } else {
-        writeUByte(flags or FLAG_LONG_SIZE)
+        writeZmqFlags(flags + ZmqFlags.longSize)
         writeULong(size.toULong())
     }
 }
+
+private fun BytePacketBuilder.writeZmqFlags(flags: ZmqFlags) {
+    writeUByte(flags.data)
+}
+

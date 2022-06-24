@@ -6,6 +6,7 @@
 package org.zeromq.internal
 
 import io.ktor.utils.io.*
+import io.ktor.utils.io.core.*
 import org.zeromq.*
 
 internal suspend fun ByteReadChannel.readGreetingPart1(): Int {
@@ -27,33 +28,30 @@ private suspend fun ByteReadChannel.readMechanism(): Mechanism {
     val bytes = readBytes(20)
     val fullString = bytes.decodeToString()
     val string = fullString.substring(0, fullString.indexOf('\u0000'))
-    return Mechanism.values().find { it.name == string }
-        ?: invalidFrame("Invalid security mechanism")
+    return Mechanism.values().find { it.name == string } ?: invalidFrame("Invalid security mechanism")
 }
 
 internal suspend fun ByteReadChannel.readCommandOrMessage(): CommandOrMessage {
-    val flags = readByte().toUByte()
-    return if (flags and FLAG_COMMAND == NULL) CommandOrMessage(readMessageContent(flags))
-    else CommandOrMessage(readCommandContent(flags))
+    val flags = readZmqFlags()
+    return if (flags.isCommand) CommandOrMessage(readCommandContent(flags))
+    else CommandOrMessage(readMessageContent(flags))
 }
 
 internal suspend fun ByteReadChannel.readCommand(): Command {
-    val flags = readByte().toUByte()
-    if (flags and FLAG_COMMAND == NULL) invalidFrame("Expected command")
+    val flags = readZmqFlags()
+    if (!flags.isCommand) invalidFrame("Expected command")
     return readCommandContent(flags)
 }
 
-private suspend fun ByteReadChannel.readCommandContent(flags: UByte): Command {
-    val shortSize = flags and FLAG_LONG_SIZE == NULL
-    val size = if (shortSize) {
-        readByte().toUByte().toLong()
+private suspend fun ByteReadChannel.readCommandContent(flags: ZmqFlags): Command {
+    val size = if (!flags.isLongSize) {
+        readUByte().toLong()
     } else {
         readLong().toULong().toLong()
     }
 
     val commandNameString = readShortString()
-    val commandName = CommandName.find(commandNameString)
-        ?: invalidFrame("Invalid command name: $commandNameString")
+    val commandName = CommandName.find(commandNameString) ?: invalidFrame("Invalid command name: $commandNameString")
 
     val remaining = size - (1 + commandNameString.length)
 
@@ -67,25 +65,24 @@ private suspend fun ByteReadChannel.readCommandContent(flags: UByte): Command {
     }
 }
 
-private suspend fun ByteReadChannel.readMessageContent(initialFlags: UByte): Message {
+private suspend fun ByteReadChannel.readMessageContent(initialFlags: ZmqFlags): Message {
     var flags = initialFlags
     val parts = mutableListOf<ByteArray>()
 
     do {
-        if (flags and FLAG_COMMAND != NULL) invalidFrame("Expected message")
+        if (flags.isCommand) invalidFrame("Expected message")
 
         parts.add(readMessagePartContent(flags))
 
-        val hasMore = flags and FLAG_MORE != NULL
-        if (hasMore) flags = readByte().toUByte()
-    } while (hasMore)
+        if (flags.isMore) flags = readZmqFlags()
+    } while (flags.isMore)
 
     return Message(parts)
 }
 
-private suspend fun ByteReadChannel.readMessagePartContent(flags: UByte): ByteArray {
-    val size = if (flags and FLAG_LONG_SIZE == NULL) {
-        readByte().toUByte().toLong()
+private suspend fun ByteReadChannel.readMessagePartContent(flags: ZmqFlags): ByteArray {
+    val size = if (!flags.isLongSize) {
+        readUByte().toLong()
     } else {
         readLong().toULong().toLong()
     }
@@ -96,9 +93,14 @@ private suspend fun ByteReadChannel.readMessagePartContent(flags: UByte): ByteAr
 }
 
 private suspend fun ByteReadChannel.readMessagePartBody(size: Int): ByteArray {
-    val bytes = borrowBuffer()
-    readFully(bytes, 0, size)
-    return bytes
+    return readMessagePartPacket(size).readBytes(size)
+//    val bytes = borrowBuffer()
+//    readFully(bytes, 0, size)
+//    return bytes
+}
+
+private suspend fun ByteReadChannel.readMessagePartPacket(size: Int): ByteReadPacket {
+    return readPacket(size)
 }
 
 private suspend fun ByteReadChannel.readProperties(dataSize: Long): Map<PropertyName, ByteArray> {
@@ -114,15 +116,14 @@ private suspend fun ByteReadChannel.readProperties(dataSize: Long): Map<Property
 
 private suspend fun ByteReadChannel.readProperty(): Pair<PropertyName, ByteArray> {
     val propertyNameString = readShortString()
-    val propertyName = PropertyName.find(propertyNameString)
-        ?: invalidFrame("Can't read property")
+    val propertyName = PropertyName.find(propertyNameString) ?: invalidFrame("Can't read property")
     val valueSize = readInt()
     val valueBytes = readBytes(valueSize)
     return propertyName to valueBytes
 }
 
 private suspend fun ByteReadChannel.readShortString(): String {
-    val size = readByte().toUByte().toInt()
+    val size = readUByte().toInt()
     return readBytes(size).decodeToString()
 }
 
@@ -131,3 +132,7 @@ private suspend fun ByteReadChannel.readBytes(size: Int): ByteArray {
     readFully(bytes)
     return bytes
 }
+
+private suspend inline fun ByteReadChannel.readUByte() = readByte().toUByte()
+
+private suspend inline fun ByteReadChannel.readZmqFlags() = ZmqFlags(readUByte())
