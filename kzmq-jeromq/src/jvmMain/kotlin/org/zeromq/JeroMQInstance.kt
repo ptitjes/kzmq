@@ -17,49 +17,17 @@ internal class JeroMQInstance private constructor(
         underlying.close()
     }
 
-    override fun createPair(): PairSocket = wrapping {
-        JeroMQPairSocket(newSocket(SocketType.PAIR))
-    }
-
-    override fun createPublisher(): PublisherSocket = wrapping {
-        JeroMQPublisherSocket(newSocket(SocketType.PUB))
-    }
-
-    override fun createSubscriber(): SubscriberSocket = wrapping {
-        JeroMQSubscriberSocket(newSocket(SocketType.SUB))
-    }
-
-    override fun createXPublisher(): XPublisherSocket {
-        TODO("Not yet implemented")
-    }
-
-    override fun createXSubscriber(): XSubscriberSocket {
-        TODO("Not yet implemented")
-    }
-
-    override fun createPush(): PushSocket = wrapping {
-        JeroMQPushSocket(newSocket(SocketType.PUSH))
-    }
-
-    override fun createPull(): PullSocket = wrapping {
-        JeroMQPullSocket(newSocket(SocketType.PULL))
-    }
-
-    override fun createRequest(): RequestSocket {
-        TODO("Not yet implemented")
-    }
-
-    override fun createReply(): ReplySocket {
-        TODO("Not yet implemented")
-    }
-
-    override fun createDealer(): DealerSocket {
-        TODO("Not yet implemented")
-    }
-
-    override fun createRouter(): RouterSocket {
-        TODO("Not yet implemented")
-    }
+    override fun createPair(): PairSocket = wrapping { JeroMQPairSocket(newSocket(SocketType.PAIR)) }
+    override fun createPublisher(): PublisherSocket = wrapping { JeroMQPublisherSocket(newSocket(SocketType.PUB)) }
+    override fun createSubscriber(): SubscriberSocket = wrapping { JeroMQSubscriberSocket(newSocket(SocketType.SUB)) }
+    override fun createXPublisher(): XPublisherSocket = TODO("Not yet implemented")
+    override fun createXSubscriber(): XSubscriberSocket = TODO("Not yet implemented")
+    override fun createPush(): PushSocket = wrapping { JeroMQPushSocket(newSocket(SocketType.PUSH)) }
+    override fun createPull(): PullSocket = wrapping { JeroMQPullSocket(newSocket(SocketType.PULL)) }
+    override fun createRequest(): RequestSocket = TODO("Not yet implemented")
+    override fun createReply(): ReplySocket = TODO("Not yet implemented")
+    override fun createDealer(): DealerSocket = TODO("Not yet implemented")
+    override fun createRouter(): RouterSocket = TODO("Not yet implemented")
 
     private fun newSocket(type: SocketType): ZMQ.Socket = underlying.createSocket(type)
 }
