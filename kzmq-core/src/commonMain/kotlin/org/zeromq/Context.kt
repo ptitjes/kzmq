@@ -10,15 +10,15 @@ import kotlin.coroutines.*
 
 fun CoroutineScope.Context(
     engine: Engine,
-    additionalContext: CoroutineContext = EmptyCoroutineContext
+    additionalContext: CoroutineContext = EmptyCoroutineContext,
 ): Context {
     val newContext = coroutineContext + additionalContext
     return Context(newContext, engine)
 }
 
 class Context internal constructor(
-    private val coroutineContext: CoroutineContext,
-    private val engine: Engine
+    coroutineContext: CoroutineContext,
+    engine: Engine,
 ) : AbstractCoroutineContextElement(Context), SocketFactory {
 
     private val instance: EngineInstance = engine.createInstance(coroutineContext)
@@ -40,5 +40,5 @@ class Context internal constructor(
     /**
      * Key for [Context] instance in the coroutine context.
      */
-    public companion object Key : CoroutineContext.Key<Context>
+    companion object Key : CoroutineContext.Key<Context>
 }
