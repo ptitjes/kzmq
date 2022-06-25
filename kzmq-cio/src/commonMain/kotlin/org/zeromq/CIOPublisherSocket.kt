@@ -85,7 +85,7 @@ import kotlin.coroutines.*
  */
 internal class CIOPublisherSocket(
     coroutineContext: CoroutineContext,
-    selectorManager: SelectorManager
+    selectorManager: SelectorManager,
 ) : CIOSocket(coroutineContext, selectorManager, Type.PUB, setOf(Type.SUB)),
     CIOSendSocket,
     PublisherSocket {
@@ -97,7 +97,7 @@ internal class CIOPublisherSocket(
     init {
         launch(CoroutineName("zmq-publisher")) {
             val peerMailboxes = hashSetOf<PeerMailbox>()
-            val subscriptions = Subscriptions()
+            var subscriptions = SubscriptionTrie<PeerMailbox>()
 
             while (isActive) {
                 select<Unit> {
@@ -117,9 +117,9 @@ internal class CIOPublisherSocket(
                     for (peerMailbox in peerMailboxes) {
                         peerMailbox.receiveChannel.onReceive { commandOrMessage ->
                             log { "handling $commandOrMessage from $peerMailbox" }
-                            when (val command = commandOrMessage.commandOrThrow()) {
-                                is SubscribeCommand -> subscriptions.add(peerMailbox, command.topic)
-                                is CancelCommand -> subscriptions.remove(peerMailbox, command.topic)
+                            subscriptions = when (val command = commandOrMessage.commandOrThrow()) {
+                                is SubscribeCommand -> subscriptions.add(command.topic, peerMailbox)
+                                is CancelCommand -> subscriptions.remove(command.topic, peerMailbox)
                                 else -> protocolError("Expected SUBSCRIBE or CANCEL, but got ${command.name}")
                             }
                         }
@@ -127,7 +127,7 @@ internal class CIOPublisherSocket(
 
                     sendChannel.onReceive { message ->
                         log { "dispatching $message" }
-                        subscriptions.forEachMatching(message) { peerMailbox ->
+                        subscriptions.forEachMatching(message.firstOrThrow()) { peerMailbox ->
                             log { "dispatching $message to $peerMailbox" }
                             peerMailbox.sendChannel.send(CommandOrMessage(message))
                         }
