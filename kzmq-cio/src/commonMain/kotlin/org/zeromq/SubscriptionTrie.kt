@@ -5,26 +5,37 @@
 
 package org.zeromq
 
+/**
+ * Represents a subscription trie.
+ *
+ * The subscription is a binary string that specifies what messages the subscriber wants. A
+ * subscription of “A” SHALL match all messages starting with “A”. An empty subscription SHALL
+ * match all messages.
+ *
+ * Subscriptions SHALL be additive and SHALL NOT be idempotent. That is, subscribing to “A” and "”
+ * is the same as subscribing to "” alone. Subscribing to “A” and “A” counts as two subscriptions,
+ * and would require two CANCEL commands to undo.
+ */
 internal data class SubscriptionTrie<T>(
     val subscriptions: Map<T, Int> = hashMapOf(),
     val children: Map<Byte, SubscriptionTrie<T>> = hashMapOf(),
 ) {
-    fun add(topic: ByteArray, element: T): SubscriptionTrie<T> = this.add(topic.iterator(), element)
+    fun add(prefix: ByteArray, element: T): SubscriptionTrie<T> = this.add(prefix.iterator(), element)
 
-    private fun add(bytes: ByteIterator, element: T): SubscriptionTrie<T> = if (bytes.hasNext()) {
-        val byte = bytes.nextByte()
-        val newChild = (children[byte] ?: SubscriptionTrie()).add(bytes, element)
+    private fun add(prefix: ByteIterator, element: T): SubscriptionTrie<T> = if (prefix.hasNext()) {
+        val byte = prefix.nextByte()
+        val newChild = (children[byte] ?: SubscriptionTrie()).add(prefix, element)
         this.copy(children = children + (byte to newChild))
     } else {
         val newCount = (subscriptions[element] ?: 0) + 1
         this.copy(subscriptions = subscriptions + (element to newCount))
     }
 
-    fun remove(topic: ByteArray, element: T): SubscriptionTrie<T> = this.remove(topic.iterator(), element)
+    fun remove(prefix: ByteArray, element: T): SubscriptionTrie<T> = this.remove(prefix.iterator(), element)
 
-    private fun remove(bytes: ByteIterator, element: T): SubscriptionTrie<T> = if (bytes.hasNext()) {
-        val byte = bytes.nextByte()
-        val newChild = (children[byte] ?: SubscriptionTrie()).remove(bytes, element)
+    private fun remove(prefix: ByteIterator, element: T): SubscriptionTrie<T> = if (prefix.hasNext()) {
+        val byte = prefix.nextByte()
+        val newChild = (children[byte] ?: SubscriptionTrie()).remove(prefix, element)
         val newChildren = children + (byte to newChild)
         this.copy(children = newChildren)
     } else {
@@ -36,12 +47,12 @@ internal data class SubscriptionTrie<T>(
         }
     }
 
-    suspend fun forEachMatching(topic: ByteArray, block: suspend (T) -> Unit) {
-        forEachMatching(topic.iterator(), mutableSetOf(), block)
+    suspend fun forEachMatching(content: ByteArray, block: suspend (T) -> Unit) {
+        forEachMatching(content.iterator(), mutableSetOf(), block)
     }
 
     private suspend fun forEachMatching(
-        bytes: ByteIterator,
+        content: ByteIterator,
         alreadyVisited: MutableSet<T>,
         block: suspend (T) -> Unit,
     ) {
@@ -52,9 +63,9 @@ internal data class SubscriptionTrie<T>(
             }
         }
 
-        if (bytes.hasNext()) {
-            val child = children[bytes.nextByte()] ?: return
-            child.forEachMatching(bytes, alreadyVisited, block)
+        if (content.hasNext()) {
+            val child = children[content.nextByte()] ?: return
+            child.forEachMatching(content, alreadyVisited, block)
         }
     }
 }

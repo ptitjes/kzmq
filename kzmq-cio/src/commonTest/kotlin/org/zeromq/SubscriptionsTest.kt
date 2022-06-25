@@ -11,36 +11,36 @@ import kotlin.test.*
 internal class SubscriptionsTest {
 
     @Test
-    fun `doesn't match null subscription`() = subscriptionTest("any", setOf<String>()) { it }
+    fun `doesn't match null subscription`() = subscriptionTest("any", setOf<Int>()) { it }
 
     @Test
-    fun `matches empty subscription`() = subscriptionTest("any", setOf("test")) {
-        it.add("", "test")
+    fun `matches empty subscription`() = subscriptionTest("any", setOf(1)) {
+        it.add("", 1)
     }
 
     @Test
-    fun `matches only prefixes`() = subscriptionTest("a", setOf("test1")) {
-        it.add("a", "test1").add("ab", "test2")
+    fun `matches only prefixes`() = subscriptionTest("a", setOf(1)) {
+        it.add("a", 1).add("ab", 2)
     }
 
     @Test
-    fun `matches all prefixes`() = subscriptionTest("abc", setOf("test1", "test2")) {
-        it.add("a", "test1").add("ab", "test2")
+    fun `matches all prefixes`() = subscriptionTest("abc", setOf(1, 2)) {
+        it.add("a", 1).add("ab", 2)
     }
 
     @Test
-    fun `matches multiple same subscriptions only once`() = subscriptionTest("abc", setOf("test1")) {
-        it.add("a", "test1").add("a", "test1")
+    fun `matches multiple same subscriptions only once`() = subscriptionTest("abc", setOf(1)) {
+        it.add("a", 1).add("a", 1)
     }
 
     @Test
-    fun `matches multiple subscriptions only once`() = subscriptionTest("abc", setOf("test1")) {
-        it.add("a", "test1").add("ab", "test1")
+    fun `matches multiple subscriptions only once`() = subscriptionTest("abc", setOf(1)) {
+        it.add("a", 1).add("ab", 1)
     }
 
     @Test
-    fun `multiple subscriptions are taken in account`() = subscriptionTest("abc", setOf("test1")) {
-        it.add("a", "test1").add("a", "test1").remove("a", "test1")
+    fun `multiple subscriptions are taken in account`() = subscriptionTest("abc", setOf(1)) {
+        it.add("a", 1).add("a", 1).remove("a", 1)
     }
 
     private fun <T> subscriptionTest(
@@ -62,9 +62,9 @@ internal class SubscriptionsTest {
         if (matched.values.isNotEmpty()) assertEquals(setOf(1), matched.values.toSet())
     }
 
-    private fun <T> SubscriptionTrie<T>.add(content: String, element: T) =
-        add(content.encodeToByteArray(), element)
+    private fun <T> SubscriptionTrie<T>.add(prefix: String, element: T) =
+        add(prefix.encodeToByteArray(), element)
 
-    private fun <T> SubscriptionTrie<T>.remove(content: String, element: T) =
-        remove(content.encodeToByteArray(), element)
+    private fun <T> SubscriptionTrie<T>.remove(prefix: String, element: T) =
+        remove(prefix.encodeToByteArray(), element)
 }
