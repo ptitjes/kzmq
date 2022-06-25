@@ -8,7 +8,7 @@ package org.zeromq
 import kotlinx.coroutines.test.*
 import kotlin.test.*
 
-internal class SubscriptionsTest {
+internal class SubscriptionTrieTest {
 
     @Test
     fun `doesn't match null subscription`() = subscriptionTest("any", setOf<Int>()) { it }
