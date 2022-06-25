@@ -17,16 +17,16 @@ internal class JeroMQInstance private constructor(
         underlying.close()
     }
 
+    override fun createPair(): PairSocket = wrapping {
+        JeroMQPairSocket(newSocket(SocketType.PAIR))
+    }
+
     override fun createPublisher(): PublisherSocket = wrapping {
         JeroMQPublisherSocket(newSocket(SocketType.PUB))
     }
 
     override fun createSubscriber(): SubscriberSocket = wrapping {
         JeroMQSubscriberSocket(newSocket(SocketType.SUB))
-    }
-
-    override fun createPair(): PairSocket {
-        TODO("Not yet implemented")
     }
 
     override fun createXPublisher(): XPublisherSocket {
