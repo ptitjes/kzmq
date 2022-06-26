@@ -74,8 +74,9 @@ private suspend fun ByteReadChannel.readMessageContent(initialFlags: ZmqFlags): 
 
         parts.add(readMessagePartContent(flags))
 
-        if (flags.isMore) flags = readZmqFlags()
-    } while (flags.isMore)
+        val hasMore = flags.isMore
+        if (hasMore) flags = readZmqFlags()
+    } while (hasMore)
 
     return Message(parts)
 }

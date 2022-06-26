@@ -31,8 +31,8 @@ internal class CIOInstance internal constructor(
     override fun createXSubscriber(): XSubscriberSocket = TODO("Not yet implemented")
     override fun createPush(): PushSocket = CIOPushSocket(childContext, selectorManager)
     override fun createPull(): PullSocket = CIOPullSocket(childContext, selectorManager)
-    override fun createRequest(): RequestSocket = TODO("Not yet implemented")
-    override fun createReply(): ReplySocket = TODO("Not yet implemented")
+    override fun createRequest(): RequestSocket = CIORequestSocket(childContext, selectorManager)
+    override fun createReply(): ReplySocket = CIOReplySocket(childContext, selectorManager)
     override fun createDealer(): DealerSocket = TODO("Not yet implemented")
     override fun createRouter(): RouterSocket = TODO("Not yet implemented")
 }
