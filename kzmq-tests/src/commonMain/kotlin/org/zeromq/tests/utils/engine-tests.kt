@@ -5,59 +5,36 @@
 
 package org.zeromq.tests.utils
 
-import io.kotest.core.*
-import io.kotest.core.names.*
 import io.kotest.core.spec.style.scopes.*
-import io.kotest.core.test.*
-import io.kotest.core.test.config.*
 import io.kotest.datatest.*
 import org.zeromq.*
-import kotlin.time.*
-import kotlin.time.Duration.Companion.seconds
 
 typealias EngineTest = suspend ContainerScope.(Pair<Context, Context>) -> Unit
 
 fun <T : RootScope> T.withEngines(name: String, test: EngineTest) =
     withEngines(name).config(test = test)
 
-fun <T : RootScope> T.withEngines(name: String): EngineTestBuilder<T> =
-    EngineTestBuilder<T>(name, false, this)
+fun <T : RootScope> T.withEngines(name: String): EngineTestBuilder =
+    EngineTestBuilder(name, this)
 
-class EngineTestBuilder<T>(
+class EngineTestBuilder(
     private val name: String,
-    private val disabled: Boolean,
     private val context: RootScope,
 ) {
-    fun config(
-        skipEngines: List<String> = listOf(),
-        enabled: Boolean? = null,
-        enabledIf: EnabledIf? = null,
-        enabledOrReasonIf: EnabledOrReasonIf? = null,
-        tags: Set<Tag>? = null,
-        timeout: Duration? = 10.seconds,
-        failfast: Boolean? = null,
-        test: EngineTest,
-    ) {
-        val config = UnresolvedTestConfig(
-            enabled = enabled,
-            enabledIf = enabledIf,
-            enabledOrReasonIf = enabledOrReasonIf,
-            tags = tags,
-            timeout = timeout,
-            failfast = failfast,
-        )
-
-        context.addContainer(TestName("context", name, false), disabled, config) {
-            runEngineTests(skipEngines, test)
-        }
+    fun config(skipEngines: List<String> = listOf(), test: EngineTest) {
+        context.runEngineTests(name, skipEngines, test)
     }
 }
 
-private suspend fun ContainerScope.runEngineTests(skipEngines: List<String>, test: EngineTest) {
+private fun RootScope.runEngineTests(
+    name: String,
+    skipEngines: List<String>,
+    test: EngineTest,
+) {
     val enginePairs = computeEnginePairs(skipEngines)
 
     withData(
-        nameFn = { (engine1, engine2) -> "(${engine1.name}, ${engine2.name})" },
+        nameFn = { (engine1, engine2) -> "$name (${engine1.name}, ${engine2.name})" },
         enginePairs,
     ) { (engine1, engine2) ->
         test(Context(engine1) to Context(engine2))
