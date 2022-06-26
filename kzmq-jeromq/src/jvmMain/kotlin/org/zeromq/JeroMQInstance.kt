@@ -24,8 +24,8 @@ internal class JeroMQInstance private constructor(
     override fun createXSubscriber(): XSubscriberSocket = TODO("Not yet implemented")
     override fun createPush(): PushSocket = wrapping { JeroMQPushSocket(newSocket(SocketType.PUSH)) }
     override fun createPull(): PullSocket = wrapping { JeroMQPullSocket(newSocket(SocketType.PULL)) }
-    override fun createRequest(): RequestSocket = TODO("Not yet implemented")
-    override fun createReply(): ReplySocket = TODO("Not yet implemented")
+    override fun createRequest(): RequestSocket = wrapping { JeroMQRequestSocket(newSocket(SocketType.REQ)) }
+    override fun createReply(): ReplySocket = wrapping { JeroMQReplySocket(newSocket(SocketType.REP)) }
     override fun createDealer(): DealerSocket = TODO("Not yet implemented")
     override fun createRouter(): RouterSocket = TODO("Not yet implemented")
 

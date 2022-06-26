@@ -15,7 +15,7 @@ import org.zeromq.*
 import org.zeromq.tests.utils.*
 
 @Suppress("unused")
-class PubSubTests : FunSpec({
+class PublisherSubscriberTests : FunSpec({
 
     withEngines("bind-connect") { (ctx1, ctx2) ->
         val address = randomAddress()
