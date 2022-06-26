@@ -5,5 +5,11 @@
 
 package org.zeromq.tests.utils
 
-actual fun findOpenPort(): Int =
-    TODO("Not supported on Js")
+import kotlinx.coroutines.*
+import kotlin.js.*
+
+actual suspend fun findOpenPort(): Int = findPort().await()
+
+@JsModule("find-open-port")
+@JsNonModule
+internal external fun findPort(): Promise<Int>

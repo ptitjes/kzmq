@@ -16,11 +16,11 @@ enum class Protocol {
     TCP,
 }
 
-fun randomAddress(protocol: Protocol = Protocol.TCP): String {
+suspend fun randomAddress(protocol: Protocol = Protocol.TCP): String {
     return when (protocol) {
         Protocol.INPROC -> "inproc://${randomAddressSuffix()}"
         Protocol.IPC -> "ipc:///tmp/${randomAddressSuffix()}"
-        Protocol.TCP -> "tcp://localhost:${findOpenPort()}"
+        Protocol.TCP -> "tcp://127.0.0.1:${findOpenPort()}"
     }
 }
 

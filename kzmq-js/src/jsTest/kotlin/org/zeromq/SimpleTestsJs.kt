@@ -7,13 +7,13 @@ package org.zeromq
 
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.test.*
 import kotlin.test.*
 
-@OptIn(DelicateCoroutinesApi::class)
 class SimpleTestsJs {
 
     @Test
-    fun testSimple() = runBlockingTest {
+    fun testSimple() = runTest {
         val context = Context(JS)
         val sent = "Hello 0MQ!".encodeToByteArray()
 
@@ -21,8 +21,13 @@ class SimpleTestsJs {
             val publisher = context.createPublisher()
             publisher.bind("inproc://testSimple")
 
-            delay(100)
+            withContext(Dispatchers.Default.limitedParallelism(1)) {
+                delay(100)
+            }
+
+            println("Before send")
             publisher.send(Message(sent))
+            println("Sent")
         }
 
         val subscription = launch {
@@ -30,7 +35,9 @@ class SimpleTestsJs {
             subscriber.connect("inproc://testSimple")
             subscriber.subscribe("")
 
+            println("Before receive")
             val received = subscriber.receive().singleOrThrow()
+            println("Received")
 
             assertEquals(sent.decodeToString(), received.decodeToString())
         }
@@ -40,7 +47,7 @@ class SimpleTestsJs {
     }
 
     @Test
-    fun testFlow() = runBlockingTest {
+    fun testFlow() = runTest {
         val context = Context(JS)
         val testFlow = flow { for (i in 0..9) emit(i.toString().encodeToByteArray()) }
 
@@ -48,7 +55,7 @@ class SimpleTestsJs {
             val publisher = context.createPublisher()
             publisher.bind("inproc://testFlow")
 
-            delay(100)
+            delay(1000)
             testFlow.map { Message(it) }.collectToSocket(publisher)
         }
 

@@ -10,7 +10,7 @@ import io.ktor.network.sockets.*
 
 private val TEST_SELECTOR_MANAGER = SelectorManager()
 
-actual fun findOpenPort(): Int =
+actual suspend fun findOpenPort(): Int =
     aSocket(TEST_SELECTOR_MANAGER).tcp().bind().use {
         val inetAddress = it.localAddress as? InetSocketAddress ?: error("Expected inet socket address")
         inetAddress.port
