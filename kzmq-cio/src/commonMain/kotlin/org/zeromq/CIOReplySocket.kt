@@ -79,13 +79,13 @@ internal class CIOReplySocket(
                 when (kind) {
                     PeerEventKind.ADDITION -> {
                         peerMailboxes.add(peerMailbox)
-                        log { "peer added $peerMailbox" }
+                        logger.d { "Peer added: $peerMailbox" }
                         forwardJobs.add(peerMailbox) { forwardRequests(peerMailbox) }
                     }
 
                     PeerEventKind.REMOVAL -> {
                         peerMailboxes.remove(peerMailbox)
-                        log { "peer removed $peerMailbox" }
+                        logger.d { "Peer removed: $peerMailbox" }
                         forwardJobs.remove(peerMailbox)
                     }
                 }
@@ -95,13 +95,13 @@ internal class CIOReplySocket(
             while (isActive) {
                 val (peerMailbox, request) = requestsChannel.receive()
 
-                log { "received request $request from $peerMailbox" }
+                logger.d { "Received request $request from $peerMailbox" }
                 val (identities, requestData) = extractAddress(request)
                 receiveChannel.send(requestData)
 
                 val replyData = sendChannel.receive()
                 val reply = prependAddress(replyData, identities)
-                log { "sending reply $reply back to $peerMailbox" }
+                logger.d { "Sending reply $reply back to $peerMailbox" }
                 peerMailbox.sendChannel.send(CommandOrMessage(reply))
             }
         }
@@ -110,7 +110,7 @@ internal class CIOReplySocket(
     private fun forwardRequests(peerMailbox: PeerMailbox) = launch {
         while (isActive) {
             val message = peerMailbox.receiveChannel.receive().messageOrThrow()
-            log { "forwarding request $message from $peerMailbox" }
+            logger.d { "Forwarding request $message from $peerMailbox" }
             requestsChannel.send(peerMailbox to message)
         }
     }

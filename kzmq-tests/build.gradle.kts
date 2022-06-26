@@ -75,6 +75,7 @@ kotlin {
         val jvmTest by getting {
             dependencies {
                 implementation("io.kotest:kotest-runner-junit5:$kotestVersion")
+                runtimeOnly("org.slf4j:slf4j-simple:1.7.36")
             }
         }
 

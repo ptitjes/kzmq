@@ -99,33 +99,32 @@ internal class CIOSubscriberSocket(
                         when (kind) {
                             PeerEventKind.ADDITION -> {
                                 peerMailboxes.add(peerMailbox)
-                                log { "peer added $peerMailbox" }
+                                logger.d { "Peer added: $peerMailbox" }
 
                                 for (subscription in subscriptions) {
-                                    log { "sending subscription ${subscription.contentToString()} to $peerMailbox" }
+                                    logger.d { "Sending subscription ${subscription.contentToString()} to $peerMailbox" }
                                     peerMailbox.sendChannel.send(
                                         CommandOrMessage(SubscribeCommand(subscription))
                                     )
-                                    log { "sent subscription ${subscription.contentToString()} to $peerMailbox" }
                                 }
                             }
                             PeerEventKind.REMOVAL -> {
                                 peerMailboxes.remove(peerMailbox)
-                                log { "peer removed $peerMailbox" }
+                                logger.d { "Peer removed: $peerMailbox" }
                             }
                         }
                     }
 
                     lateSubscriptionCommands.onReceive { command ->
                         for (peerMailbox in peerMailboxes) {
-                            log { "sending late subscription $command to $peerMailbox" }
+                            logger.d { "Sending late subscription $command to $peerMailbox" }
                             peerMailbox.sendChannel.send(CommandOrMessage(command))
                         }
                     }
 
                     for (peerMailbox in peerMailboxes) {
                         peerMailbox.receiveChannel.onReceive { commandOrMessage ->
-                            log { "receiving $commandOrMessage from $peerMailbox" }
+                            logger.d { "Receiving $commandOrMessage from $peerMailbox" }
                             val message = commandOrMessage.messageOrThrow()
                             receiveChannel.send(message)
                         }

@@ -69,12 +69,12 @@ internal class CIOPushSocket(
                 when (kind) {
                     PeerEventKind.ADDITION -> {
                         peerMailboxes.add(peerMailbox)
-                        log { "peer added $peerMailbox" }
+                        logger.d { "Peer added: $peerMailbox" }
                         forwardJobs.add(peerMailbox) { forwardTo(peerMailbox) }
                     }
                     PeerEventKind.REMOVAL -> {
                         peerMailboxes.remove(peerMailbox)
-                        log { "peer removed $peerMailbox" }
+                        logger.d { "Peer removed: $peerMailbox" }
                         forwardJobs.remove(peerMailbox)
                     }
                 }
@@ -85,7 +85,7 @@ internal class CIOPushSocket(
     private fun forwardTo(peerMailbox: PeerMailbox) = launch {
         while (isActive) {
             val message = sendChannel.receive()
-            log { "sending $message to $peerMailbox" }
+            logger.d { "Sending $message to $peerMailbox" }
             peerMailbox.sendChannel.send(CommandOrMessage(message))
         }
     }

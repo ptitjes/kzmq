@@ -105,18 +105,19 @@ internal class CIOPublisherSocket(
                         when (kind) {
                             PeerEventKind.ADDITION -> {
                                 peerMailboxes.add(peerMailbox)
-                                log { "peer added $peerMailbox" }
+                                logger.d { "Peer added: $peerMailbox" }
                             }
+
                             PeerEventKind.REMOVAL -> {
                                 peerMailboxes.remove(peerMailbox)
-                                log { "peer removed $peerMailbox" }
+                                logger.d { "Peer removed: $peerMailbox" }
                             }
                         }
                     }
 
                     for (peerMailbox in peerMailboxes) {
                         peerMailbox.receiveChannel.onReceive { commandOrMessage ->
-                            log { "handling $commandOrMessage from $peerMailbox" }
+                            logger.d { "Handling $commandOrMessage from $peerMailbox" }
                             subscriptions = when (val command = commandOrMessage.commandOrThrow()) {
                                 is SubscribeCommand -> subscriptions.add(command.topic, peerMailbox)
                                 is CancelCommand -> subscriptions.remove(command.topic, peerMailbox)
@@ -126,9 +127,8 @@ internal class CIOPublisherSocket(
                     }
 
                     sendChannel.onReceive { message ->
-                        log { "dispatching $message" }
                         subscriptions.forEachMatching(message.firstOrThrow()) { peerMailbox ->
-                            log { "dispatching $message to $peerMailbox" }
+                            logger.d { "Dispatching $message to $peerMailbox" }
                             peerMailbox.sendChannel.send(CommandOrMessage(message))
                         }
                     }

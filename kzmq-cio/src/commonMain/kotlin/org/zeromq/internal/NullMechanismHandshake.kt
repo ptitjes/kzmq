@@ -12,18 +12,18 @@ internal suspend fun nullMechanismHandshake(
     socketType: Type,
     isServer: Boolean,
     input: ByteReadChannel,
-    output: ByteWriteChannel
+    output: ByteWriteChannel,
 ): Map<PropertyName, ByteArray> {
     return if (isServer) {
-        log { "----- Expecting READY command" }
+        logger.t { "Expecting READY command" }
         val properties = expectReadyCommand(input)
-        log { "----- Sending READY command" }
+        logger.t { "Sending READY command" }
         output.sendReadyCommand(socketType)
         properties
     } else {
-        log { "----- Sending READY command" }
+        logger.t { "Sending READY command" }
         output.sendReadyCommand(socketType)
-        log { "----- Expecting READY command" }
+        logger.t { "Expecting READY command" }
         expectReadyCommand(input)
     }
 }

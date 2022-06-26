@@ -66,20 +66,20 @@ internal class CIOPairSocket(
             var forwardJob: Job? = null
 
             while (isActive) {
-                val (kind, mailbox) = peerEvents.receive()
+                val (kind, peerMailbox) = peerEvents.receive()
                 when (kind) {
                     PeerEventKind.ADDITION -> {
                         // FIXME what should we do if it already has a peer?
                         if (forwardJob != null) continue
 
-                        log { "peer added $mailbox" }
-                        forwardJob = forwardJob(mailbox)
+                        logger.d { "Peer added: $peerMailbox" }
+                        forwardJob = forwardJob(peerMailbox)
                     }
 
                     PeerEventKind.REMOVAL -> {
                         if (forwardJob == null) continue
 
-                        log { "peer removed $mailbox" }
+                        logger.d { "Peer removed: $peerMailbox" }
                         forwardJob.cancel()
                         forwardJob = null
                     }
@@ -92,15 +92,17 @@ internal class CIOPairSocket(
         launch {
             while (isActive) {
                 val message = sendChannel.receive()
-                log { "sending $message to $mailbox" }
+                logger.d { "Sending $message to $mailbox" }
                 mailbox.sendChannel.send(CommandOrMessage(message))
             }
         }
         launch {
-            val commandOrMessage = mailbox.receiveChannel.receive()
-            val message = commandOrMessage.messageOrThrow()
-            log { "receiving $message from $mailbox" }
-            receiveChannel.send(message)
+            while (isActive) {
+                val commandOrMessage = mailbox.receiveChannel.receive()
+                val message = commandOrMessage.messageOrThrow()
+                logger.d { "Receiving $message from $mailbox" }
+                receiveChannel.send(message)
+            }
         }
     }
 }

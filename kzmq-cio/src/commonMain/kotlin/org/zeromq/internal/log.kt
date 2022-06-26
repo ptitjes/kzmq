@@ -5,4 +5,9 @@
 
 package org.zeromq.internal
 
-internal expect fun log(message: () -> String)
+import mu.*
+
+internal val logger = KotlinLogging.logger {}
+
+fun KLogger.d(msg: () -> Any?) = this.debug(msg)
+fun KLogger.t(msg: () -> Any?) = this.trace(msg)

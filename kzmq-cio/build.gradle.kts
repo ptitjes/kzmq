@@ -5,6 +5,7 @@
 
 val kotlinxCoroutinesVersion: String by project
 val ktorVersion: String by project
+val kotlinLoggingVersion: String by project
 
 val mingwPath = File(System.getenv("MINGW64_DIR") ?: "C:/msys64/mingw64")
 
@@ -33,6 +34,7 @@ kotlin {
                 implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:$kotlinxCoroutinesVersion")
                 implementation("io.ktor:ktor-io:$ktorVersion")
                 implementation("io.ktor:ktor-network:$ktorVersion")
+                implementation("io.github.microutils:kotlin-logging:$kotlinLoggingVersion")
                 implementation(project(":kzmq-core"))
             }
         }

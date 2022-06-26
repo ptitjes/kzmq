@@ -75,13 +75,13 @@ internal class CIORequestSocket(
                 when (kind) {
                     PeerEventKind.ADDITION -> {
                         peerMailboxes.add(peerMailbox)
-                        log { "peer added $peerMailbox" }
+                        logger.d { "Peer added: $peerMailbox" }
                         forwardJobs.add(peerMailbox) { dispatchRequestsReplies(peerMailbox) }
                     }
 
                     PeerEventKind.REMOVAL -> {
                         peerMailboxes.remove(peerMailbox)
-                        log { "peer removed $peerMailbox" }
+                        logger.d { "Peer removed: $peerMailbox" }
                         forwardJobs.remove(peerMailbox)
                     }
                 }
@@ -92,17 +92,17 @@ internal class CIORequestSocket(
                 val (peerMailbox, requestData) = requestsChannel.receive()
 
                 val request = prependAddress(requestData)
-                log { "sending request $request to $peerMailbox" }
+                logger.d { "Sending request $request to $peerMailbox" }
                 peerMailbox.sendChannel.send(CommandOrMessage(request))
 
                 while (isActive) {
                     val (otherPeerMailbox, reply) = repliesChannel.receive()
                     if (otherPeerMailbox != peerMailbox) {
-                        log { "ignoring reply $reply from $otherPeerMailbox" }
+                        logger.d { "Ignoring reply $reply from $otherPeerMailbox" }
                         continue
                     }
 
-                    log { "sending back reply $reply from $peerMailbox" }
+                    logger.d { "Sending back reply $reply from $peerMailbox" }
                     val (_, replyData) = extractAddress(reply)
                     receiveChannel.send(replyData)
                     break
@@ -115,14 +115,14 @@ internal class CIORequestSocket(
         launch {
             while (isActive) {
                 val request = sendChannel.receive()
-                log { "dispatching request $request to $peerMailbox" }
+                logger.d { "Dispatching request $request to $peerMailbox" }
                 requestsChannel.send(peerMailbox to request)
             }
         }
         launch {
             while (isActive) {
                 val reply = peerMailbox.receiveChannel.receive().messageOrThrow()
-                log { "dispatching reply $reply from $peerMailbox" }
+                logger.d { "Dispatching reply $reply from $peerMailbox" }
                 repliesChannel.send(peerMailbox to reply)
             }
         }

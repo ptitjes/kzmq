@@ -60,7 +60,7 @@ internal class PeerManager(
             val mailbox = PeerMailbox(remoteEndpoint, socketOptions)
             val messageHandler = messageHandlerFactory()
 
-            log { "Accepting peer $mailbox" }
+            logger.d { "Accepting peer $mailbox" }
             try {
                 val peerSocket = PeerSocket(socketType, mailbox, messageHandler, socket)
                 peerSocket.handleInitialization(true, peerSocketTypes)
@@ -72,7 +72,7 @@ internal class PeerManager(
                     notifyUnavailable(mailbox)
                 }
             } catch (t: Throwable) {
-                log { "Peer disconnected [${t.message}]" }
+                logger.d { "Peer disconnected [${t.message}]" }
             } finally {
                 socket.close()
             }
@@ -102,7 +102,7 @@ internal class PeerManager(
                         peerSocket.handleInitialization(false, peerSocketTypes)
                         peerSocket.handleTraffic()
                     } catch (t: Throwable) {
-                        log { "Failed to connect [${t.message}]" }
+                        logger.d { "Failed to connect [${t.message}]" }
                     } finally {
                         socket?.close()
                     }
@@ -115,12 +115,12 @@ internal class PeerManager(
         }
 
     private suspend fun notifyAvailable(peerMailbox: PeerMailbox) {
-        log { "Notifying peer available $peerMailbox" }
+        logger.d { "Notifying peer available $peerMailbox" }
         _peerEvents.send(PeerEvent(PeerEventKind.ADDITION, peerMailbox))
     }
 
     private suspend fun notifyUnavailable(peerMailbox: PeerMailbox) {
-        log { "Notifying peer unavailable $peerMailbox" }
+        logger.d { "Notifying peer unavailable $peerMailbox" }
         _peerEvents.send(PeerEvent(PeerEventKind.REMOVAL, peerMailbox))
     }
 }

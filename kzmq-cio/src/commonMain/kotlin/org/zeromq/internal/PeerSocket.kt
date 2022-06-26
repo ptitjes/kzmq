@@ -22,18 +22,18 @@ internal class PeerSocket(
     private var peerMinorVersion: Int = 1
 
     suspend fun handleInitialization(isServer: Boolean, peerSocketTypes: Set<Type>) {
-        log { "--- Writing greeting part 1" }
+        logger.t { "Writing greeting part 1" }
         output.writeGreetingPart1()
 
-        log { "--- Reading greeting part 1" }
+        logger.t { "Reading greeting part 1" }
         val peerMajorVersion = input.readGreetingPart1()
         if (peerMajorVersion != 3)
             protocolError("Incompatible version $peerMajorVersion.x")
 
-        log { "--- Writing greeting part 2" }
+        logger.t { "Writing greeting part 2" }
         output.writeGreetingPart2(Mechanism.NULL, false)
 
-        log { "--- Reading greeting part 2" }
+        logger.t { "Reading greeting part 2" }
         val (peerMinorVersion, peerSecuritySpec) = input.readGreetingPart2()
 
         val properties = when (peerSecuritySpec.mechanism) {
@@ -44,7 +44,7 @@ internal class PeerSocket(
         validateSocketType(properties, peerSocketTypes)
 
         this.peerMinorVersion = peerMinorVersion
-        log { "--- Finished initialization (peerMinorVersion: $peerMinorVersion)" }
+        logger.t { "Finished initialization (peerMinorVersion: $peerMinorVersion)" }
     }
 
     suspend fun handleTraffic(): Unit = coroutineScope {
@@ -68,7 +68,7 @@ internal class PeerSocket(
             transformSubscriptionMessages(raw)
         } else raw
 
-        log { "Read: $incoming" }
+        logger.t { "Read: $incoming" }
         return incoming
     }
 
@@ -80,7 +80,7 @@ internal class PeerSocket(
 
         output.writeCommandOrMessage(transformed)
 
-        log { "Wrote: $outgoing" }
+        logger.t { "Wrote: $outgoing" }
     }
 }
 
@@ -109,8 +109,10 @@ private fun transformSubscriptionCommands(commandOrMessage: CommandOrMessage): C
         when (val command = commandOrMessage.commandOrThrow()) {
             is SubscribeCommand ->
                 CommandOrMessage(buildSubscriptionMessage(true, command.topic))
+
             is CancelCommand ->
                 CommandOrMessage(buildSubscriptionMessage(false, command.topic))
+
             else -> commandOrMessage
         }
     } else commandOrMessage
@@ -125,7 +127,7 @@ private fun buildSubscriptionMessage(subscribe: Boolean, topic: ByteArray): Mess
 
 private fun validateSocketType(
     properties: Map<PropertyName, ByteArray>,
-    peerSocketTypes: Set<Type>
+    peerSocketTypes: Set<Type>,
 ) {
     val socketTypeProperty = (properties[PropertyName.SOCKET_TYPE]
         ?: protocolError("No socket type property in metadata"))
