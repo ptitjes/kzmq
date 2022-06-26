@@ -36,6 +36,4 @@ subprojects {
 
 println("Using Kotlin compiler version: ${org.jetbrains.kotlin.config.KotlinCompilerVersion.VERSION}")
 
-tasks.withType<org.jetbrains.dokka.gradle.DokkaMultiModuleTask> {
-    outputDirectory.set(buildDir.resolve("dokkaCustomMultiModuleOutput"))
-}
+apply(plugin = "org.jetbrains.dokka")

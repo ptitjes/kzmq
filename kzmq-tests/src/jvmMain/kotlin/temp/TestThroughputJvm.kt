@@ -7,7 +7,6 @@ package temp
 
 import kotlinx.coroutines.*
 import org.zeromq.*
-import org.zeromq.internal.*
 
 fun main(): Unit = runBlocking {
     val dispatcher = Dispatchers.IO
@@ -59,7 +58,7 @@ private suspend fun Context.pull(
 
             while (received < messageCount) {
                 val message = receive()
-                releaseMessage(message)
+//                releaseMessage(message)
                 received++
             }
         }
@@ -67,6 +66,6 @@ private suspend fun Context.pull(
         val time = (System.currentTimeMillis() - start).toDouble() / 1_000
         val throughput = received / time
         println("Received $received messages in $time seconds ($throughput messages/s)")
-        displayStats()
+//        displayStats()
     }
 }

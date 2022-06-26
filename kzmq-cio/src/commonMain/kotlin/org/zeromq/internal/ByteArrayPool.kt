@@ -19,9 +19,9 @@ internal val ByteArrayPool: ObjectPool<ByteArray> =
         override fun produceInstance(): ByteArray = ByteArray(BYTE_BUFFER_ARRAY_LENGTH)
     }
 
-var count = 0
-var borrows = 0
-var releases = 0
+private var count = 0
+private var borrows = 0
+private var releases = 0
 
 private const val WARN_COUNT = 2000
 
@@ -32,7 +32,7 @@ internal fun borrowBuffer(): ByteArray {
     return ByteArrayPool.borrow()
 }
 
-fun releaseMessage(message: Message) {
+internal fun releaseMessage(message: Message) {
     for (bytes in message.parts) {
         ByteArrayPool.recycle(bytes)
         count--
@@ -41,6 +41,6 @@ fun releaseMessage(message: Message) {
     }
 }
 
-fun displayStats() {
+internal fun displayStats() {
     println("borrowed: $count; totalBorrowed: $borrows; totalReleases: $releases; pool capacity: ${ByteArrayPool.capacity}")
 }

@@ -15,14 +15,14 @@ package org.zeromq.internal.zeromqjs
 import Buffer
 import kotlin.js.Promise
 
-external interface `T$1` {
+internal external interface `T$1` {
     var publicKey: String
     var secretKey: String
 }
 
-external fun curveKeyPair(): `T$1`
+internal external fun curveKeyPair(): `T$1`
 
-external open class Context() {
+internal open external class Context() {
     open var blocky: Boolean
     open var ioThreads: Number
     open var maxMessageSize: Number
@@ -37,27 +37,27 @@ external open class Context() {
     open fun setInt32Option(option: Number, value: Number)
 }
 
-typealias ErrnoError = Error
+internal typealias ErrnoError = Error
 
-typealias AuthError = Error
+internal typealias AuthError = Error
 
-typealias ProtoError = Error
+internal typealias ProtoError = Error
 
-external interface EventAddress {
+internal external interface EventAddress {
     var address: String
 }
 
-external interface EventInterval {
+internal external interface EventInterval {
     var interval: Number
 }
 
-external interface EventError<E> {
+internal external interface EventError<E> {
     var error: E
 }
 
-external interface EventError__0 : EventError<ErrnoError>
+internal external interface EventError__0 : EventError<ErrnoError>
 
-external interface `T$2`<T> {
+internal external interface `T$2`<T> {
     var type: T
 }
 
@@ -76,7 +76,7 @@ external interface `T$2`<T> {
 //    open fun receive(): Promise<dynamic /* EventFor<String /* "accept" */, EventAddress> | EventFor<String /* "accept:error" */, EventAddress /* EventAddress & EventError__0 */> | EventFor<String /* "bind" */, EventAddress> | EventFor<String /* "bind:error" */, EventAddress /* EventAddress & EventError__0 */> | EventFor<String /* "connect" */, EventAddress> | EventFor<String /* "connect:delay" */, EventAddress> | EventFor<String /* "connect:retry" */, EventAddress /* EventAddress & EventInterval */> | EventFor<String /* "close" */, EventAddress> | EventFor<String /* "close:error" */, EventAddress /* EventAddress & EventError__0 */> | EventFor<String /* "disconnect" */, EventAddress> | EventFor<String /* "end" */> | EventFor<String /* "handshake" */, EventAddress> | EventFor<String /* "handshake:error:protocol" */, EventAddress /* EventAddress & EventError<ProtoError> */> | EventFor<String /* "handshake:error:auth" */, EventAddress /* EventAddress & EventError<AuthError> */> | EventFor<String /* "handshake:error:other" */, EventAddress /* EventAddress & EventError__0 */> | EventFor<String /* "unknown" */> */>
 //}
 
-external open class Proxy<F : Socket, B : Socket>(frontEnd: F, backEnd: B) {
+internal open external class Proxy<F : Socket, B : Socket>(frontEnd: F, backEnd: B) {
     open var frontEnd: F
     open var backEnd: B
     open fun run(): Promise<Unit>
@@ -85,7 +85,7 @@ external open class Proxy<F : Socket, B : Socket>(frontEnd: F, backEnd: B) {
     open fun terminate()
 }
 
-external open class Socket(type: SocketType, options: Any = definedExternally) {
+internal open external class Socket(type: SocketType, options: Any = definedExternally) {
     open var affinity: Number
     open var rate: Number
     open var recoveryInterval: Number
@@ -161,7 +161,7 @@ external open class Socket(type: SocketType, options: Any = definedExternally) {
     open fun setStringOption(option: Number, value: Buffer?)
 }
 
-external enum class SocketType {
+internal external enum class SocketType {
     Pair /* = 0 */,
     Publisher /* = 1 */,
     Subscriber /* = 2 */,

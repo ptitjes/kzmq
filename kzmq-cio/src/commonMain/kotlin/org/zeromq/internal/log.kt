@@ -9,5 +9,5 @@ import mu.*
 
 internal val logger = KotlinLogging.logger {}
 
-fun KLogger.d(msg: () -> Any?) = this.debug(msg)
-fun KLogger.t(msg: () -> Any?) = this.trace(msg)
+internal fun KLogger.d(msg: () -> Any?) = this.debug(msg)
+internal fun KLogger.t(msg: () -> Any?) = this.trace(msg)

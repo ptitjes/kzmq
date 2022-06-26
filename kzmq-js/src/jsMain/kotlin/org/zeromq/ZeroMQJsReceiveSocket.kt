@@ -9,7 +9,7 @@ import kotlinx.coroutines.*
 import kotlinx.coroutines.selects.*
 import org.zeromq.internal.zeromqjs.*
 
-class ZeroMQJsReceiveSocket(private val underlying: Readable) : ReceiveSocket {
+internal class ZeroMQJsReceiveSocket(private val underlying: Readable) : ReceiveSocket {
 
     override suspend fun receive(): Message =
         Message(underlying.receive().await().map { it.toByteArray() })

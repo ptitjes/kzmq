@@ -18,7 +18,7 @@ package org.zeromq.internal.zeromqjs
 import Buffer
 import kotlin.js.Promise
 
-external interface Writable {
+internal external interface Writable {
     var multicastHops: Int
     var sendBufferSize: Int
     var sendHighWaterMark: Int
@@ -26,23 +26,23 @@ external interface Writable {
     fun send(message: Array<Buffer>): Promise<Unit>
 }
 
-external interface Readable {
+internal external interface Readable {
     var receiveBufferSize: Int
     var receiveHighWaterMark: Int
     var receiveTimeout: Int
     fun receive(): Promise<Array<Buffer>>
 }
 
-external interface `T$0` {
+internal external interface `T$0` {
     var context: Context
 }
 
-//external interface EventSubscriber {
+//internal external interface EventSubscriber {
 //    fun <E : Any> on(type: E, listener: (data: EventOfType<E>) -> Unit): EventSubscriber
 //    fun <E : Any> off(type: E, listener: (data: EventOfType<E>) -> Unit): EventSubscriber
 //}
 
-external open class Pair() : Socket, Writable,
+internal open external class Pair() : Socket, Writable,
     Readable {
     override var multicastHops: Int
     override var sendBufferSize: Int
@@ -55,7 +55,7 @@ external open class Pair() : Socket, Writable,
     override fun receive(): Promise<Array<Buffer>>
 }
 
-external open class Publisher() : Socket,
+internal open external class Publisher() : Socket,
     Writable {
     override var multicastHops: Int
     override var sendBufferSize: Int
@@ -67,7 +67,7 @@ external open class Publisher() : Socket,
     open var invertMatching: Boolean
 }
 
-external open class Subscriber() : Socket,
+internal open external class Subscriber() : Socket,
     Readable {
     override var receiveBufferSize: Int
     override var receiveHighWaterMark: Int
@@ -79,7 +79,7 @@ external open class Subscriber() : Socket,
     open fun unsubscribe(vararg prefixes: Any /* Buffer | String */)
 }
 
-external open class Request() : Socket, Readable,
+internal open external class Request() : Socket, Readable,
     Writable {
     override var receiveBufferSize: Int
     override var receiveHighWaterMark: Int
@@ -96,7 +96,7 @@ external open class Request() : Socket, Readable,
     open var relaxed: Boolean
 }
 
-external open class Reply() : Socket, Readable,
+internal open external class Reply() : Socket, Readable,
     Writable {
     override var receiveBufferSize: Int
     override var receiveHighWaterMark: Int
@@ -110,7 +110,7 @@ external open class Reply() : Socket, Readable,
     open var routingId: String?
 }
 
-external open class Dealer() : Socket, Readable,
+internal open external class Dealer() : Socket, Readable,
     Writable {
     override var receiveBufferSize: Int
     override var receiveHighWaterMark: Int
@@ -126,7 +126,7 @@ external open class Dealer() : Socket, Readable,
     open var conflate: Boolean
 }
 
-external open class Router() : Socket, Readable,
+internal open external class Router() : Socket, Readable,
     Writable {
     override var receiveBufferSize: Int
     override var receiveHighWaterMark: Int
@@ -144,13 +144,13 @@ external open class Router() : Socket, Readable,
     open fun connect(address: String, options: RouterConnectOptions = definedExternally)
 }
 
-external interface RouterConnectOptions {
+internal external interface RouterConnectOptions {
     var routingId: String?
         get() = definedExternally
         set(value) = definedExternally
 }
 
-external open class Pull() : Socket, Readable {
+internal open external class Pull() : Socket, Readable {
     override var receiveBufferSize: Int
     override var receiveHighWaterMark: Int
     override var receiveTimeout: Int
@@ -158,7 +158,7 @@ external open class Pull() : Socket, Readable {
     open var conflate: Boolean
 }
 
-external open class Push() : Socket, Writable {
+internal open external class Push() : Socket, Writable {
     override var multicastHops: Int
     override var sendBufferSize: Int
     override var sendHighWaterMark: Int
@@ -167,7 +167,7 @@ external open class Push() : Socket, Writable {
     open var conflate: Boolean
 }
 
-external open class XPublisher() : Socket,
+internal open external class XPublisher() : Socket,
     Readable, Writable {
     override var receiveBufferSize: Int
     override var receiveHighWaterMark: Int
@@ -184,7 +184,7 @@ external open class XPublisher() : Socket,
     open var invertMatching: Boolean
 }
 
-external open class XSubscriber() : Socket,
+internal open external class XSubscriber() : Socket,
     Readable, Writable {
     override var receiveBufferSize: Int
     override var receiveHighWaterMark: Int

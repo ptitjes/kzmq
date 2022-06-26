@@ -8,7 +8,6 @@ package temp
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.*
 import org.zeromq.*
-import org.zeromq.internal.*
 
 fun main(): Unit = runBlocking {
     val dispatcher = Dispatchers.IO
@@ -59,7 +58,7 @@ private suspend fun Channel<Message>.pull(
     try {
         while (received < messageCount) {
             val message = receive()
-            releaseMessage(message)
+//            releaseMessage(message)
             received++
         }
     } finally {

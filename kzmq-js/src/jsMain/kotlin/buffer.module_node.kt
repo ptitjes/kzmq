@@ -3,4 +3,4 @@
  * Use of this source code is governed by the Apache 2.0 license.
  */
 
-external class Buffer
+internal external class Buffer

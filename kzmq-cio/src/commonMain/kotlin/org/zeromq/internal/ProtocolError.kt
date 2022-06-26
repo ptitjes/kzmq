@@ -10,4 +10,4 @@ internal open class ProtocolError(
     override val cause: Throwable? = null
 ) : Throwable(message, cause)
 
-fun protocolError(message: String): Nothing = throw ProtocolError(message)
+internal fun protocolError(message: String): Nothing = throw ProtocolError(message)
