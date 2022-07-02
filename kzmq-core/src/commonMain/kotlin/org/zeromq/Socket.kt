@@ -25,7 +25,7 @@ interface Socket {
      *
      * @param endpoint the endpoint to bind to
      */
-    fun bind(endpoint: String)
+    suspend fun bind(endpoint: String)
 
     /**
      * Unbinds to the endpoint.
@@ -36,7 +36,7 @@ interface Socket {
      *
      * @param endpoint the endpoint to unbind from
      */
-    fun unbind(endpoint: String)
+    suspend fun unbind(endpoint: String)
 
     /**
      * Connects the socket to an endpoint and then accepts incoming connections on that endpoint.

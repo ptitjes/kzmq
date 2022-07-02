@@ -17,10 +17,10 @@ internal abstract class LibzmqSocket internal constructor(
 
     override fun close() = checkNativeError(zmq_close(underlying))
 
-    override fun bind(endpoint: String) =
+    override suspend fun bind(endpoint: String) =
         checkNativeError(zmq_bind(underlying, endpoint))
 
-    override fun unbind(endpoint: String) =
+    override suspend fun unbind(endpoint: String) =
         checkNativeError(zmq_unbind(underlying, endpoint))
 
     override fun connect(endpoint: String) =

@@ -21,7 +21,7 @@ fun main(): Unit = runBlocking {
 
 private suspend fun Context.publishEverySecond(
     name: String,
-    configure: PublisherSocket.() -> Unit
+    configure: suspend PublisherSocket.() -> Unit
 ) {
     with(createPublisher()) {
         configure()

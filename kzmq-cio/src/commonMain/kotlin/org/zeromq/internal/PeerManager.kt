@@ -38,16 +38,16 @@ internal class PeerManager(
     fun disconnect(endpoint: String) = disconnect(parseEndpoint(endpoint))
 
     private fun bind(endpoint: Endpoint) {
-        bindJobs.add(endpoint) { acceptPeers(endpoint) }
+        val serverSocket = socketBuilder.bind(endpoint)
+        bindJobs.add(endpoint) { acceptPeers(serverSocket, endpoint) }
     }
 
     private fun unbind(endpoint: Endpoint) {
         bindJobs.remove(endpoint)
     }
 
-    private fun acceptPeers(endpoint: Endpoint) =
+    private fun acceptPeers(serverSocket: ServerSocket, endpoint: Endpoint) =
         launch(CoroutineName("zmq-bind-$endpoint")) {
-            val serverSocket = socketBuilder.bind(endpoint)
             while (isActive) {
                 val socket = serverSocket.accept()
                 val remoteEndpoint = socket.remoteAddress.toEndpoint()

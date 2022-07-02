@@ -15,8 +15,8 @@ internal abstract class JeroMQSocket internal constructor(
 
     override fun close() = wrapping { underlying.close() }
 
-    override fun bind(endpoint: String): Unit = wrapping { underlying.bind(endpoint) }
-    override fun unbind(endpoint: String): Unit = wrapping { underlying.unbind(endpoint) }
+    override suspend fun bind(endpoint: String): Unit = wrapping { underlying.bind(endpoint) }
+    override suspend fun unbind(endpoint: String): Unit = wrapping { underlying.unbind(endpoint) }
     override fun connect(endpoint: String): Unit = wrapping { underlying.connect(endpoint) }
     override fun disconnect(endpoint: String): Unit = wrapping { underlying.disconnect(endpoint) }
 

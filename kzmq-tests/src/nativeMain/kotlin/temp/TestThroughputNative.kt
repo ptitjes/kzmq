@@ -33,7 +33,7 @@ fun mainThroughput(): Unit = runBlocking {
 private suspend fun Context.push(
     message: Message,
     messageCount: Int,
-    configure: PushSocket.() -> Unit,
+    configure: suspend PushSocket.() -> Unit,
 ) {
     var sent = 0
     with(createPush()) {
@@ -48,7 +48,7 @@ private suspend fun Context.push(
 
 private suspend fun Context.pull(
     messageCount: Int,
-    configure: PullSocket.() -> Unit,
+    configure: suspend PullSocket.() -> Unit,
 ) {
     var received = 0
 
