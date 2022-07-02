@@ -1,12 +1,14 @@
 <img src="https://github.com/ptitjes/kzmq/raw/main/docs/logotype.png" alt="Kzmq" width="500" style="max-width:100%;">
 
 [![Maven Central](https://img.shields.io/maven-central/v/org.zeromq/kzmq)](https://mvnrepository.com/artifact/org.zeromq)
-[![Kotlin](https://img.shields.io/badge/kotlin-1.6.0-blue.svg?logo=kotlin)](http://kotlinlang.org)
+[![Kotlin](https://img.shields.io/badge/kotlin-1.6.21-blue.svg?logo=kotlin)](http://kotlinlang.org)
 [![GitHub License](https://img.shields.io/badge/license-Apache%20License%202.0-blue.svg?style=flat)](http://www.apache.org/licenses/LICENSE-2.0)
+
+> Warning: This library is work in progress.
 
 Kzmq is a Kotlin multi-platform ZeroMQ library. It supports multiple backend engines:
 
-- CIO, a Kotlin coroutine-based implementation (using `ktor-network`),
+- CIO, a Kotlin coroutine-based implementation (using `ktor-network` and `ktor-io`),
 - JeroMQ, a pure Java implementation of ZeroMQ,
 - ZeroMQ.JS, a Node.JS addon implementation of ZeroMQ,
 - Libzmq, the main native implementation of ZeroMQ.
