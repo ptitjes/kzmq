@@ -5,11 +5,20 @@
 
 package org.zeromq
 
+import kotlinx.coroutines.*
+import platform.linux.*
 import kotlin.coroutines.*
+import kotlin.math.*
 
 actual object CIO : Engine {
     override val name = "cio"
     override fun createInstance(coroutineContext: CoroutineContext): EngineInstance {
-        return CIOInstance(coroutineContext)
+        return CIOInstance(coroutineContext + Dispatchers.IO)
     }
 }
+
+private val nThreads = max(get_nprocs(), 64)
+private val IO_DISPATCHER = newFixedThreadPoolContext(nThreads, "IO")
+
+@Suppress("UnusedReceiverParameter")
+val Dispatchers.IO get() = IO_DISPATCHER

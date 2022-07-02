@@ -7,31 +7,33 @@ package temp
 
 import kotlinx.coroutines.*
 import org.zeromq.*
-import org.zeromq.internal.*
 import kotlin.system.*
 
 fun mainThroughput(): Unit = runBlocking {
+    val dispatcher = newFixedThreadPoolContext(4, "App")
     val handler = CoroutineExceptionHandler { _, throwable -> throwable.printStackTrace() }
-    val context = Context(CIO, handler + newFixedThreadPoolContext(4, "MyContext"))
+    val context = Context(CIO, handler)
 
     val messageSize = 100
     val messageCount = 10_000_000
     val message = Message(ByteArray(messageSize))
 
-    val pushJob = launch {
-        context.push(message, messageCount) { connect("tcp://localhost:9990") }
+    withContext(dispatcher) {
+        val pushJob = launch(context) {
+            context.push(message, messageCount) { connect("tcp://localhost:9990") }
+        }
+        val pullJob = launch {
+            context.pull(messageCount) { bind("tcp://localhost:9990") }
+        }
+        pullJob.join()
+        pushJob.cancelAndJoin()
     }
-    val pullJob = launch {
-        context.pull(messageCount) { bind("tcp://localhost:9990") }
-    }
-    pullJob.join()
-    pushJob.cancelAndJoin()
 }
 
 private suspend fun Context.push(
     message: Message,
     messageCount: Int,
-    configure: PushSocket.() -> Unit,
+    configure: suspend PushSocket.() -> Unit,
 ) {
     var sent = 0
     with(createPush()) {
@@ -46,7 +48,7 @@ private suspend fun Context.push(
 
 private suspend fun Context.pull(
     messageCount: Int,
-    configure: PullSocket.() -> Unit,
+    configure: suspend PullSocket.() -> Unit,
 ) {
     var received = 0
 
@@ -56,7 +58,7 @@ private suspend fun Context.pull(
 
             while (received < messageCount) {
                 val message = receive()
-                releaseMessage(message)
+//                releaseMessage(message)
                 received++
             }
         }

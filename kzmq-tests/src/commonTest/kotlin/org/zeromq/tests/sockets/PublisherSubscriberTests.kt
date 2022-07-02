@@ -82,7 +82,7 @@ class PublisherSubscriberTests : FunSpec({
         }
     }
 
-    withEngines("select").config(skipEngines = listOf("jeromq")) { (ctx1, ctx2) ->
+    withEngines("select").config(skipEngines = listOf("jeromq", "zeromq.js")) { (ctx1, ctx2) ->
         val address1 = randomAddress()
         val address2 = randomAddress()
 

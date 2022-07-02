@@ -39,8 +39,8 @@ internal abstract class CIOSocket(
         socketJob.cancel()
     }
 
-    override fun bind(endpoint: String) = peerManager.bind(endpoint)
-    override fun unbind(endpoint: String) = peerManager.unbind(endpoint)
+    override suspend fun bind(endpoint: String) = peerManager.bind(endpoint)
+    override suspend fun unbind(endpoint: String) = peerManager.unbind(endpoint)
     override fun connect(endpoint: String) = peerManager.connect(endpoint)
     override fun disconnect(endpoint: String) = peerManager.disconnect(endpoint)
 }

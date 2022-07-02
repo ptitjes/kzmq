@@ -51,7 +51,9 @@ class RequestReplyTests : FunSpec({
         request.receive() shouldBe replyMessage
     }
 
-    withEngines("round-robin connected reply sockets").config(skipEngines = listOf("jeromq")) { (ctx1, ctx2) ->
+    withEngines("round-robin connected reply sockets").config(
+        skipEngines = listOf("jeromq", "zeromq.js")
+    ) { (ctx1, ctx2) ->
         val address = randomAddress()
 
         val request = ctx1.createRequest()
@@ -94,7 +96,7 @@ class RequestReplyTests : FunSpec({
         }
     }
 
-    withEngines("fair-queuing request sockets").config(skipEngines = listOf("jeromq")) { (ctx1, ctx2) ->
+    withEngines("fair-queuing request sockets").config(skipEngines = listOf("jeromq", "zeromq.js")) { (ctx1, ctx2) ->
         val address = randomAddress()
 
         val request1 = ctx1.createRequest()
