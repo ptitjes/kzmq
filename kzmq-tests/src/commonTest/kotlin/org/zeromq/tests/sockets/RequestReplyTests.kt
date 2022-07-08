@@ -96,7 +96,9 @@ class RequestReplyTests : FunSpec({
         }
     }
 
-    withEngines("fair-queuing request sockets").config(skipEngines = listOf("jeromq", "zeromq.js")) { (ctx1, ctx2) ->
+    withEngines("fair-queuing request sockets").config(
+        skipEngines = listOf("cio", "jeromq", "zeromq.js")
+    ) { (ctx1, ctx2) ->
         val address = randomAddress()
 
         val request1 = ctx1.createRequest()
