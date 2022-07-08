@@ -52,8 +52,6 @@ internal class CIOPullSocket(
     CIOReceiveSocket,
     PullSocket {
 
-    override fun createPeerMessageHandler(): MessageHandler = NoopMessageHandler
-
     override val receiveChannel = Channel<Message>()
 
     init {

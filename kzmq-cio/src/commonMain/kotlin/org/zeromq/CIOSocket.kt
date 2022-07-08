@@ -17,8 +17,6 @@ internal abstract class CIOSocket(
     peerSocketTypes: Set<Type>,
 ) : Socket, CoroutineScope {
 
-    protected abstract fun createPeerMessageHandler(): MessageHandler
-
     val socketOptions = SocketOptions()
 
     private val socketJob = Job()
@@ -31,7 +29,6 @@ internal abstract class CIOSocket(
             type,
             peerSocketTypes,
             socketOptions,
-            ::createPeerMessageHandler,
         )
     protected val peerEvents = peerManager.peerEvents
 

@@ -82,8 +82,6 @@ internal class CIOSubscriberSocket(
     CIOReceiveSocket,
     SubscriberSocket {
 
-    override fun createPeerMessageHandler(): MessageHandler = NoopMessageHandler
-
     override val receiveChannel = Channel<Message>()
 
     private var subscriptions = mutableListOf<ByteArray>()

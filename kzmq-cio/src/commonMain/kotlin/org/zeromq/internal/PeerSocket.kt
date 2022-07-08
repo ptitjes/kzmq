@@ -13,7 +13,6 @@ import org.zeromq.*
 internal class PeerSocket(
     private val localType: Type,
     private val mailbox: PeerMailbox,
-    private val messageHandler: MessageHandler,
     socket: Socket,
 ) {
     private var input = socket.openReadChannel()
@@ -50,12 +49,12 @@ internal class PeerSocket(
     suspend fun handleTraffic(): Unit = coroutineScope {
         launch {
             while (isActive) {
-                messageHandler.handleIncoming(readIncoming()) { mailbox.receiveChannel.send(it) }
+                readIncoming().let { mailbox.receiveChannel.send(it) }
             }
         }
         launch {
             while (isActive) {
-                messageHandler.handleOutgoing(mailbox.sendChannel.receive()) { writeOutgoing(it) }
+                mailbox.sendChannel.receive().let { writeOutgoing(it) }
             }
         }
     }

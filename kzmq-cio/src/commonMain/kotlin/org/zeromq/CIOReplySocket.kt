@@ -62,8 +62,6 @@ internal class CIOReplySocket(
     CIOSendSocket,
     ReplySocket {
 
-    override fun createPeerMessageHandler(): MessageHandler = NoopMessageHandler
-
     override val receiveChannel = Channel<Message>()
     override val sendChannel = Channel<Message>()
 

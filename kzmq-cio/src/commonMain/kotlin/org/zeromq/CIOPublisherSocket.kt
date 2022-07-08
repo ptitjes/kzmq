@@ -90,8 +90,6 @@ internal class CIOPublisherSocket(
     CIOSendSocket,
     PublisherSocket {
 
-    override fun createPeerMessageHandler(): MessageHandler = NoopMessageHandler
-
     override val sendChannel = Channel<Message>()
 
     init {
