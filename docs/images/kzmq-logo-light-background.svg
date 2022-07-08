@@ -2,13 +2,13 @@
 <!-- Created with Inkscape (http://www.inkscape.org/) -->
 
 <svg
-   width="107.83717mm"
-   height="31.407194mm"
-   viewBox="0 0 107.83717 31.407194"
+   width="407.57358"
+   height="138.70435"
+   viewBox="0 0 107.83717 36.698859"
    version="1.1"
    id="svg5"
-   inkscape:version="1.1.1 (3bf5ae0d25, 2021-09-20)"
-   sodipodi:docname="logotype.svg"
+   inkscape:version="1.1.2 (0a00cf5339, 2022-02-04)"
+   sodipodi:docname="kzmq-logo-light-background.svg"
    inkscape:export-filename="/home/didier/Documents/Kzmq/logo/logotype.png"
    inkscape:export-xdpi="1200.1582"
    inkscape:export-ydpi="1200.1582"
@@ -30,36 +30,37 @@
      showguides="false"
      inkscape:guide-bbox="true"
      inkscape:zoom="1.8478542"
-     inkscape:cx="140.97432"
-     inkscape:cy="161.8093"
+     inkscape:cx="140.70374"
+     inkscape:cy="209.43211"
      inkscape:window-width="3072"
      inkscape:window-height="1659"
      inkscape:window-x="0"
      inkscape:window-y="0"
      inkscape:window-maximized="1"
      inkscape:current-layer="layer2"
-     fit-margin-top="0"
+     fit-margin-top="10"
      fit-margin-left="0"
      fit-margin-right="0"
-     fit-margin-bottom="0">
+     fit-margin-bottom="10"
+     units="px">
     <sodipodi:guide
-       position="29.48809,31.023"
+       position="29.488091,13.668833"
        orientation="0,-1"
        id="guide11671" />
     <sodipodi:guide
-       position="-2.1832121,15.69329"
+       position="-2.1832121,-1.6608771"
        orientation="0,-1"
        id="guide11675" />
     <sodipodi:guide
-       position="15.688238,5.8952001"
+       position="15.688239,-11.458967"
        orientation="0,-1"
        id="guide12402" />
     <sodipodi:guide
-       position="15.678102,25.60897"
+       position="15.678103,8.2548033"
        orientation="0,-1"
        id="guide12406" />
     <sodipodi:guide
-       position="100.34711,2.1009245e-07"
+       position="100.34711,-17.354167"
        orientation="0,-1"
        id="guide1172" />
   </sodipodi:namedview>
@@ -132,7 +133,7 @@
      inkscape:groupmode="layer"
      id="layer2"
      inkscape:label="Logo"
-     transform="translate(-58.48593,-57.184637)">
+     transform="translate(-58.48593,-54.538803)">
     <g
        id="g1258">
       <path
