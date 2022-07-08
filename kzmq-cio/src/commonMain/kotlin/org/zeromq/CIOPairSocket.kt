@@ -56,8 +56,6 @@ internal class CIOPairSocket(
     CIOSendSocket,
     PairSocket {
 
-    override fun createPeerMessageHandler(): MessageHandler = NoopMessageHandler
-
     override val receiveChannel = Channel<Message>()
     override val sendChannel = Channel<Message>()
 

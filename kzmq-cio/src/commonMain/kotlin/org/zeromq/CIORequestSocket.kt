@@ -57,8 +57,6 @@ internal class CIORequestSocket(
     CIOReceiveSocket,
     RequestSocket {
 
-    override fun createPeerMessageHandler(): MessageHandler = NoopMessageHandler
-
     override val sendChannel = Channel<Message>()
     override val receiveChannel = Channel<Message>()
 

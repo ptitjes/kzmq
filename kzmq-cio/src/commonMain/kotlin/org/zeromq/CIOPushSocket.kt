@@ -55,8 +55,6 @@ internal class CIOPushSocket(
     CIOSendSocket,
     PushSocket {
 
-    override fun createPeerMessageHandler(): MessageHandler = NoopMessageHandler
-
     override val sendChannel = Channel<Message>()
 
     init {

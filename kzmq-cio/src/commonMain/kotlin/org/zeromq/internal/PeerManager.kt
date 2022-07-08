@@ -19,7 +19,6 @@ internal class PeerManager(
     private val socketType: Type,
     private val peerSocketTypes: Set<Type>,
     private val socketOptions: SocketOptions,
-    val messageHandlerFactory: () -> MessageHandler,
 ) : CoroutineScope {
 
     override val coroutineContext: CoroutineContext = context + CoroutineName("zmq-socket-handler")
@@ -58,11 +57,10 @@ internal class PeerManager(
     private fun acceptPeer(remoteEndpoint: Endpoint, socket: Socket) =
         launch(CoroutineName("zmq-accept-${remoteEndpoint}")) {
             val mailbox = PeerMailbox(remoteEndpoint, socketOptions)
-            val messageHandler = messageHandlerFactory()
 
             logger.d { "Accepting peer $mailbox" }
             try {
-                val peerSocket = PeerSocket(socketType, mailbox, messageHandler, socket)
+                val peerSocket = PeerSocket(socketType, mailbox, socket)
                 peerSocket.handleInitialization(true, peerSocketTypes)
 
                 try {
@@ -89,7 +87,6 @@ internal class PeerManager(
     private fun connectPeer(endpoint: Endpoint) =
         launch(CoroutineName("zmq-connect-$endpoint")) {
             val mailbox = PeerMailbox(endpoint, socketOptions)
-            val messageHandler = messageHandlerFactory()
 
             try {
                 notifyAvailable(mailbox)
@@ -98,7 +95,7 @@ internal class PeerManager(
                     var socket: Socket? = null
                     try {
                         socket = socketBuilder.connect(endpoint)
-                        val peerSocket = PeerSocket(socketType, mailbox, messageHandler, socket)
+                        val peerSocket = PeerSocket(socketType, mailbox, socket)
                         peerSocket.handleInitialization(false, peerSocketTypes)
                         peerSocket.handleTraffic()
                     } catch (t: Throwable) {
