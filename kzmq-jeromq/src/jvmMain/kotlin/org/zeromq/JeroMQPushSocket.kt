@@ -6,8 +6,8 @@
 package org.zeromq
 
 internal class JeroMQPushSocket internal constructor(
-    underlying: ZMQ.Socket,
-) : JeroMQSocket(underlying, Type.PUSH), PushSocket {
+    factory: (type: SocketType) -> ZMQ.Socket,
+) : JeroMQSocket(factory, SocketType.PUSH, Type.PUSH), PushSocket {
 
     override var conflate: Boolean by underlying::conflate
 }

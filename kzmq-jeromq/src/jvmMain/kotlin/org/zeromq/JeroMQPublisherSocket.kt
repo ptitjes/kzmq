@@ -6,8 +6,8 @@
 package org.zeromq
 
 internal class JeroMQPublisherSocket internal constructor(
-    underlying: ZMQ.Socket,
-) : JeroMQSocket(underlying, Type.PUB), PublisherSocket {
+    factory: (type: SocketType) -> ZMQ.Socket,
+) : JeroMQSocket(factory, SocketType.PUB, Type.PUB), PublisherSocket {
 
     override var conflate: Boolean by underlying::conflate
     override var invertMatching: Boolean by notImplementedProperty()

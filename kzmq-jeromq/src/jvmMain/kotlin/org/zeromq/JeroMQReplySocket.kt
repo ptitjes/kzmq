@@ -6,8 +6,8 @@
 package org.zeromq
 
 internal class JeroMQReplySocket internal constructor(
-    underlying: ZMQ.Socket,
-) : JeroMQSocket(underlying, Type.REP), ReplySocket {
+    factory: (type: SocketType) -> ZMQ.Socket,
+) : JeroMQSocket(factory, SocketType.REP, Type.REP), ReplySocket {
 
     override var routingId: String? by notImplementedProperty()
 }

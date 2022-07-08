@@ -6,8 +6,8 @@
 package org.zeromq
 
 internal class JeroMQPullSocket internal constructor(
-    underlying: ZMQ.Socket,
-) : JeroMQSocket(underlying, Type.PULL), PullSocket {
+    factory: (type: SocketType) -> ZMQ.Socket,
+) : JeroMQSocket(factory, SocketType.PULL, Type.PULL), PullSocket {
 
     override var conflate: Boolean by underlying::conflate
 }

@@ -17,17 +17,17 @@ internal class JeroMQInstance private constructor(
         underlying.close()
     }
 
-    override fun createPair(): PairSocket = wrapping { JeroMQPairSocket(newSocket(SocketType.PAIR)) }
-    override fun createPublisher(): PublisherSocket = wrapping { JeroMQPublisherSocket(newSocket(SocketType.PUB)) }
-    override fun createSubscriber(): SubscriberSocket = wrapping { JeroMQSubscriberSocket(newSocket(SocketType.SUB)) }
-    override fun createXPublisher(): XPublisherSocket = TODO("Not yet implemented")
-    override fun createXSubscriber(): XSubscriberSocket = TODO("Not yet implemented")
-    override fun createPush(): PushSocket = wrapping { JeroMQPushSocket(newSocket(SocketType.PUSH)) }
-    override fun createPull(): PullSocket = wrapping { JeroMQPullSocket(newSocket(SocketType.PULL)) }
-    override fun createRequest(): RequestSocket = wrapping { JeroMQRequestSocket(newSocket(SocketType.REQ)) }
-    override fun createReply(): ReplySocket = wrapping { JeroMQReplySocket(newSocket(SocketType.REP)) }
-    override fun createDealer(): DealerSocket = TODO("Not yet implemented")
-    override fun createRouter(): RouterSocket = TODO("Not yet implemented")
+    override fun createPair(): PairSocket = wrapping { JeroMQPairSocket(::newSocket) }
+    override fun createPublisher(): PublisherSocket = wrapping { JeroMQPublisherSocket(::newSocket) }
+    override fun createSubscriber(): SubscriberSocket = wrapping { JeroMQSubscriberSocket(::newSocket) }
+    override fun createXPublisher(): XPublisherSocket = wrapping { JeroMQXPublisherSocket(::newSocket) }
+    override fun createXSubscriber(): XSubscriberSocket = wrapping { JeroMQXSubscriberSocket(::newSocket) }
+    override fun createPush(): PushSocket = wrapping { JeroMQPushSocket(::newSocket) }
+    override fun createPull(): PullSocket = wrapping { JeroMQPullSocket(::newSocket) }
+    override fun createRequest(): RequestSocket = wrapping { JeroMQRequestSocket(::newSocket) }
+    override fun createReply(): ReplySocket = wrapping { JeroMQReplySocket(::newSocket) }
+    override fun createDealer(): DealerSocket = wrapping { JeroMQDealerSocket(::newSocket) }
+    override fun createRouter(): RouterSocket = wrapping { JeroMQRouterSocket(::newSocket) }
 
     private fun newSocket(type: SocketType): ZMQ.Socket = underlying.createSocket(type)
 }

@@ -6,8 +6,8 @@
 package org.zeromq
 
 internal class JeroMQRequestSocket internal constructor(
-    underlying: ZMQ.Socket,
-) : JeroMQSocket(underlying, Type.REQ), RequestSocket {
+    factory: (type: SocketType) -> ZMQ.Socket,
+) : JeroMQSocket(factory, SocketType.REQ, Type.REQ), RequestSocket {
 
     override var routingId: String? by notImplementedProperty()
     override var probeRouter: Boolean by notImplementedProperty()
