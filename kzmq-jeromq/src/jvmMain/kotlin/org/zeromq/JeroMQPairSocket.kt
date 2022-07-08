@@ -6,5 +6,5 @@
 package org.zeromq
 
 internal class JeroMQPairSocket internal constructor(
-    underlying: ZMQ.Socket,
-) : JeroMQSocket(underlying, Type.PAIR), PairSocket
+    factory: (type: SocketType) -> ZMQ.Socket,
+) : JeroMQSocket(factory, SocketType.PAIR, Type.PAIR), PairSocket

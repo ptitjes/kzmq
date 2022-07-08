@@ -9,9 +9,12 @@ import kotlinx.coroutines.selects.*
 
 @Suppress("RedundantSuspendModifier")
 internal abstract class JeroMQSocket internal constructor(
-    private val underlying: ZMQ.Socket,
+    factory: (type: SocketType) -> ZMQ.Socket,
+    underlyingType: SocketType,
     override val type: Type,
 ) : Socket {
+
+    protected val underlying = factory(underlyingType)
 
     override fun close() = wrapping { underlying.close() }
 
@@ -114,6 +117,7 @@ internal abstract class JeroMQSocket internal constructor(
 
         override suspend fun hasNext(): Boolean {
             if (next == null) next = receive()
+            // TODO fix the fact that we should return false when the socket is closed
             return next != null
         }
 

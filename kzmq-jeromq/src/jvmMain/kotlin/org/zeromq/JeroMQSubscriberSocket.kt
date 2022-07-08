@@ -6,8 +6,8 @@
 package org.zeromq
 
 internal class JeroMQSubscriberSocket internal constructor(
-    underlying: ZMQ.Socket,
-) : JeroMQSocket(underlying, Type.SUB), SubscriberSocket {
+    factory: (type: SocketType) -> ZMQ.Socket,
+) : JeroMQSocket(factory, SocketType.SUB, Type.SUB), SubscriberSocket {
 
     override var conflate: Boolean by underlying::conflate
     override var invertMatching: Boolean by notImplementedProperty()
