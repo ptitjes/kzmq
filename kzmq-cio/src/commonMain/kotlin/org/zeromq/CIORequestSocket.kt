@@ -27,6 +27,7 @@ import kotlin.coroutines.*
  * higher-level protocols such as [rfc.zeromq.org/spec:18/MDP].
  *
  * ## The REQ Socket Type
+ *
  * The REQ socket type acts as the client for a set of anonymous services, sending requests and
  * receiving replies using a lock-step round-robin algorithm. It is designed for simple
  * request-reply models where reliability against failing peers is not an issue.
@@ -65,23 +66,22 @@ internal class CIORequestSocket(
 
     init {
         launch(CoroutineName("zmq-req-peers")) {
-            val peerMailboxes = hashSetOf<PeerMailbox>()
             val forwardJobs = JobMap<PeerMailbox>()
 
             while (isActive) {
                 val (kind, peerMailbox) = peerEvents.receive()
                 when (kind) {
                     PeerEventKind.ADDITION -> {
-                        peerMailboxes.add(peerMailbox)
                         logger.d { "Peer added: $peerMailbox" }
                         forwardJobs.add(peerMailbox) { dispatchRequestsReplies(peerMailbox) }
                     }
 
                     PeerEventKind.REMOVAL -> {
-                        peerMailboxes.remove(peerMailbox)
                         logger.d { "Peer removed: $peerMailbox" }
                         forwardJobs.remove(peerMailbox)
                     }
+
+                    else -> {}
                 }
             }
         }
@@ -89,7 +89,7 @@ internal class CIORequestSocket(
             while (isActive) {
                 val (peerMailbox, requestData) = requestsChannel.receive()
 
-                val request = prependAddress(requestData)
+                val request = addPrefixAddress(requestData)
                 logger.d { "Sending request $request to $peerMailbox" }
                 peerMailbox.sendChannel.send(CommandOrMessage(request))
 
@@ -101,7 +101,7 @@ internal class CIORequestSocket(
                     }
 
                     logger.d { "Sending back reply $reply from $peerMailbox" }
-                    val (_, replyData) = extractAddress(reply)
+                    val (_, replyData) = extractPrefixAddress(reply)
                     receiveChannel.send(replyData)
                     break
                 }
@@ -126,9 +126,7 @@ internal class CIORequestSocket(
         }
     }
 
-    override var routingId: String?
-        get() = TODO("Not yet implemented")
-        set(value) {}
+    override var routingId: ByteArray? by socketOptions::routingId
     override var probeRouter: Boolean
         get() = TODO("Not yet implemented")
         set(value) {}

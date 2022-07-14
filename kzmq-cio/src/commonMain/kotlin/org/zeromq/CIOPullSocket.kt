@@ -47,7 +47,7 @@ import kotlin.coroutines.*
  */
 internal class CIOPullSocket(
     coroutineContext: CoroutineContext,
-    selectorManager: SelectorManager
+    selectorManager: SelectorManager,
 ) : CIOSocket(coroutineContext, selectorManager, Type.PULL, setOf(Type.PUSH)),
     CIOReceiveSocket,
     PullSocket {
@@ -56,22 +56,22 @@ internal class CIOPullSocket(
 
     init {
         launch(CoroutineName("zmq-pull")) {
-            val peerMailboxes = hashSetOf<PeerMailbox>()
             val forwardJobs = JobMap<PeerMailbox>()
 
             while (isActive) {
                 val (kind, peerMailbox) = peerEvents.receive()
                 when (kind) {
                     PeerEventKind.ADDITION -> {
-                        peerMailboxes.add(peerMailbox)
                         logger.d { "Peer added: $peerMailbox" }
                         forwardJobs.add(peerMailbox) { forwardFrom(peerMailbox) }
                     }
+
                     PeerEventKind.REMOVAL -> {
-                        peerMailboxes.remove(peerMailbox)
                         logger.d { "Peer removed: $peerMailbox" }
                         forwardJobs.remove(peerMailbox)
                     }
+
+                    else -> {}
                 }
             }
         }

@@ -6,10 +6,9 @@
 package org.zeromq.internal
 
 import io.ktor.utils.io.*
-import org.zeromq.*
 
 internal suspend fun nullMechanismHandshake(
-    socketType: Type,
+    localProperties: MutableMap<PropertyName, ByteArray>,
     isServer: Boolean,
     input: ByteReadChannel,
     output: ByteWriteChannel,
@@ -18,11 +17,11 @@ internal suspend fun nullMechanismHandshake(
         logger.t { "Expecting READY command" }
         val properties = expectReadyCommand(input)
         logger.t { "Sending READY command" }
-        output.sendReadyCommand(socketType)
+        output.sendReadyCommand(localProperties)
         properties
     } else {
         logger.t { "Sending READY command" }
-        output.sendReadyCommand(socketType)
+        output.sendReadyCommand(localProperties)
         logger.t { "Expecting READY command" }
         expectReadyCommand(input)
     }
@@ -36,10 +35,6 @@ private suspend fun expectReadyCommand(input: ByteReadChannel): Map<PropertyName
     }
 }
 
-private suspend fun ByteWriteChannel.sendReadyCommand(socketType: Type) {
-    writeCommand(
-        ReadyCommand(
-            PropertyName.SOCKET_TYPE to socketType.name.encodeToByteArray()
-        )
-    )
+private suspend fun ByteWriteChannel.sendReadyCommand(properties: MutableMap<PropertyName, ByteArray>) {
+    writeCommand(ReadyCommand(properties))
 }
