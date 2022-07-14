@@ -60,14 +60,16 @@ internal class PeerManager(
 
             logger.d { "Accepting peer $mailbox" }
             try {
-                val peerSocket = PeerSocket(socketType, mailbox, socket)
+                val peerSocket = PeerSocket(socketType, socketOptions, mailbox, socket)
                 peerSocket.handleInitialization(true, peerSocketTypes)
 
                 try {
-                    notifyAvailable(mailbox)
+                    notify(PeerEventKind.ADDITION, mailbox)
+                    notify(PeerEventKind.CONNECTION, mailbox)
                     peerSocket.handleTraffic()
                 } finally {
-                    notifyUnavailable(mailbox)
+                    notify(PeerEventKind.DISCONNECTION, mailbox)
+                    notify(PeerEventKind.REMOVAL, mailbox)
                 }
             } catch (t: Throwable) {
                 logger.d { "Peer disconnected [${t.message}]" }
@@ -89,36 +91,33 @@ internal class PeerManager(
             val mailbox = PeerMailbox(endpoint, socketOptions)
 
             try {
-                notifyAvailable(mailbox)
+                notify(PeerEventKind.ADDITION, mailbox)
 
                 while (isActive) {
                     var socket: Socket? = null
                     try {
                         socket = socketBuilder.connect(endpoint)
-                        val peerSocket = PeerSocket(socketType, mailbox, socket)
+                        val peerSocket = PeerSocket(socketType, socketOptions, mailbox, socket)
                         peerSocket.handleInitialization(false, peerSocketTypes)
+                        notify(PeerEventKind.CONNECTION, mailbox)
                         peerSocket.handleTraffic()
                     } catch (t: Throwable) {
                         logger.d { "Failed to connect [${t.message}]" }
                     } finally {
+                        notify(PeerEventKind.DISCONNECTION, mailbox)
                         socket?.close()
                     }
 
                     // TODO Wait before reconnecting ? (have a strategy)
                 }
             } finally {
-                notifyUnavailable(mailbox)
+                notify(PeerEventKind.REMOVAL, mailbox)
             }
         }
 
-    private suspend fun notifyAvailable(peerMailbox: PeerMailbox) {
-        logger.d { "Notifying peer available $peerMailbox" }
-        _peerEvents.send(PeerEvent(PeerEventKind.ADDITION, peerMailbox))
-    }
-
-    private suspend fun notifyUnavailable(peerMailbox: PeerMailbox) {
-        logger.d { "Notifying peer unavailable $peerMailbox" }
-        _peerEvents.send(PeerEvent(PeerEventKind.REMOVAL, peerMailbox))
+    private suspend fun notify(eventKind: PeerEventKind, peerMailbox: PeerMailbox) {
+        logger.d { "Notifying peer $eventKind: $peerMailbox" }
+        _peerEvents.send(PeerEvent(eventKind, peerMailbox))
     }
 }
 
@@ -127,7 +126,7 @@ internal data class PeerEvent(
     val peerMailbox: PeerMailbox,
 )
 
-internal enum class PeerEventKind { ADDITION, REMOVAL }
+internal enum class PeerEventKind { ADDITION, CONNECTION, DISCONNECTION, REMOVAL }
 
 private fun SocketBuilder.bind(endpoint: Endpoint): ServerSocket =
     tcp().bind(endpoint.toSocketAddress())

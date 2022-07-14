@@ -12,6 +12,8 @@ internal class PeerMailbox(private val endpoint: Endpoint, socketOptions: Socket
     val receiveChannel = Channel<CommandOrMessage>(socketOptions.receiveQueueSize)
     val sendChannel = Channel<CommandOrMessage>(socketOptions.sendQueueSize)
 
+    internal var identity: Identity? = null
+
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (other == null || this::class != other::class) return false
@@ -29,5 +31,22 @@ internal class PeerMailbox(private val endpoint: Endpoint, socketOptions: Socket
 
     override fun toString(): String {
         return "PeerMailbox(endpoint=$endpoint)"
+    }
+}
+
+class Identity(val value: ByteArray) {
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other == null || this::class != other::class) return false
+
+        other as Identity
+
+        if (!value.contentEquals(other.value)) return false
+
+        return true
+    }
+
+    override fun hashCode(): Int {
+        return value.contentHashCode()
     }
 }

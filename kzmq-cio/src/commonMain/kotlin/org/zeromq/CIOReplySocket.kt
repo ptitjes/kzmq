@@ -69,23 +69,22 @@ internal class CIOReplySocket(
 
     init {
         launch(CoroutineName("zmq-rep-peers")) {
-            val peerMailboxes = hashSetOf<PeerMailbox>()
             val forwardJobs = JobMap<PeerMailbox>()
 
             while (isActive) {
                 val (kind, peerMailbox) = peerEvents.receive()
                 when (kind) {
                     PeerEventKind.ADDITION -> {
-                        peerMailboxes.add(peerMailbox)
                         logger.d { "Peer added: $peerMailbox" }
                         forwardJobs.add(peerMailbox) { forwardRequests(peerMailbox) }
                     }
 
                     PeerEventKind.REMOVAL -> {
-                        peerMailboxes.remove(peerMailbox)
                         logger.d { "Peer removed: $peerMailbox" }
                         forwardJobs.remove(peerMailbox)
                     }
+
+                    else -> {}
                 }
             }
         }
@@ -94,11 +93,11 @@ internal class CIOReplySocket(
                 val (peerMailbox, request) = requestsChannel.receive()
 
                 logger.d { "Received request $request from $peerMailbox" }
-                val (identities, requestData) = extractAddress(request)
+                val (identities, requestData) = extractPrefixAddress(request)
                 receiveChannel.send(requestData)
 
                 val replyData = sendChannel.receive()
-                val reply = prependAddress(replyData, identities)
+                val reply = addPrefixAddress(replyData, identities)
                 logger.d { "Sending reply $reply back to $peerMailbox" }
                 peerMailbox.sendChannel.send(CommandOrMessage(reply))
             }
@@ -113,18 +112,5 @@ internal class CIOReplySocket(
         }
     }
 
-    override var routingId: String?
-        get() = TODO("Not yet implemented")
-        set(value) {}
-}
-
-internal fun extractAddress(message: Message): Pair<List<ByteArray>, Message> {
-    val delimiterIndex = message.parts.indexOfFirst { it.isEmpty() }
-    val identities = message.parts.subList(0, delimiterIndex)
-    val data = Message(message.parts.subList(delimiterIndex + 1, message.parts.size))
-    return identities to data
-}
-
-internal fun prependAddress(data: Message, identities: List<ByteArray> = listOf()): Message {
-    return Message(identities + ByteArray(0) + data.parts)
+    override var routingId: ByteArray? by socketOptions::routingId
 }

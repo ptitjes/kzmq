@@ -12,6 +12,7 @@ import org.zeromq.*
 
 internal class PeerSocket(
     private val localType: Type,
+    private val socketOptions: SocketOptions,
     private val mailbox: PeerMailbox,
     socket: Socket,
 ) {
@@ -35,12 +36,23 @@ internal class PeerSocket(
         logger.t { "Reading greeting part 2" }
         val (peerMinorVersion, peerSecuritySpec) = input.readGreetingPart2()
 
-        val properties = when (peerSecuritySpec.mechanism) {
-            Mechanism.NULL -> nullMechanismHandshake(localType, isServer, input, output)
+        val localProperties = mutableMapOf<PropertyName, ByteArray>().apply {
+            put(PropertyName.SOCKET_TYPE, localType.name.encodeToByteArray())
+            socketOptions.routingId?.let { identity -> put(PropertyName.IDENTITY, identity) }
+        }
+
+        val peerProperties = when (peerSecuritySpec.mechanism) {
+            Mechanism.NULL -> nullMechanismHandshake(localProperties, isServer, input, output)
             else -> protocolError("Unsupported mechanism ${peerSecuritySpec.mechanism}")
         }
 
-        validateSocketType(properties, peerSocketTypes)
+        validateSocketType(peerProperties, peerSocketTypes)
+
+        val identity = peerProperties[PropertyName.IDENTITY]?.let { Identity(it) }
+        if (mailbox.identity != null && mailbox.identity != identity) {
+            logger.e { "Identity mismatch: old=${mailbox.receiveChannel} new=$identity)" }
+        }
+        mailbox.identity = identity
 
         this.peerMinorVersion = peerMinorVersion
         logger.t { "Finished initialization (peerMinorVersion: $peerMinorVersion)" }

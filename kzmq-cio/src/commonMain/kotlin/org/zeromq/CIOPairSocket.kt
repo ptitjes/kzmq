@@ -81,6 +81,8 @@ internal class CIOPairSocket(
                         forwardJob.cancel()
                         forwardJob = null
                     }
+
+                    else -> {}
                 }
             }
         }

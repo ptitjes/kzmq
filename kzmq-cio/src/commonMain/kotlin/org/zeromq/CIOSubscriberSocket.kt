@@ -96,8 +96,8 @@ internal class CIOSubscriberSocket(
                     peerEvents.onReceive { (kind, peerMailbox) ->
                         when (kind) {
                             PeerEventKind.ADDITION -> {
-                                peerMailboxes.add(peerMailbox)
                                 logger.d { "Peer added: $peerMailbox" }
+                                peerMailboxes.add(peerMailbox)
 
                                 for (subscription in subscriptions) {
                                     logger.d { "Sending subscription ${subscription.contentToString()} to $peerMailbox" }
@@ -106,10 +106,13 @@ internal class CIOSubscriberSocket(
                                     )
                                 }
                             }
+
                             PeerEventKind.REMOVAL -> {
-                                peerMailboxes.remove(peerMailbox)
                                 logger.d { "Peer removed: $peerMailbox" }
+                                peerMailboxes.remove(peerMailbox)
                             }
+
+                            else -> {}
                         }
                     }
 
