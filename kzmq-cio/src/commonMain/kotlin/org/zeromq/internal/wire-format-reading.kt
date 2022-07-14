@@ -3,29 +3,38 @@
  * Use of this source code is governed by the Apache 2.0 license.
  */
 
+@file:OptIn(ExperimentalUnsignedTypes::class)
+
 package org.zeromq.internal
 
 import io.ktor.utils.io.*
 import io.ktor.utils.io.core.*
 import org.zeromq.*
 
+internal val GREETING_PART1_SIZE = SIGNATURE.size + 1
+internal val GREETING_PART2_SIZE = 1 + MECHANISM_SIZE + 1 + FILLER.size
+
 internal suspend fun ByteReadChannel.readGreetingPart1(): Int {
-    if (readByte().toUByte() != signatureHeadByte) invalidFrame("Invalid signature header byte")
-    discardExact(8)
-    if (readByte().toUByte() != signatureTrailByte) invalidFrame("Invalid signature header byte")
-    return readByte().toInt()
+    return readPacket(GREETING_PART1_SIZE).run {
+        if (readUByte() != signatureHeadByte) invalidFrame("Invalid signature header byte")
+        discardExact(8)
+        if (readUByte() != signatureTrailByte) invalidFrame("Invalid signature header byte")
+        readByte().toInt()
+    }
 }
 
 internal suspend fun ByteReadChannel.readGreetingPart2(): Pair<Int, SecuritySpec> {
-    val minorVersion = readByte().toInt()
-    val mechanism = readMechanism()
-    val asServer = readByte().toUByte() == AS_SERVER
-    discardExact(31)
-    return Pair(minorVersion, SecuritySpec(mechanism, asServer))
+    return readPacket(GREETING_PART2_SIZE).run {
+        val minorVersion = readByte().toInt()
+        val mechanism = readMechanism()
+        val asServer = readUByte() == AS_SERVER
+        discardExact(FILLER.size)
+        Pair(minorVersion, SecuritySpec(mechanism, asServer))
+    }
 }
 
-private suspend fun ByteReadChannel.readMechanism(): Mechanism {
-    val bytes = readBytes(20)
+private fun ByteReadPacket.readMechanism(): Mechanism {
+    val bytes = readBytes(MECHANISM_SIZE)
     val fullString = bytes.decodeToString()
     val string = fullString.substring(0, fullString.indexOf('\u0000'))
     return Mechanism.values().find { it.name == string } ?: invalidFrame("Invalid security mechanism")

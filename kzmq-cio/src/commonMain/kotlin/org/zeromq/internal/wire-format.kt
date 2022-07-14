@@ -44,6 +44,8 @@ internal const val AS_SERVER: UByte = 0x01u
 
 internal val FILLER = UByteArray(31) { NULL }
 
+internal const val MECHANISM_SIZE = 20
+
 private const val FLAG_MORE: UByte = 0x01u
 private const val FLAG_LONG_SIZE: UByte = 0x02u
 private const val FLAG_COMMAND: UByte = 0x04u

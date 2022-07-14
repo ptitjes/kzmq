@@ -28,7 +28,7 @@ internal suspend fun ByteWriteChannel.writeGreetingPart2(mechanism: Mechanism, a
 private fun BytePacketBuilder.writeMechanism(mechanism: Mechanism) {
     val bytes = mechanism.bytes
     writeFully(bytes)
-    repeat(20 - bytes.size) { writeUByte(NULL) }
+    repeat(MECHANISM_SIZE - bytes.size) { writeUByte(NULL) }
 }
 
 internal suspend fun ByteWriteChannel.writeCommandOrMessage(commandOrMessage: CommandOrMessage) {
