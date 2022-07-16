@@ -7,6 +7,8 @@ package org.zeromq
 
 import Buffer
 import org.khronos.webgl.*
+import kotlin.properties.*
+import kotlin.reflect.*
 
 internal fun ByteArray.toBuffer(): Buffer {
     val int8Array: Int8Array = this.unsafeCast<Int8Array>()
@@ -24,4 +26,14 @@ internal fun Buffer.toByteArray(): ByteArray {
         uint8Array.byteOffset,
         uint8Array.byteLength
     ).unsafeCast<ByteArray>()
+}
+
+internal fun <R> KMutableProperty0<String?>.asNullableByteArrayProperty(): ReadWriteProperty<R, ByteArray?> {
+    return object : ReadWriteProperty<R, ByteArray?> {
+        override fun getValue(thisRef: R, property: KProperty<*>): ByteArray? =
+            this@asNullableByteArrayProperty.get()?.encodeToByteArray()
+
+        override fun setValue(thisRef: R, property: KProperty<*>, value: ByteArray?) =
+            this@asNullableByteArrayProperty.set(value?.decodeToString())
+    }
 }

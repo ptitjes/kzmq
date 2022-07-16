@@ -15,5 +15,5 @@ internal class ZeroMQJsReplySocket internal constructor(
     SendSocket by ZeroMQJsSendSocket(underlying),
     ReplySocket {
 
-    override var routingId: String? by underlying::routingId
+    override var routingId: ByteArray? by underlying::routingId.asNullableByteArrayProperty()
 }

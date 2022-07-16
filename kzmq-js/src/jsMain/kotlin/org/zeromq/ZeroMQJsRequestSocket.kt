@@ -15,7 +15,7 @@ internal class ZeroMQJsRequestSocket internal constructor(
     SendSocket by ZeroMQJsSendSocket(underlying),
     RequestSocket {
 
-    override var routingId: String? by underlying::routingId
+    override var routingId: ByteArray? by underlying::routingId.asNullableByteArrayProperty()
     override var probeRouter: Boolean by underlying::probeRouter
     override var correlate: Boolean by underlying::correlate
     override var relaxed: Boolean by underlying::relaxed

@@ -9,8 +9,7 @@ internal class JeroMQRouterSocket internal constructor(
     factory: (type: SocketType) -> ZMQ.Socket,
 ) : JeroMQSocket(factory, SocketType.ROUTER, Type.ROUTER), RouterSocket {
 
-    // TODO is there no option for this in JeroMQ?
-    override var routingId: String? by notImplementedProperty()
+    override var routingId: ByteArray? by underlying::identity
 
     // TODO there no getter for setProbeRouter in underlying socket
     override var probeRouter: Boolean by notImplementedProperty()

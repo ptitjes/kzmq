@@ -15,7 +15,7 @@ internal class ZeroMQJsRouterSocket internal constructor(
     ReceiveSocket by ZeroMQJsReceiveSocket(underlying),
     RouterSocket {
 
-    override var routingId: String? by underlying::routingId
+    override var routingId: ByteArray? by underlying::routingId.asNullableByteArrayProperty()
     override var probeRouter: Boolean by underlying::probeRouter
     override var mandatory: Boolean by underlying::mandatory
     override var handover: Boolean by underlying::handover

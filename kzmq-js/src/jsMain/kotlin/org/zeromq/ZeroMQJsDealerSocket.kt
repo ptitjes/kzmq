@@ -16,6 +16,8 @@ internal class ZeroMQJsDealerSocket internal constructor(
     DealerSocket {
 
     override var conflate: Boolean by underlying::conflate
-    override var routingId: String? by underlying::routingId
+
+    override var routingId: ByteArray? by underlying::routingId.asNullableByteArrayProperty()
+
     override var probeRouter: Boolean by underlying::probeRouter
 }

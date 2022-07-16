@@ -9,5 +9,5 @@ internal class JeroMQReplySocket internal constructor(
     factory: (type: SocketType) -> ZMQ.Socket,
 ) : JeroMQSocket(factory, SocketType.REP, Type.REP), ReplySocket {
 
-    override var routingId: String? by notImplementedProperty()
+    override var routingId: ByteArray? by underlying::identity
 }
