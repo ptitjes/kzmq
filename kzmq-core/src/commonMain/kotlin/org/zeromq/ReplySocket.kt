@@ -12,5 +12,5 @@ interface ReplySocket : Socket, SendSocket, ReceiveSocket {
      *
      * See [ZMQ_ROUTING_ID](http://api.zeromq.org/master:zmq-getsockopt)
      */
-    var routingId: String?
+    var routingId: ByteArray?
 }

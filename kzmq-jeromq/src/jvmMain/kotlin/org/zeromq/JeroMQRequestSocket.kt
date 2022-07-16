@@ -9,7 +9,7 @@ internal class JeroMQRequestSocket internal constructor(
     factory: (type: SocketType) -> ZMQ.Socket,
 ) : JeroMQSocket(factory, SocketType.REQ, Type.REQ), RequestSocket {
 
-    override var routingId: String? by notImplementedProperty()
+    override var routingId: ByteArray? by underlying::identity
     override var probeRouter: Boolean by notImplementedProperty()
     override var correlate: Boolean by notImplementedProperty()
     override var relaxed: Boolean by notImplementedProperty()
