@@ -27,8 +27,7 @@ internal class PeerSocket(
 
         logger.t { "Reading greeting part 1" }
         val peerMajorVersion = input.readGreetingPart1()
-        if (peerMajorVersion != 3)
-            protocolError("Incompatible version $peerMajorVersion.x")
+        if (peerMajorVersion != 3) protocolError("Incompatible version $peerMajorVersion.x")
 
         logger.t { "Writing greeting part 2" }
         output.writeGreetingPart2(Mechanism.NULL, false)
@@ -48,7 +47,7 @@ internal class PeerSocket(
 
         validateSocketType(peerProperties, peerSocketTypes)
 
-        val identity = peerProperties[PropertyName.IDENTITY]?.let { Identity(it) }
+        val identity = peerProperties[PropertyName.IDENTITY]?.let { Identity(constantFrameOf(it)) }
         if (mailbox.identity != null && mailbox.identity != identity) {
             logger.e { "Identity mismatch: old=${mailbox.receiveChannel} new=$identity)" }
         }
@@ -100,48 +99,46 @@ private fun transformSubscriptionMessages(commandOrMessage: CommandOrMessage): C
         extractSubscriptionCommand(commandOrMessage.messageOrThrow()) ?: commandOrMessage
     } else commandOrMessage
 
-private fun extractSubscriptionCommand(message: Message): CommandOrMessage? {
-    if (message.isSingle) {
-        val bytes = message.singleOrThrow()
-        val firstByte = bytes[0].toInt()
-        if (firstByte == 0 || firstByte == 1) {
-            val subscribe = firstByte == 1
-            val topic = bytes.sliceArray(1 until bytes.size)
-            return CommandOrMessage(
-                if (subscribe) SubscribeCommand(topic) else CancelCommand(topic)
-            )
-        }
-    }
-    return null
+private fun extractSubscriptionCommand(message: Message): CommandOrMessage {
+    if (message.isMultipart) protocolError("Expected a message with a single subscription frame")
+
+    val frame = message.removeFirst()
+    val firstByte = frame[0].toInt()
+    if (firstByte != 0 && firstByte != 1) protocolError("Expected a subscription frame")
+
+    val subscribe = firstByte == 1
+    val topic = frame.copyOf(1)
+    frame.release()
+
+    return CommandOrMessage(if (subscribe) SubscribeCommand(topic) else CancelCommand(topic))
 }
 
 private fun transformSubscriptionCommands(commandOrMessage: CommandOrMessage): CommandOrMessage =
     if (commandOrMessage.isCommand) {
         when (val command = commandOrMessage.commandOrThrow()) {
-            is SubscribeCommand ->
-                CommandOrMessage(buildSubscriptionMessage(true, command.topic))
+            is SubscribeCommand -> CommandOrMessage(buildSubscriptionMessage(true, command.topic))
 
-            is CancelCommand ->
-                CommandOrMessage(buildSubscriptionMessage(false, command.topic))
+            is CancelCommand -> CommandOrMessage(buildSubscriptionMessage(false, command.topic))
 
             else -> commandOrMessage
         }
     } else commandOrMessage
 
 private fun buildSubscriptionMessage(subscribe: Boolean, topic: ByteArray): Message {
+    // TODO use a pool
     val bytes = ByteArray(topic.size + 1) { index ->
         if (index == 0) if (subscribe) 1 else 0
         else topic[index - 1]
     }
-    return Message(bytes)
+    return messageOf(constantFrameOf(bytes))
 }
 
 private fun validateSocketType(
     properties: Map<PropertyName, ByteArray>,
     peerSocketTypes: Set<Type>,
 ) {
-    val socketTypeProperty = (properties[PropertyName.SOCKET_TYPE]
-        ?: protocolError("No socket type property in metadata"))
+    val socketTypeProperty =
+        (properties[PropertyName.SOCKET_TYPE] ?: protocolError("No socket type property in metadata"))
     val peerSocketType = findSocketType(socketTypeProperty.decodeToString())
     if (!peerSocketTypes.contains(peerSocketType)) protocolError("Invalid socket type: $peerSocketType")
 }

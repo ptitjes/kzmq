@@ -127,7 +127,8 @@ internal class CIOPublisherSocket(
                     }
 
                     sendChannel.onReceive { message ->
-                        subscriptions.forEachMatching(message.firstOrThrow()) { peerMailbox ->
+                        val firstFrame = message.peekFirst()
+                        subscriptions.forEachMatching(firstFrame) { peerMailbox ->
                             logger.d { "Dispatching $message to $peerMailbox" }
                             peerMailbox.sendChannel.send(CommandOrMessage(message))
                         }

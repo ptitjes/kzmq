@@ -27,7 +27,7 @@ private suspend fun Context.pull(
         subscribe("")
 
         for (message in this) {
-            val data = message.singleOrThrow().decodeToString()
+            val data = message.removeFirst().copyOf().decodeToString()
             println("Received: $data")
         }
     }

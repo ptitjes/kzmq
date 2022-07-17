@@ -92,13 +92,13 @@ internal abstract class LibzmqSocket internal constructor(
     }
 
     private fun doSend(message: Message, blocking: Boolean) {
-        val parts = message.parts
+        val parts = message.frames
         val lastPartIndex = parts.lastIndex
 
         val baseFlags = if (blocking) 0 else ZMQ_DONTWAIT
 
         for ((index, part) in parts.withIndex()) {
-            val nativeData = part.toCValues()
+            val nativeData = part.copyOf().toCValues()
             val flags = baseFlags or if (index < lastPartIndex) ZMQ_SNDMORE else 0
             checkNativeError(zmq_send(underlying, nativeData, nativeData.size.toULong(), flags))
         }
@@ -135,12 +135,12 @@ internal abstract class LibzmqSocket internal constructor(
     }
 
     private fun doReceiveMessage(blocking: Boolean): Message {
-        val parts = mutableListOf<ByteArray>()
+        val parts = mutableListOf<Frame>()
         do {
             val part = doReceiveMessagePart(blocking) ?: continue
-            parts += part
+            parts += constantFrameOf(part)
         } while (hasMoreParts)
-        return Message(parts)
+        return messageOf(parts)
     }
 
     private val hasMoreParts: Boolean by socketOption(underlying, ZMQ_RCVMORE, booleanConverter)

@@ -52,27 +52,31 @@ internal abstract class JeroMQSocket internal constructor(
     fun trySend(message: Message): SocketResult<Unit> = catching { sendImmediate(message) }
 
     private suspend fun sendSuspend(message: Message) = trace("sendSuspend") {
-        val parts = message.parts
-        val lastIndex = parts.size - 1
-        for ((index, part) in parts.withIndex()) {
-            sendPartSuspend(part, index < lastIndex)
-        }
+        do {
+            sendFrameSuspend(message.removeFirst(), message.isNotEmpty())
+        } while (message.isNotEmpty())
     }
 
-    private suspend fun sendPartSuspend(part: ByteArray, sendMore: Boolean) {
-        suspendOnIO { underlying.send(part, if (sendMore) ZMQ.SNDMORE else 0) }
+    private suspend fun sendFrameSuspend(frame: Frame, sendMore: Boolean) {
+        suspendOnIO {
+            frame.read { array, offset, length ->
+                underlying.send(array, offset, length, if (sendMore) ZMQ.SNDMORE else 0)
+            }
+            frame.release()
+        }
     }
 
     private fun sendImmediate(message: Message) = trace("sendImmediate") {
-        val parts = message.parts
-        val lastIndex = parts.size - 1
-        for ((index, part) in parts.withIndex()) {
-            sendPartImmediate(part, index < lastIndex)
-        }
+        do {
+            sendFrameImmediate(message.removeFirst(), message.isNotEmpty())
+        } while (message.isNotEmpty())
     }
 
-    private fun sendPartImmediate(part: ByteArray, sendMore: Boolean) {
-        underlying.send(part, ZMQ.DONTWAIT or if (sendMore) ZMQ.SNDMORE else 0)
+    private fun sendFrameImmediate(frame: Frame, sendMore: Boolean) {
+        frame.read { array, offset, length ->
+            underlying.send(array, offset, length, ZMQ.DONTWAIT or if (sendMore) ZMQ.SNDMORE else 0)
+        }
+        frame.release()
     }
 
     // TODO multicastHops is a long in underlying socket
@@ -89,27 +93,27 @@ internal abstract class JeroMQSocket internal constructor(
         get() = throw NotImplementedError("Not supported on JeroMQ engine")
 
     private suspend fun receiveSuspend(): Message = trace("receiveSuspend") {
-        val parts = mutableListOf<ByteArray>()
+        val frames = mutableListOf<Frame>()
         do {
-            parts.add(receivePartSuspend())
+            frames.add(receiveFrameSuspend())
         } while (underlying.hasReceiveMore())
-        return Message(*parts.toTypedArray())
+        return messageOf(*frames.toTypedArray())
     }
 
-    private suspend fun receivePartSuspend(): ByteArray {
-        return suspendOnIO { underlying.recv(0) }
+    private suspend fun receiveFrameSuspend(): Frame {
+        return suspendOnIO { constantFrameOf(underlying.recv(0)) }
     }
 
     private fun receiveImmediate(): Message = trace("receiveImmediate") {
-        val parts = mutableListOf<ByteArray>()
+        val frames = mutableListOf<Frame>()
         do {
-            parts.add(receivePartImmediate() ?: error("No message received"))
+            frames.add(receiveFrameImmediate() ?: error("No message received"))
         } while (underlying.hasReceiveMore())
-        return Message(*parts.toTypedArray())
+        return messageOf(*frames.toTypedArray())
     }
 
-    private fun receivePartImmediate(): ByteArray? {
-        return underlying.recv(ZMQ.DONTWAIT)
+    private fun receiveFrameImmediate(): Frame? {
+        return constantFrameOf(underlying.recv(ZMQ.DONTWAIT))
     }
 
     operator fun iterator(): SocketIterator = object : SocketIterator {

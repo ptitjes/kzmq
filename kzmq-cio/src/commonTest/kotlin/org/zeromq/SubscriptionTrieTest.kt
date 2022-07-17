@@ -56,7 +56,7 @@ internal class SubscriptionTrieTest {
     ) = runTest {
         val subscriptions = trieFactory(SubscriptionTrie<T>())
         val matched = mutableMapOf<T, Int>()
-        subscriptions.forEachMatching(content) { matched[it] = (matched[it] ?: 0) + 1 }
+        subscriptions.forEachMatching(constantFrameOf(content)) { matched[it] = (matched[it] ?: 0) + 1 }
 
         assertEquals(expectedMatches, matched.keys)
         if (matched.values.isNotEmpty()) assertEquals(setOf(1), matched.values.toSet())

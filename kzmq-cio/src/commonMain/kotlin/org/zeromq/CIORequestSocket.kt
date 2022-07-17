@@ -87,10 +87,10 @@ internal class CIORequestSocket(
         }
         launch {
             while (isActive) {
-                val (peerMailbox, requestData) = requestsChannel.receive()
+                val (peerMailbox, request) = requestsChannel.receive()
 
-                val request = addPrefixAddress(requestData)
                 logger.d { "Sending request $request to $peerMailbox" }
+                request.addPrefixAddresses(emptyList())
                 peerMailbox.sendChannel.send(CommandOrMessage(request))
 
                 while (isActive) {
@@ -101,8 +101,8 @@ internal class CIORequestSocket(
                     }
 
                     logger.d { "Sending back reply $reply from $peerMailbox" }
-                    val (_, replyData) = extractPrefixAddress(reply)
-                    receiveChannel.send(replyData)
+                    reply.removePrefixAddresses()
+                    receiveChannel.send(reply)
                     break
                 }
             }

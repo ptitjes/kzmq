@@ -14,12 +14,13 @@ import kotlinx.coroutines.selects.*
 import org.zeromq.*
 import org.zeromq.tests.utils.*
 
+private val HELLO = constantFrameOf("Hello 0MQ!")
+
 @Suppress("unused")
 class PublisherSubscriberTests : FunSpec({
 
     withEngines("bind-connect") { (ctx1, ctx2) ->
         val address = randomAddress()
-        val message = Message("Hello 0MQ!".encodeToByteArray())
 
         val publisher = ctx1.createPublisher()
         publisher.bind(address)
@@ -31,15 +32,14 @@ class PublisherSubscriberTests : FunSpec({
         waitForSubscriptions()
 
         coroutineScope {
-            launch { publisher.send(message) }
-            launch { subscriber.receive() shouldBe message }
+            launch { publisher.send(messageOf(HELLO)) }
+            launch { subscriber.receive() shouldBe messageOf(HELLO) }
         }
     }
 
     // TODO Figure out why this test is hanging with JeroMQ and ZeroMQ.js
     withEngines("connect-bind").config(skipEngines = listOf("jeromq", "zeromq.js")) { (ctx1, ctx2) ->
         val address = randomAddress()
-        val message = Message("Hello 0MQ!".encodeToByteArray())
 
         val publisher = ctx1.createPublisher()
         publisher.connect(address)
@@ -51,15 +51,15 @@ class PublisherSubscriberTests : FunSpec({
         waitForSubscriptions()
 
         coroutineScope {
-            launch { publisher.send(message) }
-            launch { subscriber.receive() shouldBe message }
+            launch { publisher.send(messageOf(HELLO)) }
+            launch { subscriber.receive() shouldBe messageOf(HELLO) }
         }
     }
 
     withEngines("flow") { (ctx1, ctx2) ->
         val address = randomAddress()
-        val messageCount = 10
-        val sent = generateMessages(messageCount).asFlow()
+        val count = 10
+        val frames = generateRandomFrames(count)
 
         val publisher = ctx1.createPublisher()
         publisher.bind(address)
@@ -72,12 +72,12 @@ class PublisherSubscriberTests : FunSpec({
 
         coroutineScope {
             launch {
-                sent.collectToSocket(publisher)
+                frames.asFlow().map { messageOf(it) }.collectToSocket(publisher)
             }
 
             launch {
-                val received = subscriber.consumeAsFlow().take(messageCount)
-                received.toList() shouldContainExactly sent.toList()
+                val received = subscriber.consumeAsFlow().take(count)
+                received.toList().map { it.removeFirst() } shouldContainExactly frames
             }
         }
     }
@@ -86,8 +86,8 @@ class PublisherSubscriberTests : FunSpec({
         val address1 = randomAddress()
         val address2 = randomAddress()
 
-        val messageCount = 10
-        val sent = generateMessages(messageCount)
+        val count = 10
+        val frames = generateRandomFrames(count).sortedWith(FrameComparator)
 
         val publisher1 = ctx1.createPublisher()
         publisher1.bind(address1)
@@ -107,20 +107,20 @@ class PublisherSubscriberTests : FunSpec({
 
         coroutineScope {
             launch {
-                for ((index, message) in sent.withIndex()) {
-                    (if (index % 2 == 0) publisher1 else publisher2).send(message)
+                for ((index, frame) in frames.withIndex()) {
+                    (if (index % 2 == 0) publisher1 else publisher2).send(messageOf(frame))
                 }
             }
 
             launch {
-                val received = mutableListOf<Message>()
-                repeat(messageCount) {
+                val received = mutableListOf<Frame>()
+                repeat(count) {
                     received += select<Message> {
                         subscriber1.onReceive { it }
                         subscriber2.onReceive { it }
-                    }
+                    }.removeFirst()
                 }
-                received.sortedWith(MessageComparator) shouldContainExactly sent
+                received.sortedWith(FrameComparator) shouldContainExactly frames
             }
         }
     }
@@ -128,8 +128,11 @@ class PublisherSubscriberTests : FunSpec({
     withEngines("subscription filter") { (ctx1, ctx2) ->
         val address = randomAddress()
 
-        val sent = listOf("prefixed data", "non-prefixed data", "prefix is good")
-        val expected = sent.filter { it.startsWith("prefix") }
+        val data = listOf("prefixed data", "non-prefixed data", "prefix is good")
+        val expectedData = data.filter { it.startsWith("prefix") }
+
+        val frames = data.map { constantFrameOf(it) }
+        val expectedFrames = expectedData.map { constantFrameOf(it) }
 
         val publisher = ctx1.createPublisher()
         publisher.bind(address)
@@ -142,15 +145,15 @@ class PublisherSubscriberTests : FunSpec({
 
         coroutineScope {
             launch {
-                sent.forEach { publisher.send(Message(it.encodeToByteArray())) }
+                frames.forEach { publisher.send(messageOf(it)) }
             }
 
             launch {
-                val received = mutableListOf<String>()
+                val received = mutableListOf<Frame>()
                 repeat(2) {
-                    received += subscriber.receive().singleOrThrow().decodeToString()
+                    received += subscriber.receive().removeFirst()
                 }
-                received shouldContainExactly expected
+                received shouldContainExactly expectedFrames
             }
         }
     }

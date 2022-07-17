@@ -47,8 +47,8 @@ internal data class SubscriptionTrie<T>(
         }
     }
 
-    suspend fun forEachMatching(content: ByteArray, block: suspend (T) -> Unit) {
-        forEachMatching(content.iterator(), mutableSetOf(), block)
+    suspend fun forEachMatching(frame: Frame, block: suspend (T) -> Unit) {
+        forEachMatching(frame.iterator(), mutableSetOf(), block)
     }
 
     private suspend fun forEachMatching(

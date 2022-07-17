@@ -11,19 +11,17 @@ import io.ktor.utils.io.*
 import io.ktor.utils.io.core.*
 import org.zeromq.*
 
-internal suspend fun ByteWriteChannel.writeGreetingPart1() =
-    writePacket {
-        writeFully(SIGNATURE)
-        writeUByte(MAJOR_VERSION.toUByte())
-    }
+internal suspend fun ByteWriteChannel.writeGreetingPart1() = writePacket {
+    writeFully(SIGNATURE)
+    writeUByte(MAJOR_VERSION.toUByte())
+}
 
-internal suspend fun ByteWriteChannel.writeGreetingPart2(mechanism: Mechanism, asServer: Boolean) =
-    writePacket {
-        writeUByte(MINOR_VERSION.toUByte())
-        writeMechanism(mechanism)
-        writeUByte(if (asServer) AS_SERVER else AS_CLIENT)
-        writeFully(FILLER)
-    }
+internal suspend fun ByteWriteChannel.writeGreetingPart2(mechanism: Mechanism, asServer: Boolean) = writePacket {
+    writeUByte(MINOR_VERSION.toUByte())
+    writeMechanism(mechanism)
+    writeUByte(if (asServer) AS_SERVER else AS_CLIENT)
+    writeFully(FILLER)
+}
 
 private fun BytePacketBuilder.writeMechanism(mechanism: Mechanism) {
     val bytes = mechanism.bytes
@@ -116,18 +114,16 @@ private fun BytePacketBuilder.writeShortString(bytes: ByteArray) {
 }
 
 private suspend fun ByteWriteChannel.writeMessage(message: Message) = writePacket {
-    val parts = message.parts
-    val lastIndex = parts.lastIndex
-    for ((index, part) in parts.withIndex()) {
-        val hasMore = index < lastIndex
-        writeMessagePart(hasMore, part)
-    }
+    do {
+        writeMessageFrame(message.removeFirst(), message.isNotEmpty())
+    } while (message.isNotEmpty())
 }
 
-private fun BytePacketBuilder.writeMessagePart(hasMore: Boolean, part: ByteArray) {
+private fun BytePacketBuilder.writeMessageFrame(frame: Frame, hasMore: Boolean) {
     val flags = if (hasMore) ZmqFlags.more else ZmqFlags.none
-    writeFrameHeader(flags, part.size.toLong())
-    writeFully(part)
+    writeFrameHeader(flags, frame.size.toLong())
+    frame.read { array, offset, length -> writeFully(array, offset, length) }
+    frame.release()
 }
 
 private fun BytePacketBuilder.writeFrameHeader(flags: ZmqFlags, size: Long) {
@@ -143,4 +139,3 @@ private fun BytePacketBuilder.writeFrameHeader(flags: ZmqFlags, size: Long) {
 private fun BytePacketBuilder.writeZmqFlags(flags: ZmqFlags) {
     writeUByte(flags.data)
 }
-

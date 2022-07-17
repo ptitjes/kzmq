@@ -12,8 +12,8 @@ import kotlinx.coroutines.*
 import org.zeromq.*
 import org.zeromq.tests.utils.*
 
-private const val REQUEST_MARKER = "REQ"
-private const val REPLY_MARKER = "REP"
+private val REQUEST_MARKER = constantFrameOf("REQ")
+private val REPLY_MARKER = constantFrameOf("REP")
 
 @Suppress("unused")
 class DealerRouterTests : FunSpec({
@@ -51,9 +51,9 @@ class DealerRouterTests : FunSpec({
                     val requestData = byteArrayOf(requestId.toByte())
 
                     dealer.send(
-                        Message(
-                            REQUEST_MARKER.encodeToByteArray(),
-                            requestData
+                        messageOf(
+                            REQUEST_MARKER,
+                            constantFrameOf(requestData)
                         )
                     )
                 }
@@ -63,15 +63,15 @@ class DealerRouterTests : FunSpec({
                     repeat(dealerCount) {
                         val request = router.receive()
 
-                        request.parts.size shouldBe 3
-                        val dealerId = request.parts[0]
-                        request.parts[1].decodeToString() shouldBe REQUEST_MARKER
-                        val requestId = request.parts[2]
+                        request.frames.size shouldBe 3
+                        val dealerId = request.frames[0]
+                        request.frames[1] shouldBe REQUEST_MARKER
+                        val requestId = request.frames[2]
 
                         router.send(
-                            Message(
+                            messageOf(
                                 dealerId,
-                                REPLY_MARKER.encodeToByteArray(),
+                                REPLY_MARKER,
                                 requestId,
                                 dealerId
                             )
@@ -84,16 +84,15 @@ class DealerRouterTests : FunSpec({
                     repeat(routerCount) {
                         val reply = dealer.receive()
 
-                        reply.parts.size shouldBe 3
-                        reply.parts[0].decodeToString() shouldBe REPLY_MARKER
-                        val requestIdFrame = reply.parts[1]
-                        val dealerIdFrame = reply.parts[2]
+                        reply.frames.size shouldBe 3
+                        reply.frames[0] shouldBe REPLY_MARKER
+                        val requestIdFrame = reply.frames[1]
+                        val dealerIdFrame = reply.frames[2]
 
                         val requestId = requestIdFrame[0].toInt()
                         val dealerId = dealerIdFrame.decodeRoutingId()
 
-                        println(dealer.routingId?.contentToString())
-                        dealerId shouldBe dealer.routingId?.decodeRoutingId()
+                        dealerId shouldBe dealer.routingId?.let { constantFrameOf(it).decodeRoutingId() }
                         dealerId shouldBe requestId % dealerCount
 
                         trace.receivedReplyIds.getAndUpdate { it + requestId }
@@ -110,7 +109,7 @@ class DealerRouterTests : FunSpec({
  * TODO Remove when https://github.com/zeromq/zeromq.js/issues/506 is fixed.
  */
 private fun Int.encodeRoutingId(): ByteArray = byteArrayOf(1, (this + 1).toByte())
-private fun ByteArray.decodeRoutingId(): Int {
+private fun Frame.decodeRoutingId(): Int {
     require(size == 2)
     require(this[0] == 1.toByte())
     return this[1].toInt() - 1

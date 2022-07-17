@@ -14,12 +14,13 @@ import kotlinx.coroutines.selects.*
 import org.zeromq.*
 import org.zeromq.tests.utils.*
 
+private val HELLO = constantFrameOf("Hello 0MQ!")
+
 @Suppress("unused")
 class PushPullTests : FunSpec({
 
     withEngines("bind-connect") { (ctx1, ctx2) ->
         val address = randomAddress()
-        val message = Message("Hello 0MQ!".encodeToByteArray())
 
         val push = ctx1.createPush()
         push.bind(address)
@@ -27,13 +28,12 @@ class PushPullTests : FunSpec({
         val pull = ctx2.createPull()
         pull.connect(address)
 
-        push.send(message)
-        pull.receive() shouldBe message
+        push.send(messageOf(HELLO))
+        pull.receive() shouldBe messageOf(HELLO)
     }
 
     withEngines("connect-bind") { (ctx1, ctx2) ->
         val address = randomAddress()
-        val message = Message("Hello 0MQ!".encodeToByteArray())
 
         val push = ctx1.createPush()
         push.connect(address)
@@ -41,14 +41,14 @@ class PushPullTests : FunSpec({
         val pull = ctx2.createPull()
         pull.bind(address)
 
-        push.send(message)
-        pull.receive() shouldBe message
+        push.send(messageOf(HELLO))
+        pull.receive() shouldBe messageOf(HELLO)
     }
 
     withEngines("flow") { (ctx1, ctx2) ->
         val address = randomAddress()
-        val messageCount = 10
-        val sent = generateMessages(messageCount).asFlow()
+        val count = 10
+        val frames = generateRandomFrames(count)
 
         val push = ctx1.createPush()
         push.bind(address)
@@ -58,12 +58,12 @@ class PushPullTests : FunSpec({
 
         coroutineScope {
             launch {
-                sent.collectToSocket(push)
+                frames.asFlow().map { messageOf(it) }.collectToSocket(push)
             }
 
             launch {
-                val received = pull.consumeAsFlow().take(messageCount)
-                received.toList() shouldContainExactly sent.toList()
+                val received = pull.consumeAsFlow().take(count)
+                received.toList().map { it.removeFirst() } shouldContainExactly frames
             }
         }
     }
@@ -72,8 +72,8 @@ class PushPullTests : FunSpec({
         val address1 = randomAddress()
         val address2 = randomAddress()
 
-        val messageCount = 10
-        val sent = generateMessages(messageCount)
+        val count = 10
+        val frames = generateRandomFrames(count).sortedWith(FrameComparator)
 
         val push1 = ctx1.createPush()
         push1.bind(address1)
@@ -89,20 +89,20 @@ class PushPullTests : FunSpec({
 
         coroutineScope {
             launch {
-                for ((index, message) in sent.withIndex()) {
-                    (if (index % 2 == 0) push1 else push2).send(message)
+                for ((index, frame) in frames.withIndex()) {
+                    (if (index % 2 == 0) push1 else push2).send(messageOf(frame))
                 }
             }
 
             launch {
-                val received = mutableListOf<Message>()
-                repeat(messageCount) {
+                val received = mutableListOf<Frame>()
+                repeat(count) {
                     received += select<Message> {
                         pull1.onReceive { it }
                         pull2.onReceive { it }
-                    }
+                    }.removeFirst()
                 }
-                received.sortedWith(MessageComparator) shouldContainExactly sent
+                received.sortedWith(FrameComparator) shouldContainExactly frames
             }
         }
     }

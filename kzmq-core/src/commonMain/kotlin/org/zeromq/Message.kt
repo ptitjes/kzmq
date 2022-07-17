@@ -5,21 +5,39 @@
 
 package org.zeromq
 
-data class Message(val parts: List<ByteArray>) {
+fun messageOf(frames: List<Frame>) = Message(frames)
+fun messageOf(vararg frames: Frame) = Message(frames.toList())
+
+class Message(frames: List<Frame> = emptyList()) {
+
+    private val _frames: MutableList<Frame> = mutableListOf()
+
     init {
-        require(parts.isNotEmpty()) { "parts should contain at least one part" }
+        _frames.addAll(frames.map { it.steal() })
     }
 
-    constructor(vararg parts: ByteArray) : this(parts.toList())
+    val frames: List<Frame> get() = _frames
 
-    val isSingle: Boolean get() = parts.size == 1
-    val isMultipart: Boolean get() = parts.size > 1
+    fun release() {
+        _frames.forEach { it.release() }
+        _frames.clear()
+    }
 
-    fun singleOrThrow(): ByteArray =
-        if (isSingle) parts[0] else error("Message is multipart")
+    fun steal(): Message = Message(frames.map { it.steal() }).also {
+        _frames.clear()
+    }
 
-    fun firstOrThrow(): ByteArray =
-        parts.getOrNull(0) ?: error("Message has no parts")
+    val isSingle: Boolean get() = frames.size == 1
+    val isMultipart: Boolean get() = frames.size > 1
+
+    fun peekFirst(): Frame = frames.getOrNull(0) ?: error("Message has no parts")
+
+    fun pushFirst(frame: Frame) {
+        _frames.add(0, frame)
+    }
+
+    fun removeFirst(): Frame = _frames.removeFirst()
+    fun removeFirstOrNull(): Frame? = _frames.removeFirstOrNull()
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
@@ -27,23 +45,27 @@ data class Message(val parts: List<ByteArray>) {
 
         other as Message
 
-        if (parts.size != other.parts.size) return false
-        for (i in parts.indices) {
-            if (!parts[i].contentEquals(other.parts[i])) return false
-        }
+        if (frames != other.frames) return false
 
         return true
     }
 
     override fun hashCode(): Int {
-        var result: Int = 0
-        for (part in parts) {
-            result = 31 * result + part.contentHashCode()
-        }
-        return result
+        return frames.hashCode()
     }
 
     override fun toString(): String {
-        return "Message(parts=${parts.joinToString { it.contentToString() }})"
+        return "Message(frames=$frames)"
     }
+}
+
+fun Message.isEmpty() = frames.isEmpty()
+fun Message.isNotEmpty() = frames.isNotEmpty()
+
+fun Message.removeFirstWhile(predicate: (frame: Frame) -> Boolean): List<Frame> {
+    val removed = mutableListOf<Frame>()
+    while (predicate(peekFirst())) {
+        removed += removeFirst()
+    }
+    return removed
 }

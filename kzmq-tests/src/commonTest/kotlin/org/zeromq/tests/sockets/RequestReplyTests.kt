@@ -12,13 +12,14 @@ import kotlinx.coroutines.selects.*
 import org.zeromq.*
 import org.zeromq.tests.utils.*
 
+private val HELLO_REQUEST = constantFrameOf("Hello 0MQ!")
+private val HELLO_REPLY = constantFrameOf("Hello back!")
+
 @Suppress("unused")
 class RequestReplyTests : FunSpec({
 
     withEngines("bind-connect") { (ctx1, ctx2) ->
         val address = randomAddress()
-        val requestMessage = Message("Hello 0MQ!".encodeToByteArray())
-        val replyMessage = Message("Hello back!".encodeToByteArray())
 
         val request = ctx1.createRequest()
         request.bind(address)
@@ -26,17 +27,15 @@ class RequestReplyTests : FunSpec({
         val reply = ctx2.createReply()
         reply.connect(address)
 
-        request.send(requestMessage)
-        reply.receive() shouldBe requestMessage
+        request.send(messageOf(HELLO_REQUEST))
+        reply.receive() shouldBe messageOf(HELLO_REQUEST)
 
-        reply.send(replyMessage)
-        request.receive() shouldBe replyMessage
+        reply.send(messageOf(HELLO_REPLY))
+        request.receive() shouldBe messageOf(HELLO_REPLY)
     }
 
     withEngines("connect-bind") { (ctx1, ctx2) ->
         val address = randomAddress()
-        val requestMessage = Message("Hello 0MQ!".encodeToByteArray())
-        val replyMessage = Message("Hello back!".encodeToByteArray())
 
         val request = ctx1.createRequest()
         request.bind(address)
@@ -44,11 +43,11 @@ class RequestReplyTests : FunSpec({
         val reply = ctx2.createReply()
         reply.connect(address)
 
-        request.send(requestMessage)
-        reply.receive() shouldBe requestMessage
+        request.send(messageOf(HELLO_REQUEST))
+        reply.receive() shouldBe messageOf(HELLO_REQUEST)
 
-        reply.send(replyMessage)
-        request.receive() shouldBe replyMessage
+        reply.send(messageOf(HELLO_REPLY))
+        request.receive() shouldBe messageOf(HELLO_REPLY)
     }
 
     withEngines("round-robin connected reply sockets").config(
@@ -70,8 +69,9 @@ class RequestReplyTests : FunSpec({
 
         var lastReplier: ReplySocket? = null
         repeat(10) { i ->
-            val requestMessage = Message("Hello $i".encodeToByteArray())
-            val replyMessage = Message("Hello back $i".encodeToByteArray())
+            val indexFrame = constantFrameOf(ByteArray(1) { i.toByte() })
+            val requestMessage = messageOf(HELLO_REQUEST, indexFrame)
+            val replyMessage = messageOf(HELLO_REPLY, indexFrame)
 
             request.send(requestMessage)
 
@@ -80,19 +80,25 @@ class RequestReplyTests : FunSpec({
                     lastReplier shouldNotBe reply1
                     lastReplier = reply1
 
-                    message shouldBe requestMessage
+                    message.removeFirst() shouldBe HELLO_REQUEST
+                    message.removeFirst() shouldBe indexFrame
+
                     reply1.send(replyMessage)
                 }
                 reply2.onReceive { message ->
                     lastReplier shouldNotBe reply2
                     lastReplier = reply2
 
-                    message shouldBe requestMessage
+                    message.removeFirst() shouldBe HELLO_REQUEST
+                    message.removeFirst() shouldBe indexFrame
+
                     reply2.send(replyMessage)
                 }
             }
 
-            request.receive() shouldBe replyMessage
+            val reply = request.receive()
+            reply.removeFirst() shouldBe HELLO_REPLY
+            reply.removeFirst() shouldBe indexFrame
         }
     }
 
@@ -115,17 +121,17 @@ class RequestReplyTests : FunSpec({
                 var lastRequester: String? = null
                 repeat(10) {
                     val request = reply.receive()
-                    val requester = request.singleOrThrow().decodeToString().substringAfterLast(" ")
 
-                    lastRequester shouldNotBe requester
-                    lastRequester = requester
+                    request.removeFirst() shouldBe HELLO_REQUEST
+                    val number = request.removeFirst()
 
-                    reply.send(Message("Hello back to $requester".encodeToByteArray()))
+                    reply.send(messageOf(HELLO_REPLY, number))
                 }
             }
             launch {
-                val requestMessage = Message("Hello from request1".encodeToByteArray())
-                val replyMessage = Message("Hello back to request1".encodeToByteArray())
+                val numberFrame = constantFrameOf(ByteArray(1) { 1 })
+                val requestMessage = messageOf(HELLO_REQUEST, numberFrame)
+                val replyMessage = messageOf(HELLO_REPLY, numberFrame)
 
                 repeat(5) {
                     request1.send(requestMessage)
@@ -133,8 +139,9 @@ class RequestReplyTests : FunSpec({
                 }
             }
             launch {
-                val requestMessage = Message("Hello from request2".encodeToByteArray())
-                val replyMessage = Message("Hello back to request2".encodeToByteArray())
+                val numberFrame = constantFrameOf(ByteArray(1) { 2 })
+                val requestMessage = messageOf(HELLO_REQUEST, numberFrame)
+                val replyMessage = messageOf(HELLO_REPLY, numberFrame)
 
                 repeat(5) {
                     request2.send(requestMessage)

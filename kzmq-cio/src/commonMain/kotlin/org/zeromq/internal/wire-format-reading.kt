@@ -76,41 +76,27 @@ private suspend fun ByteReadChannel.readCommandContent(flags: ZmqFlags): Command
 
 private suspend fun ByteReadChannel.readMessageContent(initialFlags: ZmqFlags): Message {
     var flags = initialFlags
-    val parts = mutableListOf<ByteArray>()
+    val frames = mutableListOf<Frame>()
 
     do {
         if (flags.isCommand) invalidFrame("Expected message")
 
-        parts.add(readMessagePartContent(flags))
+        frames.add(readMessageFrame(flags))
 
         val hasMore = flags.isMore
         if (hasMore) flags = readZmqFlags()
     } while (hasMore)
 
-    return Message(parts)
+    return messageOf(frames)
 }
 
-private suspend fun ByteReadChannel.readMessagePartContent(flags: ZmqFlags): ByteArray {
-    val size = if (!flags.isLongSize) {
-        readUByte().toLong()
-    } else {
-        readLong().toULong().toLong()
-    }
+private suspend fun ByteReadChannel.readMessageFrame(flags: ZmqFlags): Frame {
+    // FIXME cast size to int for now
+    val size = (if (!flags.isLongSize) readUByte().toInt() else readULong().toInt())
 
-    // FIXME casting to int for now
-    return readBytes(size.toInt())
-//    return readMessagePartBody(size.toInt())
-}
-
-private suspend fun ByteReadChannel.readMessagePartBody(size: Int): ByteArray {
-    return readMessagePartPacket(size).readBytes(size)
-//    val bytes = borrowBuffer()
-//    readFully(bytes, 0, size)
-//    return bytes
-}
-
-private suspend fun ByteReadChannel.readMessagePartPacket(size: Int): ByteReadPacket {
-    return readPacket(size)
+    // TODO use a pool
+    val bytes = readBytes(size)
+    return constantFrameOf(bytes)
 }
 
 private suspend fun ByteReadChannel.readProperties(dataSize: Long): Map<PropertyName, ByteArray> {
@@ -144,5 +130,6 @@ private suspend fun ByteReadChannel.readBytes(size: Int): ByteArray {
 }
 
 private suspend inline fun ByteReadChannel.readUByte() = readByte().toUByte()
+private suspend inline fun ByteReadChannel.readULong() = readLong().toULong()
 
 private suspend inline fun ByteReadChannel.readZmqFlags() = ZmqFlags(readUByte())

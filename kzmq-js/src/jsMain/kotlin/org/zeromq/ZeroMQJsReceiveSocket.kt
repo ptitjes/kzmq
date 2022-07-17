@@ -12,7 +12,7 @@ import org.zeromq.internal.zeromqjs.*
 internal class ZeroMQJsReceiveSocket(private val underlying: Readable) : ReceiveSocket {
 
     override suspend fun receive(): Message =
-        Message(underlying.receive().await().map { it.toByteArray() })
+        messageOf(underlying.receive().await().map { constantFrameOf(it.asByteArray()) })
 
     override suspend fun receiveCatching(): SocketResult<Message> = try {
         SocketResult.success(receive())

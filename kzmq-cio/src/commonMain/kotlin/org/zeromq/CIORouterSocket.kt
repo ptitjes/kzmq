@@ -66,9 +66,7 @@ internal class CIORouterSocket(
     coroutineContext: CoroutineContext,
     selectorManager: SelectorManager,
 ) : CIOSocket(coroutineContext, selectorManager, Type.ROUTER, setOf(Type.REQ, Type.DEALER, Type.ROUTER)),
-    CIOReceiveSocket,
-    CIOSendSocket,
-    RouterSocket {
+    CIOReceiveSocket, CIOSendSocket, RouterSocket {
 
     override val receiveChannel = Channel<Message>()
     override val sendChannel = Channel<Message>()
@@ -80,7 +78,7 @@ internal class CIORouterSocket(
 
             fun generateNewIdentity(): Identity {
                 while (true) {
-                    val identity = Identity(Random.nextBytes(ByteArray(16)))
+                    val identity = Identity(constantFrameOf(Random.nextBytes(ByteArray(16))))
                     if (!perIdentityMailboxes.containsKey(identity)) return identity
                 }
             }
@@ -113,8 +111,9 @@ internal class CIORouterSocket(
                         }
                     }
 
-                    sendChannel.onReceive {
-                        val (identity, message) = extractIdentity(it)
+                    sendChannel.onReceive { message ->
+                        val identity = Identity(message.removeFirst())
+
                         perIdentityMailboxes[identity]?.let { peerMailbox ->
                             logger.d { "Forwarding reply $message to $peerMailbox with identity $identity" }
                             peerMailbox.sendChannel.send(CommandOrMessage(message))
@@ -130,7 +129,8 @@ internal class CIORouterSocket(
             val message = peerMailbox.receiveChannel.receive().messageOrThrow()
             peerMailbox.identity?.let { identity ->
                 logger.d { "Forwarding request $message from $peerMailbox with identity $identity" }
-                receiveChannel.send(prependIdentity(message, identity))
+                message.pushFirst(identity.frame)
+                receiveChannel.send(message)
             }
         }
     }
@@ -146,9 +146,3 @@ internal class CIORouterSocket(
         get() = TODO("Not yet implemented")
         set(value) {}
 }
-
-private fun prependIdentity(message: Message, identity: Identity): Message =
-    Message(listOf(identity.value) + message.parts)
-
-private fun extractIdentity(message: Message): Pair<Identity, Message> =
-    Identity(message.parts[0]) to Message(message.parts.subList(1, message.parts.size))

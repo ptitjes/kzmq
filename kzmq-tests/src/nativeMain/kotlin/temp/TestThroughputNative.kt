@@ -16,7 +16,7 @@ fun mainThroughput(): Unit = runBlocking {
 
     val messageSize = 100
     val messageCount = 10_000_000
-    val message = Message(ByteArray(messageSize))
+    val message = messageOf(constantFrameOf(ByteArray(messageSize)))
 
     withContext(dispatcher) {
         val pushJob = launch(context) {

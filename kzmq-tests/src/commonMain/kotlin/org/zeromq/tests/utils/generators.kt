@@ -6,6 +6,7 @@
 package org.zeromq.tests.utils
 
 import org.zeromq.*
+import kotlin.random.*
 
 private val characters =
     listOf('_') + ('a'..'z').toList() + ('A'..'Z').toList() + ('0'..'9').toList()
@@ -26,4 +27,6 @@ suspend fun randomAddress(protocol: Protocol = Protocol.TCP): String {
 
 private fun randomAddressSuffix() = List(16) { characters.random() }.joinToString("")
 
-fun generateMessages(messageCount: Int) = List(messageCount) { Message("message-$it".encodeToByteArray()) }
+fun generateMessages(messageCount: Int) = List(messageCount) { messageOf(constantFrameOf("message-$it")) }
+
+fun generateRandomFrames(count: Int) = List(count) { constantFrameOf(Random.nextBytes(ByteArray(16))) }

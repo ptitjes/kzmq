@@ -11,12 +11,13 @@ import kotlinx.coroutines.*
 import org.zeromq.*
 import org.zeromq.tests.utils.*
 
+private val HELLO = constantFrameOf("Hello 0MQ!")
+
 @Suppress("unused")
 class TcpTests : FunSpec({
 
     withEngines("bind-connect") { (ctx1, ctx2) ->
         val address = randomAddress(Protocol.TCP)
-        val message = Message("Hello 0MQ!".encodeToByteArray())
 
         val push = ctx1.createPush()
         push.bind(address)
@@ -25,14 +26,13 @@ class TcpTests : FunSpec({
         pull.connect(address)
 
         coroutineScope {
-            launch { push.send(message) }
-            launch { pull.receive() shouldBe message }
+            launch { push.send(messageOf(HELLO)) }
+            launch { pull.receive() shouldBe messageOf(HELLO) }
         }
     }
 
     withEngines("connect-bind") { (ctx1, ctx2) ->
         val address = randomAddress(Protocol.TCP)
-        val message = Message("Hello 0MQ!".encodeToByteArray())
 
         val push = ctx1.createPush()
         push.connect(address)
@@ -41,8 +41,8 @@ class TcpTests : FunSpec({
         pull.bind(address)
 
         coroutineScope {
-            launch { push.send(message) }
-            launch { pull.receive() shouldBe message }
+            launch { push.send(messageOf(HELLO)) }
+            launch { pull.receive() shouldBe messageOf(HELLO) }
         }
     }
 })

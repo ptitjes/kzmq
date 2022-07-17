@@ -29,7 +29,7 @@ private suspend fun Context.publishEverySecond(
         var value = 0
         while (true) {
             val data = "$name > $value"
-            send(Message(data.encodeToByteArray()))
+            send(messageOf(constantFrameOf(data)))
             println("Sent: $data")
             delay(1000)
             value++

@@ -6,13 +6,15 @@
 package org.zeromq.tests.utils
 
 import org.zeromq.*
+import kotlin.math.*
 
-object MessageComparator : Comparator<Message> {
-    override fun compare(a: Message, b: Message): Int {
-        val aAsString = a.parts.joinToString { it.decodeToString() }
-        val bAsString = b.parts.joinToString { it.decodeToString() }
-        return if (aAsString < bAsString) -1
-        else if (aAsString > bAsString) +1
-        else 0
+object FrameComparator : Comparator<Frame> {
+    override fun compare(a: Frame, b: Frame): Int {
+        for (i in 0 until min(a.size, b.size)) {
+            if (a[i] != b[i]) {
+                return b[i] - a[i]
+            }
+        }
+        return b.size - a.size
     }
 }

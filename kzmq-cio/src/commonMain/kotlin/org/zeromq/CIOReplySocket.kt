@@ -91,13 +91,14 @@ internal class CIOReplySocket(
         launch(CoroutineName("zmq-rep")) {
             while (isActive) {
                 val (peerMailbox, request) = requestsChannel.receive()
-
                 logger.d { "Received request $request from $peerMailbox" }
-                val (identities, requestData) = extractPrefixAddress(request)
-                receiveChannel.send(requestData)
 
-                val replyData = sendChannel.receive()
-                val reply = addPrefixAddress(replyData, identities)
+                val identities = request.removePrefixAddresses()
+                receiveChannel.send(request)
+
+                val reply = sendChannel.receive()
+                reply.addPrefixAddresses(identities)
+
                 logger.d { "Sending reply $reply back to $peerMailbox" }
                 peerMailbox.sendChannel.send(CommandOrMessage(reply))
             }

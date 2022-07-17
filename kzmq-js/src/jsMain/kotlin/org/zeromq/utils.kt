@@ -10,7 +10,7 @@ import org.khronos.webgl.*
 import kotlin.properties.*
 import kotlin.reflect.*
 
-internal fun ByteArray.toBuffer(): Buffer {
+internal fun ByteArray.asBuffer(): Buffer {
     val int8Array: Int8Array = this.unsafeCast<Int8Array>()
     return Uint8Array(
         int8Array.buffer,
@@ -19,7 +19,7 @@ internal fun ByteArray.toBuffer(): Buffer {
     ).unsafeCast<Buffer>()
 }
 
-internal fun Buffer.toByteArray(): ByteArray {
+internal fun Buffer.asByteArray(): ByteArray {
     val uint8Array: Uint8Array = this.unsafeCast<Uint8Array>()
     return Int8Array(
         uint8Array.buffer,
