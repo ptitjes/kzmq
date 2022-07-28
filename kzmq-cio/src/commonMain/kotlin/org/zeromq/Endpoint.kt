@@ -55,6 +55,12 @@ internal fun parseEndpoint(endpoint: String): Endpoint =
 
 internal fun SocketAddress.toEndpoint() = when (this) {
     is InetSocketAddress -> TCPEndpoint(hostname, port)
-    is UnixSocketAddress -> IPCEndpoint(path)
+    is UnixSocketAddress -> {
+        // TODO this is a workaround for:
+        // https://youtrack.jetbrains.com/issue/KTOR-4695/Regression-UnixSocketAddresspath-fails-on-JVM
+        IPCEndpoint(this.toString())
+        // IPCEndpoint(path)
+    }
+
     else -> error("Unknown SocketAddress type")
 }
