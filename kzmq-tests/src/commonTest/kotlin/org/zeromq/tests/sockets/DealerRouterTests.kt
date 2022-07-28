@@ -92,7 +92,6 @@ class DealerRouterTests : FunSpec({
                         val requestId = requestIdFrame[0].toInt()
                         val dealerId = dealerIdFrame.decodeRoutingId()
 
-                        println(dealer.routingId?.contentToString())
                         dealerId shouldBe dealer.routingId?.decodeRoutingId()
                         dealerId shouldBe requestId % dealerCount
 
