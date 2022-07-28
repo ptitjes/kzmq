@@ -56,4 +56,5 @@ internal fun parseEndpoint(endpoint: String): Endpoint =
 internal fun SocketAddress.toEndpoint() = when (this) {
     is InetSocketAddress -> TCPEndpoint(hostname, port)
     is UnixSocketAddress -> IPCEndpoint(path)
+    else -> error("Unknown SocketAddress type")
 }
