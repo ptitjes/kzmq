@@ -13,7 +13,7 @@ import org.zeromq.internal.*
 import kotlin.coroutines.*
 
 /**
- * An implementation of the [PUB socket](https://rfc.zeromq.org/spec/29/).
+ * An implementation of the [XSUB socket](https://rfc.zeromq.org/spec/29/).
  *
  * ## The Publish-Subscribe Pattern
  *
@@ -50,47 +50,56 @@ import kotlin.coroutines.*
  * in the relevant documents. For TCP, refer to
  * [http://rfc.zeromq.org/spec:23/ZMTP](http://rfc.zeromq.org/spec:23/ZMTP).
  *
- * ## The PUB Socket Type
+ * ## The XPUB Socket Type
  *
- * The PUB socket type provides basic one-way broadcasting to a set of subscribers. Over TCP, it
- * does filtering on outgoing messages but nonetheless a message will be sent multiple times over
- * the network to reach multiple subscribers. PUB is used mainly for transient event distribution
- * where stability of the network (e.g. consistently low memory usage) is more important than
- * reliability of traffic.
+ * The XPUB socket type extends the PUB socket with the ability to receive messages from anonymous
+ * subscribers, and the exposure of subscription commands to the application. XPUB is usually used
+ * in proxies but is also useful for advanced applications.
  *
  * A. General behavior:
- * 1. MAY be connected to any number of SUB or XSUB subscribers, and SHALL only send messages.
- * 2. SHALL maintain a single outgoing message queue for each connected subscriber.
- * 3. SHALL create a queue when initiating an outgoing connection to a subscriber, and SHALL
- *    maintain the queue whether or not the connection is established.
- * 4. SHALL create a queue when a subscriber connects to it. If this subscriber disconnects, the
- *    PUB socket SHALL destroy its queue and SHALL discard any messages it contains.
- * 5. SHOULD constrain queue sizes to a runtime-configurable limit.
- * 6. SHALL silently discard any messages that subscribers send it.
+ * 1. MAY be connected to any number of SUB or XSUB subscribers, and MAY both send and receive
+ *    messages.
+ * 2. SHALL maintain a double queue for each connected subscriber, allowing outgoing and incoming
+ *    messages to be queued independently.
+ * 3. SHALL create a double queue when initiating an outgoing connection to a subscriber, and
+ *    SHALL maintain the double queue whether or not the connection is established.
+ * 4. SHALL create a double queue when a subscriber connects to it. If this subscriber disconnects,
+ *    the XPUB socket SHALL destroy its double queue and SHALL discard any messages it contains.
+ * 5. SHOULD constrain incoming and outgoing queue sizes to a runtime-configurable limit.
  *
  * B. For processing outgoing messages:
  * 1. SHALL not modify outgoing messages in any way.
  * 2. MAY, depending on the transport, send all messages to all subscribers.
  * 3. MAY, depending on the transport, send messages only to subscribers who have a matching
  *    subscription.
- * 4. SHALL perform a binary comparison of the subscription against the start of the first frame of
- *    the message.
+ * 4. SHALL perform a binary comparison of the subscription against the start of the first frame
+ *    of the message.
  * 5. SHALL silently drop the message if the queue for a subscriber is full.
  * 6. SHALL NOT block on sending.
  *
- * C. For processing subscriptions:
+ * C. For processing incoming messages:
+ * 1. SHALL receive incoming messages from its subscribers using a fair-queuing strategy.
+ * 2. SHALL deliver these messages to its calling application.
+ *
+ * D. For processing subscriptions:
  * 1. SHALL receive subscribe and unsubscribe requests from subscribers depending on the transport
  *    protocol used.
- * 2. SHALL NOT deliver these commands to its calling application.
+ * 2. SHALL deliver these commands to its calling application.
+ * 3. MAY, depending on configuration, normalize commands delivered to its calling application so
+ *    that multiple identical subscriptions result in a single command only.
+ * 4. SHALL, if the subscriber peer disconnects prematurely, generate a suitable unsubscribe
+ *    request for the calling application.
  */
-internal class CIOPublisherSocket(
+internal class CIOXPublisherSocket(
     coroutineContext: CoroutineContext,
     selectorManager: SelectorManager,
-) : CIOSocket(coroutineContext, selectorManager, Type.PUB, setOf(Type.SUB, Type.XSUB)),
+) : CIOSocket(coroutineContext, selectorManager, Type.XPUB, setOf(Type.SUB, Type.XSUB)),
     CIOSendSocket,
-    PublisherSocket {
+    CIOReceiveSocket,
+    XPublisherSocket {
 
     override val sendChannel = Channel<Message>()
+    override val receiveChannel = Channel<Message>()
 
     init {
         launch(CoroutineName("zmq-publisher")) {
@@ -118,10 +127,22 @@ internal class CIOPublisherSocket(
                     for (peerMailbox in peerMailboxes) {
                         peerMailbox.receiveChannel.onReceive { commandOrMessage ->
                             logger.d { "Handling $commandOrMessage from $peerMailbox" }
-                            subscriptions = when (val command = commandOrMessage.commandOrThrow()) {
-                                is SubscribeCommand -> subscriptions.add(command.topic, peerMailbox)
-                                is CancelCommand -> subscriptions.remove(command.topic, peerMailbox)
-                                else -> protocolError("Expected SUBSCRIBE or CANCEL, but got ${command.name}")
+                            if (commandOrMessage.isCommand) {
+                                subscriptions = when (val command = commandOrMessage.commandOrThrow()) {
+                                    is SubscribeCommand -> {
+                                        receiveChannel.send(subscriptionMessageOf(true, command.topic))
+                                        subscriptions.add(command.topic, peerMailbox)
+                                    }
+
+                                    is CancelCommand -> {
+                                        receiveChannel.send(subscriptionMessageOf(false, command.topic))
+                                        subscriptions.remove(command.topic, peerMailbox)
+                                    }
+
+                                    else -> protocolError("Expected SUBSCRIBE or CANCEL, but got ${command.name}")
+                                }
+                            } else {
+                                receiveChannel.send(commandOrMessage.messageOrThrow())
                             }
                         }
                     }
@@ -137,13 +158,16 @@ internal class CIOPublisherSocket(
         }
     }
 
-    override var conflate: Boolean
-        get() = TODO("Not yet implemented")
-        set(value) {}
     override var invertMatching: Boolean
         get() = TODO("Not yet implemented")
         set(value) {}
     override var noDrop: Boolean
+        get() = TODO("Not yet implemented")
+        set(value) {}
+    override var manual: Boolean
+        get() = TODO("Not yet implemented")
+        set(value) {}
+    override var welcomeMessage: String?
         get() = TODO("Not yet implemented")
         set(value) {}
 }

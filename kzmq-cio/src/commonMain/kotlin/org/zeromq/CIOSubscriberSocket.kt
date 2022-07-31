@@ -78,7 +78,7 @@ import kotlin.coroutines.*
 internal class CIOSubscriberSocket(
     coroutineContext: CoroutineContext,
     selectorManager: SelectorManager,
-) : CIOSocket(coroutineContext, selectorManager, Type.SUB, setOf(Type.PUB)),
+) : CIOSocket(coroutineContext, selectorManager, Type.SUB, setOf(Type.PUB, Type.XPUB)),
     CIOReceiveSocket,
     SubscriberSocket {
 
