@@ -27,7 +27,7 @@ internal class CIOInstance internal constructor(
     override fun createPair(): PairSocket = CIOPairSocket(childContext, selectorManager)
     override fun createPublisher(): PublisherSocket = CIOPublisherSocket(childContext, selectorManager)
     override fun createSubscriber(): SubscriberSocket = CIOSubscriberSocket(childContext, selectorManager)
-    override fun createXPublisher(): XPublisherSocket = TODO("Not yet implemented")
+    override fun createXPublisher(): XPublisherSocket = CIOXPublisherSocket(childContext, selectorManager)
     override fun createXSubscriber(): XSubscriberSocket = CIOXSubscriberSocket(childContext, selectorManager)
     override fun createPush(): PushSocket = CIOPushSocket(childContext, selectorManager)
     override fun createPull(): PullSocket = CIOPullSocket(childContext, selectorManager)
