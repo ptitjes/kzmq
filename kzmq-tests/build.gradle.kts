@@ -23,6 +23,11 @@ kotlin {
         }
         testRuns["test"].executionTask.configure {
             useJUnitPlatform()
+            testLogging {
+                showExceptions = true
+                showStandardStreams = true
+                exceptionFormat = org.gradle.api.tasks.testing.logging.TestExceptionFormat.FULL
+            }
         }
     }
 
