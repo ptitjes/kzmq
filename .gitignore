@@ -36,3 +36,4 @@ out/
 .idea/httpRequests
 
 .idea/kotlinc.xml
+.idea/artifacts

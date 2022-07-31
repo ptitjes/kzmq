@@ -1,8 +1,0 @@
-<component name="ArtifactManager">
-  <artifact type="jar" name="kzmq-jeromq-jvm-0.1-SNAPSHOT">
-    <output-path>$PROJECT_DIR$/kzmq-jeromq/build/libs</output-path>
-    <root id="archive" name="kzmq-jeromq-jvm-0.1-SNAPSHOT.jar">
-      <element id="module-output" name="kzmq.kzmq-jeromq.jvmMain" />
-    </root>
-  </artifact>
-</component>
