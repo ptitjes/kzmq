@@ -20,7 +20,10 @@ internal abstract class CIOSocket(
     val socketOptions = SocketOptions()
 
     private val socketJob = Job()
-    final override val coroutineContext = context + socketJob
+    private val exceptionHandler = CoroutineExceptionHandler { _, throwable ->
+        logger.e(throwable) { "An error occurred while managing peers" }
+    }
+    final override val coroutineContext = context + socketJob + exceptionHandler
 
     private val peerManager =
         PeerManager(

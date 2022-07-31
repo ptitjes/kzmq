@@ -5,7 +5,7 @@
 
 package org.zeromq
 
-interface XPublisherSocket : Socket, SendSocket {
+interface XPublisherSocket : Socket, SendSocket, ReceiveSocket {
 
     /**
      * Sets the socket behaviour to return an error if the high watermark is reached and the

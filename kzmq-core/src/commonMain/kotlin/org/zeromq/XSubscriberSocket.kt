@@ -5,4 +5,4 @@
 
 package org.zeromq
 
-interface XSubscriberSocket : Socket, ReceiveSocket
+interface XSubscriberSocket : Socket, SendSocket, ReceiveSocket

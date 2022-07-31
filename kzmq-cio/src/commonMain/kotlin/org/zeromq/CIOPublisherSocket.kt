@@ -86,7 +86,7 @@ import kotlin.coroutines.*
 internal class CIOPublisherSocket(
     coroutineContext: CoroutineContext,
     selectorManager: SelectorManager,
-) : CIOSocket(coroutineContext, selectorManager, Type.PUB, setOf(Type.SUB)),
+) : CIOSocket(coroutineContext, selectorManager, Type.PUB, setOf(Type.SUB, Type.XSUB)),
     CIOSendSocket,
     PublisherSocket {
 

@@ -71,11 +71,14 @@ internal class PeerSocket(
         }
     }
 
+    private val isPublisher: Boolean get() = localType == Type.PUB || localType == Type.XPUB
+    private val isSubscriber: Boolean get() = localType == Type.SUB || localType == Type.XSUB
+
     private suspend fun readIncoming(): CommandOrMessage {
         val raw = input.readCommandOrMessage()
 
         // Specially handle ZMTP 3.0 subscriptions
-        val incoming = if (peerMinorVersion == 0 && localType == Type.PUB) {
+        val incoming = if (peerMinorVersion == 0 && isPublisher) {
             transformSubscriptionMessages(raw)
         } else raw
 
@@ -85,7 +88,7 @@ internal class PeerSocket(
 
     private suspend fun writeOutgoing(outgoing: CommandOrMessage) {
         // Specially handle ZMTP 3.0 subscriptions
-        val transformed = if (peerMinorVersion == 0 && localType == Type.SUB) {
+        val transformed = if (peerMinorVersion == 0 && isSubscriber) {
             transformSubscriptionCommands(outgoing)
         } else outgoing
 
@@ -101,40 +104,25 @@ private fun transformSubscriptionMessages(commandOrMessage: CommandOrMessage): C
     } else commandOrMessage
 
 private fun extractSubscriptionCommand(message: Message): CommandOrMessage? {
-    if (message.isSingle) {
-        val bytes = message.singleOrThrow()
-        val firstByte = bytes[0].toInt()
-        if (firstByte == 0 || firstByte == 1) {
-            val subscribe = firstByte == 1
-            val topic = bytes.sliceArray(1 until bytes.size)
-            return CommandOrMessage(
-                if (subscribe) SubscribeCommand(topic) else CancelCommand(topic)
-            )
-        }
+    return destructureSubscriptionMessage(message)?.let { (subscribe, topic) ->
+        CommandOrMessage(
+            if (subscribe) SubscribeCommand(topic) else CancelCommand(topic)
+        )
     }
-    return null
 }
 
 private fun transformSubscriptionCommands(commandOrMessage: CommandOrMessage): CommandOrMessage =
     if (commandOrMessage.isCommand) {
         when (val command = commandOrMessage.commandOrThrow()) {
             is SubscribeCommand ->
-                CommandOrMessage(buildSubscriptionMessage(true, command.topic))
+                CommandOrMessage(subscriptionMessageOf(true, command.topic))
 
             is CancelCommand ->
-                CommandOrMessage(buildSubscriptionMessage(false, command.topic))
+                CommandOrMessage(subscriptionMessageOf(false, command.topic))
 
             else -> commandOrMessage
         }
     } else commandOrMessage
-
-private fun buildSubscriptionMessage(subscribe: Boolean, topic: ByteArray): Message {
-    val bytes = ByteArray(topic.size + 1) { index ->
-        if (index == 0) if (subscribe) 1 else 0
-        else topic[index - 1]
-    }
-    return Message(bytes)
-}
 
 private fun validateSocketType(
     properties: Map<PropertyName, ByteArray>,
