@@ -155,5 +155,3 @@ class PublisherSubscriberTests : FunSpec({
         }
     }
 })
-
-private suspend fun waitForSubscriptions() = delay(200)

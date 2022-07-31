@@ -101,6 +101,8 @@ internal class PeerManager(
                         peerSocket.handleInitialization(false, peerSocketTypes)
                         notify(PeerEventKind.CONNECTION, mailbox)
                         peerSocket.handleTraffic()
+                    } catch (e: CancellationException) {
+                        // Ignore
                     } catch (t: Throwable) {
                         logger.d { "Failed to connect [${t.message}]" }
                     } finally {
