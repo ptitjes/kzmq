@@ -57,8 +57,7 @@ private suspend fun Context.pull(
             configure()
 
             while (received < messageCount) {
-                val message = receive()
-//                releaseMessage(message)
+                receive()
                 received++
             }
         }
