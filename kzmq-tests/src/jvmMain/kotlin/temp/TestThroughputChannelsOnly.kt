@@ -11,7 +11,7 @@ import org.zeromq.*
 
 fun main(): Unit = runBlocking {
     val dispatcher = Dispatchers.IO
-    val handler = CoroutineExceptionHandler { _, throwable -> throwable.printStackTrace() }
+
     val channel1 = Channel<Message>()
     val channel2 = Channel<Message>()
 
@@ -57,8 +57,7 @@ private suspend fun Channel<Message>.pull(
 
     try {
         while (received < messageCount) {
-            val message = receive()
-//            releaseMessage(message)
+            receive()
             received++
         }
     } finally {
