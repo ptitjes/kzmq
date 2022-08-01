@@ -5,42 +5,34 @@
 
 package org.zeromq
 
-import io.ktor.network.selector.*
 import kotlinx.coroutines.*
 import org.zeromq.internal.*
-import kotlin.coroutines.*
 
 internal abstract class CIOSocket(
-    context: CoroutineContext,
-    selectorManager: SelectorManager,
-    final override val type: Type,
-    peerSocketTypes: Set<Type>,
-) : Socket, CoroutineScope {
+    engineInstance: CIOEngineInstance,
+) : Socket, SocketInfo, CoroutineScope {
 
-    val socketOptions = SocketOptions()
+    override val options = SocketOptions()
 
-    private val socketJob = Job()
+    private val job = Job()
     private val exceptionHandler = CoroutineExceptionHandler { _, throwable ->
-        logger.e(throwable) { "An error occurred while managing peers" }
+        logger.e(throwable) { "An error occurred in socket" }
     }
-    final override val coroutineContext = context + socketJob + exceptionHandler
-
-    private val peerManager =
-        PeerManager(
-            coroutineContext,
-            selectorManager,
-            type,
-            peerSocketTypes,
-            socketOptions,
-        )
-    protected val peerEvents = peerManager.peerEvents
+    final override val coroutineContext = engineInstance.coroutineContext + job + exceptionHandler
 
     override fun close() {
-        socketJob.cancel()
+        job.cancel()
     }
 
-    override suspend fun bind(endpoint: String) = peerManager.bind(endpoint)
+    private val peerManager = PeerManager(
+        coroutineContext,
+        engineInstance.transportRegistry
+    )
+    protected val peerEvents = peerManager.peerEvents
+
+    override suspend fun bind(endpoint: String) = peerManager.bind(endpoint, this)
     override suspend fun unbind(endpoint: String) = peerManager.unbind(endpoint)
-    override fun connect(endpoint: String) = peerManager.connect(endpoint)
+
+    override fun connect(endpoint: String) = peerManager.connect(endpoint, this)
     override fun disconnect(endpoint: String) = peerManager.disconnect(endpoint)
 }

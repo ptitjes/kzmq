@@ -5,11 +5,9 @@
 
 package org.zeromq
 
-import io.ktor.network.selector.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.*
 import org.zeromq.internal.*
-import kotlin.coroutines.*
 
 /**
  * An implementation of the [REP socket](https://rfc.zeromq.org/spec/28/).
@@ -55,12 +53,11 @@ import kotlin.coroutines.*
  * 5. SHALL not block on sending.
  */
 internal class CIOReplySocket(
-    coroutineContext: CoroutineContext,
-    selectorManager: SelectorManager,
-) : CIOSocket(coroutineContext, selectorManager, Type.REP, setOf(Type.REQ, Type.DEALER)),
-    CIOReceiveSocket,
-    CIOSendSocket,
-    ReplySocket {
+    engineInstance: CIOEngineInstance,
+) : CIOSocket(engineInstance), CIOReceiveSocket, CIOSendSocket, ReplySocket {
+
+    override val type: Type get() = Type.REP
+    override val validPeerTypes: Set<Type> get() = validPeerSocketTypes
 
     override val receiveChannel = Channel<Message>()
     override val sendChannel = Channel<Message>()
@@ -74,12 +71,12 @@ internal class CIOReplySocket(
             while (isActive) {
                 val (kind, peerMailbox) = peerEvents.receive()
                 when (kind) {
-                    PeerEventKind.ADDITION -> {
+                    PeerEvent.Kind.ADDITION -> {
                         logger.d { "Peer added: $peerMailbox" }
                         forwardJobs.add(peerMailbox) { forwardRequests(peerMailbox) }
                     }
 
-                    PeerEventKind.REMOVAL -> {
+                    PeerEvent.Kind.REMOVAL -> {
                         logger.d { "Peer removed: $peerMailbox" }
                         forwardJobs.remove(peerMailbox)
                     }
@@ -112,5 +109,9 @@ internal class CIOReplySocket(
         }
     }
 
-    override var routingId: ByteArray? by socketOptions::routingId
+    override var routingId: ByteArray? by options::routingId
+
+    companion object {
+        private val validPeerSocketTypes = setOf(Type.REQ, Type.DEALER)
+    }
 }

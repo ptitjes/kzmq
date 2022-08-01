@@ -1,34 +1,34 @@
 /*
- * Copyright (c) 2021-2022 Didier Villevalois and Kzmq contributors.
+ * Copyright (c) 2022 Didier Villevalois and Kzmq contributors.
  * Use of this source code is governed by the Apache 2.0 license.
  */
 
-package org.zeromq.internal
+package org.zeromq.internal.tcp
 
 import io.ktor.network.sockets.*
 import io.ktor.network.sockets.Socket
 import kotlinx.coroutines.*
 import org.zeromq.*
+import org.zeromq.internal.*
 
-internal class PeerSocket(
-    private val localType: Type,
-    private val socketOptions: SocketOptions,
+internal class TcpSocketHandler(
+    private val socketInfo: SocketInfo,
+    private val isServer: Boolean,
     private val mailbox: PeerMailbox,
-    socket: Socket,
+    rawSocket: Socket,
 ) {
-    private var input = socket.openReadChannel()
-    private var output = socket.openWriteChannel(autoFlush = true)
+    private var input = rawSocket.openReadChannel()
+    private var output = rawSocket.openWriteChannel(autoFlush = true)
 
     private var peerMinorVersion: Int = 1
 
-    suspend fun handleInitialization(isServer: Boolean, peerSocketTypes: Set<Type>) {
+    suspend fun handleInitialization() {
         logger.t { "Writing greeting part 1" }
         output.writeGreetingPart1()
 
         logger.t { "Reading greeting part 1" }
         val peerMajorVersion = input.readGreetingPart1()
-        if (peerMajorVersion != 3)
-            protocolError("Incompatible version $peerMajorVersion.x")
+        if (peerMajorVersion != 3) protocolError("Incompatible version $peerMajorVersion.x")
 
         logger.t { "Writing greeting part 2" }
         output.writeGreetingPart2(Mechanism.NULL, false)
@@ -37,8 +37,8 @@ internal class PeerSocket(
         val (peerMinorVersion, peerSecuritySpec) = input.readGreetingPart2()
 
         val localProperties = mutableMapOf<PropertyName, ByteArray>().apply {
-            put(PropertyName.SOCKET_TYPE, localType.name.encodeToByteArray())
-            socketOptions.routingId?.let { identity -> put(PropertyName.IDENTITY, identity) }
+            put(PropertyName.SOCKET_TYPE, socketInfo.type.name.encodeToByteArray())
+            socketInfo.options.routingId?.let { identity -> put(PropertyName.IDENTITY, identity) }
         }
 
         val peerProperties = when (peerSecuritySpec.mechanism) {
@@ -46,7 +46,7 @@ internal class PeerSocket(
             else -> protocolError("Unsupported mechanism ${peerSecuritySpec.mechanism}")
         }
 
-        validateSocketType(peerProperties, peerSocketTypes)
+        validateSocketType(peerProperties, socketInfo.validPeerTypes)
 
         val identity = peerProperties[PropertyName.IDENTITY]?.let { Identity(it) }
         if (mailbox.identity != null && mailbox.identity != identity) {
@@ -71,8 +71,8 @@ internal class PeerSocket(
         }
     }
 
-    private val isPublisher: Boolean get() = localType == Type.PUB || localType == Type.XPUB
-    private val isSubscriber: Boolean get() = localType == Type.SUB || localType == Type.XSUB
+    private val isPublisher: Boolean get() = socketInfo.type == Type.PUB || socketInfo.type == Type.XPUB
+    private val isSubscriber: Boolean get() = socketInfo.type == Type.SUB || socketInfo.type == Type.XSUB
 
     private suspend fun readIncoming(): CommandOrMessage {
         val raw = input.readCommandOrMessage()
@@ -114,11 +114,9 @@ private fun extractSubscriptionCommand(message: Message): CommandOrMessage? {
 private fun transformSubscriptionCommands(commandOrMessage: CommandOrMessage): CommandOrMessage =
     if (commandOrMessage.isCommand) {
         when (val command = commandOrMessage.commandOrThrow()) {
-            is SubscribeCommand ->
-                CommandOrMessage(subscriptionMessageOf(true, command.topic))
+            is SubscribeCommand -> CommandOrMessage(subscriptionMessageOf(true, command.topic))
 
-            is CancelCommand ->
-                CommandOrMessage(subscriptionMessageOf(false, command.topic))
+            is CancelCommand -> CommandOrMessage(subscriptionMessageOf(false, command.topic))
 
             else -> commandOrMessage
         }
@@ -128,8 +126,8 @@ private fun validateSocketType(
     properties: Map<PropertyName, ByteArray>,
     peerSocketTypes: Set<Type>,
 ) {
-    val socketTypeProperty = (properties[PropertyName.SOCKET_TYPE]
-        ?: protocolError("No socket type property in metadata"))
+    val socketTypeProperty =
+        (properties[PropertyName.SOCKET_TYPE] ?: protocolError("No socket type property in metadata"))
     val peerSocketType = findSocketType(socketTypeProperty.decodeToString())
     if (!peerSocketTypes.contains(peerSocketType)) protocolError("Invalid socket type: $peerSocketType")
 }

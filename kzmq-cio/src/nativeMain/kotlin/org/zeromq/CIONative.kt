@@ -13,7 +13,7 @@ import kotlin.math.*
 actual object CIO : Engine {
     override val name = "cio"
     override fun createInstance(coroutineContext: CoroutineContext): EngineInstance {
-        return CIOInstance(coroutineContext + Dispatchers.IO)
+        return CIOEngineInstance(coroutineContext + Dispatchers.IO)
     }
 }
 

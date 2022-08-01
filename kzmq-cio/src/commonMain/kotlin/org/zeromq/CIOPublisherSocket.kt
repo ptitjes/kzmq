@@ -5,12 +5,10 @@
 
 package org.zeromq
 
-import io.ktor.network.selector.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.*
 import kotlinx.coroutines.selects.*
 import org.zeromq.internal.*
-import kotlin.coroutines.*
 
 /**
  * An implementation of the [PUB socket](https://rfc.zeromq.org/spec/29/).
@@ -84,11 +82,11 @@ import kotlin.coroutines.*
  * 2. SHALL NOT deliver these commands to its calling application.
  */
 internal class CIOPublisherSocket(
-    coroutineContext: CoroutineContext,
-    selectorManager: SelectorManager,
-) : CIOSocket(coroutineContext, selectorManager, Type.PUB, setOf(Type.SUB, Type.XSUB)),
-    CIOSendSocket,
-    PublisherSocket {
+    engineInstance: CIOEngineInstance,
+) : CIOSocket(engineInstance), CIOSendSocket, PublisherSocket {
+
+    override val type: Type get() = Type.PUB
+    override val validPeerTypes: Set<Type> get() = validPeerSocketTypes
 
     override val sendChannel = Channel<Message>()
 
@@ -101,12 +99,12 @@ internal class CIOPublisherSocket(
                 select<Unit> {
                     peerEvents.onReceive { (kind, peerMailbox) ->
                         when (kind) {
-                            PeerEventKind.ADDITION -> {
+                            PeerEvent.Kind.ADDITION -> {
                                 logger.d { "Peer added: $peerMailbox" }
                                 peerMailboxes.add(peerMailbox)
                             }
 
-                            PeerEventKind.REMOVAL -> {
+                            PeerEvent.Kind.REMOVAL -> {
                                 logger.d { "Peer removed: $peerMailbox" }
                                 peerMailboxes.remove(peerMailbox)
                             }
@@ -146,5 +144,9 @@ internal class CIOPublisherSocket(
     override var noDrop: Boolean
         get() = TODO("Not yet implemented")
         set(value) {}
+
+    companion object {
+        private val validPeerSocketTypes = setOf(Type.SUB, Type.XSUB)
+    }
 }
 

@@ -5,11 +5,9 @@
 
 package org.zeromq
 
-import io.ktor.network.selector.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.*
 import org.zeromq.internal.*
-import kotlin.coroutines.*
 
 /**
  * An implementation of the [REQ socket](https://rfc.zeromq.org/spec/28/).
@@ -51,12 +49,11 @@ import kotlin.coroutines.*
  * 2. SHALL discard silently any messages received from other peers.
  */
 internal class CIORequestSocket(
-    coroutineContext: CoroutineContext,
-    selectorManager: SelectorManager,
-) : CIOSocket(coroutineContext, selectorManager, Type.REQ, setOf(Type.REP, Type.ROUTER)),
-    CIOSendSocket,
-    CIOReceiveSocket,
-    RequestSocket {
+    engineInstance: CIOEngineInstance,
+) : CIOSocket(engineInstance), CIOSendSocket, CIOReceiveSocket, RequestSocket {
+
+    override val type: Type get() = Type.REQ
+    override val validPeerTypes: Set<Type> get() = validPeerSocketTypes
 
     override val sendChannel = Channel<Message>()
     override val receiveChannel = Channel<Message>()
@@ -71,12 +68,12 @@ internal class CIORequestSocket(
             while (isActive) {
                 val (kind, peerMailbox) = peerEvents.receive()
                 when (kind) {
-                    PeerEventKind.ADDITION -> {
+                    PeerEvent.Kind.ADDITION -> {
                         logger.d { "Peer added: $peerMailbox" }
                         forwardJobs.add(peerMailbox) { dispatchRequestsReplies(peerMailbox) }
                     }
 
-                    PeerEventKind.REMOVAL -> {
+                    PeerEvent.Kind.REMOVAL -> {
                         logger.d { "Peer removed: $peerMailbox" }
                         forwardJobs.remove(peerMailbox)
                     }
@@ -126,7 +123,7 @@ internal class CIORequestSocket(
         }
     }
 
-    override var routingId: ByteArray? by socketOptions::routingId
+    override var routingId: ByteArray? by options::routingId
     override var probeRouter: Boolean
         get() = TODO("Not yet implemented")
         set(value) {}
@@ -136,4 +133,8 @@ internal class CIORequestSocket(
     override var relaxed: Boolean
         get() = TODO("Not yet implemented")
         set(value) {}
+
+    companion object {
+        private val validPeerSocketTypes = setOf(Type.REP, Type.ROUTER)
+    }
 }

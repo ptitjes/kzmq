@@ -11,7 +11,7 @@ import org.zeromq.internal.*
 internal interface CIOReceiveSocket : ReceiveSocket {
 
     val receiveChannel: ReceiveChannel<Message>
-    val socketOptions: SocketOptions
+    val options: SocketOptions
 
     override suspend fun receive(): Message = receiveChannel.receive()
 
@@ -49,9 +49,9 @@ internal interface CIOReceiveSocket : ReceiveSocket {
         set(value) {}
 
     override var receiveHighWaterMark: Int
-        get() = socketOptions.receiveQueueSize
+        get() = options.receiveQueueSize
         set(value) {
-            socketOptions.receiveQueueSize = value
+            options.receiveQueueSize = value
         }
 
     override var receiveTimeout: Int
