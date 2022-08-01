@@ -5,11 +5,9 @@
 
 package org.zeromq
 
-import io.ktor.network.selector.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.*
 import org.zeromq.internal.*
-import kotlin.coroutines.*
 
 /**
  * An implementation of the [PUSH socket](https://rfc.zeromq.org/spec/30/).
@@ -49,11 +47,11 @@ import kotlin.coroutines.*
  * 5. SHALL NOT discard messages that it cannot queue.
  */
 internal class CIOPushSocket(
-    coroutineContext: CoroutineContext,
-    selectorManager: SelectorManager,
-) : CIOSocket(coroutineContext, selectorManager, Type.PUSH, setOf(Type.PULL)),
-    CIOSendSocket,
-    PushSocket {
+    engineInstance: CIOEngineInstance,
+) : CIOSocket(engineInstance), CIOSendSocket, PushSocket {
+
+    override val type: Type get() = Type.PUSH
+    override val validPeerTypes: Set<Type> get() = validPeerSocketTypes
 
     override val sendChannel = Channel<Message>()
 
@@ -64,12 +62,12 @@ internal class CIOPushSocket(
             while (isActive) {
                 val (kind, peerMailbox) = peerEvents.receive()
                 when (kind) {
-                    PeerEventKind.ADDITION -> {
+                    PeerEvent.Kind.ADDITION -> {
                         logger.d { "Peer added: $peerMailbox" }
                         forwardJobs.add(peerMailbox) { forwardTo(peerMailbox) }
                     }
 
-                    PeerEventKind.REMOVAL -> {
+                    PeerEvent.Kind.REMOVAL -> {
                         logger.d { "Peer removed: $peerMailbox" }
                         forwardJobs.remove(peerMailbox)
                     }
@@ -91,5 +89,9 @@ internal class CIOPushSocket(
     override var conflate: Boolean
         get() = TODO("Not yet implemented")
         set(value) {}
+
+    companion object {
+        private val validPeerSocketTypes = setOf(Type.PULL)
+    }
 }
 

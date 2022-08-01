@@ -5,12 +5,10 @@
 
 package org.zeromq
 
-import io.ktor.network.selector.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.*
 import kotlinx.coroutines.selects.*
 import org.zeromq.internal.*
-import kotlin.coroutines.*
 
 /**
  * An implementation of the [SUB socket](https://rfc.zeromq.org/spec/29/).
@@ -76,11 +74,11 @@ import kotlin.coroutines.*
  *    used.
  */
 internal class CIOSubscriberSocket(
-    coroutineContext: CoroutineContext,
-    selectorManager: SelectorManager,
-) : CIOSocket(coroutineContext, selectorManager, Type.SUB, setOf(Type.PUB, Type.XPUB)),
-    CIOReceiveSocket,
-    SubscriberSocket {
+    engineInstance: CIOEngineInstance,
+) : CIOSocket(engineInstance), CIOReceiveSocket, SubscriberSocket {
+
+    override val type: Type get() = Type.SUB
+    override val validPeerTypes: Set<Type> get() = validPeerSocketTypes
 
     override val receiveChannel = Channel<Message>()
 
@@ -95,7 +93,7 @@ internal class CIOSubscriberSocket(
                 select<Unit> {
                     peerEvents.onReceive { (kind, peerMailbox) ->
                         when (kind) {
-                            PeerEventKind.ADDITION -> {
+                            PeerEvent.Kind.ADDITION -> {
                                 logger.d { "Peer added: $peerMailbox" }
                                 peerMailboxes.add(peerMailbox)
 
@@ -107,7 +105,7 @@ internal class CIOSubscriberSocket(
                                 }
                             }
 
-                            PeerEventKind.REMOVAL -> {
+                            PeerEvent.Kind.REMOVAL -> {
                                 logger.d { "Peer removed: $peerMailbox" }
                                 peerMailboxes.remove(peerMailbox)
                             }
@@ -189,4 +187,8 @@ internal class CIOSubscriberSocket(
     override var invertMatching: Boolean
         get() = TODO("Not yet implemented")
         set(value) {}
+
+    companion object {
+        private val validPeerSocketTypes = setOf(Type.PUB, Type.XPUB)
+    }
 }

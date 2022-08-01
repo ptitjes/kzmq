@@ -5,12 +5,10 @@
 
 package org.zeromq
 
-import io.ktor.network.selector.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.*
 import kotlinx.coroutines.selects.*
 import org.zeromq.internal.*
-import kotlin.coroutines.*
 import kotlin.random.*
 
 /**
@@ -63,12 +61,11 @@ import kotlin.random.*
  * 4. SHALL NOT block on sending.
  */
 internal class CIORouterSocket(
-    coroutineContext: CoroutineContext,
-    selectorManager: SelectorManager,
-) : CIOSocket(coroutineContext, selectorManager, Type.ROUTER, setOf(Type.REQ, Type.DEALER, Type.ROUTER)),
-    CIOReceiveSocket,
-    CIOSendSocket,
-    RouterSocket {
+    engineInstance: CIOEngineInstance,
+) : CIOSocket(engineInstance), CIOReceiveSocket, CIOSendSocket, RouterSocket {
+
+    override val type: Type get() = Type.ROUTER
+    override val validPeerTypes: Set<Type> get() = validPeerSocketTypes
 
     override val receiveChannel = Channel<Message>()
     override val sendChannel = Channel<Message>()
@@ -89,17 +86,17 @@ internal class CIORouterSocket(
                 select<Unit> {
                     peerEvents.onReceive { (kind, peerMailbox) ->
                         when (kind) {
-                            PeerEventKind.CONNECTION -> {
+                            PeerEvent.Kind.CONNECTION -> {
                                 logger.d { "Peer connected: $peerMailbox" }
 
-                                val identity = peerMailbox.identity
-                                    ?: generateNewIdentity().also { peerMailbox.identity = it }
+                                val identity =
+                                    peerMailbox.identity ?: generateNewIdentity().also { peerMailbox.identity = it }
                                 perIdentityMailboxes[identity] = peerMailbox
 
                                 forwardJobs.add(peerMailbox) { routeRequests(peerMailbox) }
                             }
 
-                            PeerEventKind.DISCONNECTION -> {
+                            PeerEvent.Kind.DISCONNECTION -> {
                                 logger.d { "Peer disconnected: $peerMailbox" }
 
                                 peerMailbox.identity?.let { identity ->
@@ -135,7 +132,7 @@ internal class CIORouterSocket(
         }
     }
 
-    override var routingId: ByteArray? by socketOptions::routingId
+    override var routingId: ByteArray? by options::routingId
     override var probeRouter: Boolean
         get() = TODO("Not yet implemented")
         set(value) {}
@@ -145,6 +142,10 @@ internal class CIORouterSocket(
     override var handover: Boolean
         get() = TODO("Not yet implemented")
         set(value) {}
+
+    companion object {
+        private val validPeerSocketTypes = setOf(Type.REQ, Type.DEALER, Type.ROUTER)
+    }
 }
 
 private fun prependIdentity(message: Message, identity: Identity): Message =

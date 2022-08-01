@@ -5,11 +5,9 @@
 
 package org.zeromq
 
-import io.ktor.network.selector.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.*
 import org.zeromq.internal.*
-import kotlin.coroutines.*
 
 /**
  * An implementation of the [PAIR socket](https://rfc.zeromq.org/spec/31/).
@@ -49,12 +47,11 @@ import kotlin.coroutines.*
  * 2. SHALL deliver these to its calling application.
  */
 internal class CIOPairSocket(
-    coroutineContext: CoroutineContext,
-    selectorManager: SelectorManager,
-) : CIOSocket(coroutineContext, selectorManager, Type.PAIR, setOf(Type.PAIR)),
-    CIOReceiveSocket,
-    CIOSendSocket,
-    PairSocket {
+    engineInstance: CIOEngineInstance,
+) : CIOSocket(engineInstance), CIOReceiveSocket, CIOSendSocket, PairSocket {
+
+    override val type: Type get() = Type.PAIR
+    override val validPeerTypes: Set<Type> get() = validPeerSocketTypes
 
     override val receiveChannel = Channel<Message>()
     override val sendChannel = Channel<Message>()
@@ -66,7 +63,7 @@ internal class CIOPairSocket(
             while (isActive) {
                 val (kind, peerMailbox) = peerEvents.receive()
                 when (kind) {
-                    PeerEventKind.ADDITION -> {
+                    PeerEvent.Kind.ADDITION -> {
                         // FIXME what should we do if it already has a peer?
                         if (forwardJob != null) continue
 
@@ -74,7 +71,7 @@ internal class CIOPairSocket(
                         forwardJob = forwardJob(peerMailbox)
                     }
 
-                    PeerEventKind.REMOVAL -> {
+                    PeerEvent.Kind.REMOVAL -> {
                         if (forwardJob == null) continue
 
                         logger.d { "Peer removed: $peerMailbox" }
@@ -104,5 +101,9 @@ internal class CIOPairSocket(
                 receiveChannel.send(message)
             }
         }
+    }
+
+    companion object {
+        private val validPeerSocketTypes = setOf(Type.PAIR)
     }
 }

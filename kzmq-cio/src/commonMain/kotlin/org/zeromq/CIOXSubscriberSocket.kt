@@ -5,12 +5,10 @@
 
 package org.zeromq
 
-import io.ktor.network.selector.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.*
 import kotlinx.coroutines.selects.*
 import org.zeromq.internal.*
-import kotlin.coroutines.*
 
 /**
  * An implementation of the [XSUB socket](https://rfc.zeromq.org/spec/29/).
@@ -87,12 +85,11 @@ import kotlin.coroutines.*
  * 3. When closing a connection to a publisher SHOULD send unsubscribe requests for all subscriptions.
  */
 internal class CIOXSubscriberSocket(
-    coroutineContext: CoroutineContext,
-    selectorManager: SelectorManager,
-) : CIOSocket(coroutineContext, selectorManager, Type.XSUB, setOf(Type.PUB, Type.XPUB)),
-    CIOSendSocket,
-    CIOReceiveSocket,
-    XSubscriberSocket {
+    engineInstance: CIOEngineInstance,
+) : CIOSocket(engineInstance), CIOSendSocket, CIOReceiveSocket, XSubscriberSocket {
+
+    override val type: Type get() = Type.XSUB
+    override val validPeerTypes: Set<Type> get() = validPeerSocketTypes
 
     override val sendChannel = Channel<Message>()
     override val receiveChannel = Channel<Message>()
@@ -108,7 +105,7 @@ internal class CIOXSubscriberSocket(
                 select<Unit> {
                     peerEvents.onReceive { (kind, peerMailbox) ->
                         when (kind) {
-                            PeerEventKind.ADDITION -> {
+                            PeerEvent.Kind.ADDITION -> {
                                 logger.d { "Peer added: $peerMailbox" }
                                 peerMailboxes.add(peerMailbox)
 
@@ -120,7 +117,7 @@ internal class CIOXSubscriberSocket(
                                 }
                             }
 
-                            PeerEventKind.REMOVAL -> {
+                            PeerEvent.Kind.REMOVAL -> {
                                 logger.d { "Peer removed: $peerMailbox" }
                                 peerMailboxes.remove(peerMailbox)
                             }
@@ -182,5 +179,9 @@ internal class CIOXSubscriberSocket(
         for (topic in removedTopics) {
             lateSubscriptionCommands.send(CancelCommand(topic))
         }
+    }
+
+    companion object {
+        private val validPeerSocketTypes = setOf(Type.PUB, Type.XPUB)
     }
 }

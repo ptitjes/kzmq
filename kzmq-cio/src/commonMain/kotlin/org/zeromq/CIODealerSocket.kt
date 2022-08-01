@@ -5,11 +5,9 @@
 
 package org.zeromq
 
-import io.ktor.network.selector.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.*
 import org.zeromq.internal.*
-import kotlin.coroutines.*
 
 /**
  * An implementation of the [DEALER socket](https://rfc.zeromq.org/spec/28/).
@@ -57,12 +55,11 @@ import kotlin.coroutines.*
  * 2. SHALL deliver these to its calling application.
  */
 internal class CIODealerSocket(
-    coroutineContext: CoroutineContext,
-    selectorManager: SelectorManager,
-) : CIOSocket(coroutineContext, selectorManager, Type.DEALER, setOf(Type.REP, Type.ROUTER)),
-    CIOSendSocket,
-    CIOReceiveSocket,
-    DealerSocket {
+    engineInstance: CIOEngineInstance,
+) : CIOSocket(engineInstance), CIOSendSocket, CIOReceiveSocket, DealerSocket {
+
+    override val type: Type get() = Type.DEALER
+    override val validPeerTypes: Set<Type> get() = validPeerSocketTypes
 
     override val sendChannel = Channel<Message>()
     override val receiveChannel = Channel<Message>()
@@ -74,12 +71,12 @@ internal class CIODealerSocket(
             while (isActive) {
                 val (kind, peerMailbox) = peerEvents.receive()
                 when (kind) {
-                    PeerEventKind.ADDITION -> {
+                    PeerEvent.Kind.ADDITION -> {
                         logger.d { "Peer added: $peerMailbox" }
                         forwardJobs.add(peerMailbox) { dispatchRequestsReplies(peerMailbox) }
                     }
 
-                    PeerEventKind.REMOVAL -> {
+                    PeerEvent.Kind.REMOVAL -> {
                         logger.d { "Peer removed: $peerMailbox" }
                         forwardJobs.remove(peerMailbox)
                     }
@@ -111,9 +108,13 @@ internal class CIODealerSocket(
         get() = TODO("Not yet implemented")
         set(value) {}
 
-    override var routingId: ByteArray? by socketOptions::routingId
+    override var routingId: ByteArray? by options::routingId
 
     override var probeRouter: Boolean
         get() = TODO("Not yet implemented")
         set(value) {}
+
+    companion object {
+        private val validPeerSocketTypes = setOf(Type.REP, Type.ROUTER)
+    }
 }

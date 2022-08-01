@@ -11,7 +11,7 @@ import org.zeromq.internal.*
 internal interface CIOSendSocket : SendSocket {
 
     val sendChannel: SendChannel<Message>
-    val socketOptions: SocketOptions
+    val options: SocketOptions
 
     override suspend fun send(message: Message) = sendChannel.send(message)
 
@@ -37,9 +37,9 @@ internal interface CIOSendSocket : SendSocket {
         set(value) {}
 
     override var sendHighWaterMark: Int
-        get() = socketOptions.sendQueueSize
+        get() = options.sendQueueSize
         set(value) {
-            socketOptions.sendQueueSize = value
+            options.sendQueueSize = value
         }
 
     override var sendTimeout: Int
