@@ -16,7 +16,7 @@ import kotlin.time.Duration.Companion.seconds
 @Suppress("unused")
 class XPublisherSubscriberTests : FunSpec({
 
-    withEngines("subscription filter").config(
+    withContexts("subscription filter").config(
 //        onlyEnginePairs = listOf("jeromq" to "jeromq"),
         timeout = 5.seconds,
     ) { (ctx1, ctx2) ->

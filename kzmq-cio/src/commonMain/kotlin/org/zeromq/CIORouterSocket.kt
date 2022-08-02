@@ -62,16 +62,15 @@ import kotlin.random.*
  */
 internal class CIORouterSocket(
     engineInstance: CIOEngineInstance,
-) : CIOSocket(engineInstance), CIOReceiveSocket, CIOSendSocket, RouterSocket {
+) : CIOSocket(engineInstance, Type.ROUTER), CIOReceiveSocket, CIOSendSocket, RouterSocket {
 
-    override val type: Type get() = Type.ROUTER
     override val validPeerTypes: Set<Type> get() = validPeerSocketTypes
 
     override val receiveChannel = Channel<Message>()
     override val sendChannel = Channel<Message>()
 
     init {
-        launch(CoroutineName("zmq-router")) {
+        launch {
             val forwardJobs = JobMap<PeerMailbox>()
             val perIdentityMailboxes = hashMapOf<Identity, PeerMailbox>()
 

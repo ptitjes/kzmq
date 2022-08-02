@@ -18,7 +18,7 @@ internal class TcpTransport(
     private val rawSocketBuilder = aSocket(selectorManager)
 
     override fun supportsSchemes(scheme: String) = scheme == "tcp" || scheme == "ipc"
-    override val isMulticast = false
+    override val isMulticast get() = false
 
     override fun close() {
         selectorManager.close()
@@ -64,6 +64,7 @@ internal class TcpTransport(
         socketInfo: SocketInfo,
         endpoint: String,
     ) = coroutineScope {
+        val remoteAddress = parseTcpEndpoint(endpoint).address
         val mailbox = PeerMailbox(endpoint, socketInfo.options)
 
         try {
@@ -72,7 +73,6 @@ internal class TcpTransport(
             while (isActive) {
                 var rawSocket: Socket? = null
                 try {
-                    val remoteAddress = parseTcpEndpoint(endpoint).address
                     rawSocket = rawSocketBuilder.tcp().connect(remoteAddress)
                     val socketHandler = TcpSocketHandler(socketInfo, false, mailbox, rawSocket)
                     socketHandler.handleInitialization()

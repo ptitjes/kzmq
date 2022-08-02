@@ -50,9 +50,8 @@ import org.zeromq.internal.*
  */
 internal class CIORequestSocket(
     engineInstance: CIOEngineInstance,
-) : CIOSocket(engineInstance), CIOSendSocket, CIOReceiveSocket, RequestSocket {
+) : CIOSocket(engineInstance, Type.REQ), CIOSendSocket, CIOReceiveSocket, RequestSocket {
 
-    override val type: Type get() = Type.REQ
     override val validPeerTypes: Set<Type> get() = validPeerSocketTypes
 
     override val sendChannel = Channel<Message>()
@@ -62,7 +61,7 @@ internal class CIORequestSocket(
     private val repliesChannel = Channel<Pair<PeerMailbox, Message>>()
 
     init {
-        launch(CoroutineName("zmq-req-peers")) {
+        launch {
             val forwardJobs = JobMap<PeerMailbox>()
 
             while (isActive) {

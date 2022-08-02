@@ -25,6 +25,11 @@ internal class JobMap<K> {
     fun remove(key: K) {
         jobs.getAndUpdate { it - key }[key]?.cancel()
     }
+
+    fun removeAll() {
+        val jobs = jobs.getAndSet(mapOf())
+        jobs.forEach { (_, container) -> container.cancel() }
+    }
 }
 
 private class JobContainer(private val factory: () -> Job) {

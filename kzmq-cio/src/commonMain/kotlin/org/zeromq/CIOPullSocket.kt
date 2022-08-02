@@ -45,15 +45,14 @@ import org.zeromq.internal.*
  */
 internal class CIOPullSocket(
     engineInstance: CIOEngineInstance,
-) : CIOSocket(engineInstance), CIOReceiveSocket, PullSocket {
+) : CIOSocket(engineInstance, Type.PULL), CIOReceiveSocket, PullSocket {
 
-    override val type: Type get() = Type.PULL
     override val validPeerTypes: Set<Type> get() = validPeerSocketTypes
 
     override val receiveChannel = Channel<Message>()
 
     init {
-        launch(CoroutineName("zmq-pull")) {
+        launch {
             val forwardJobs = JobMap<PeerMailbox>()
 
             while (isActive) {

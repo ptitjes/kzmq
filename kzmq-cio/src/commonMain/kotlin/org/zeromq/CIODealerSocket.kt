@@ -56,16 +56,15 @@ import org.zeromq.internal.*
  */
 internal class CIODealerSocket(
     engineInstance: CIOEngineInstance,
-) : CIOSocket(engineInstance), CIOSendSocket, CIOReceiveSocket, DealerSocket {
+) : CIOSocket(engineInstance, Type.DEALER), CIOSendSocket, CIOReceiveSocket, DealerSocket {
 
-    override val type: Type get() = Type.DEALER
     override val validPeerTypes: Set<Type> get() = validPeerSocketTypes
 
     override val sendChannel = Channel<Message>()
     override val receiveChannel = Channel<Message>()
 
     init {
-        launch(CoroutineName("zmq-dealer")) {
+        launch {
             val forwardJobs = JobMap<PeerMailbox>()
 
             while (isActive) {
