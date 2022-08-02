@@ -13,6 +13,6 @@ internal data class PeerEvent(
         ADDITION,
         CONNECTION,
         DISCONNECTION,
-        REMOVAL
+        REMOVAL,
     }
 }

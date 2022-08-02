@@ -90,16 +90,15 @@ import org.zeromq.internal.*
  */
 internal class CIOXPublisherSocket(
     engineInstance: CIOEngineInstance,
-) : CIOSocket(engineInstance), CIOSendSocket, CIOReceiveSocket, XPublisherSocket {
+) : CIOSocket(engineInstance, Type.XPUB), CIOSendSocket, CIOReceiveSocket, XPublisherSocket {
 
-    override val type: Type get() = Type.XPUB
     override val validPeerTypes: Set<Type> get() = validPeerSocketTypes
 
     override val sendChannel = Channel<Message>()
     override val receiveChannel = Channel<Message>()
 
     init {
-        launch(CoroutineName("zmq-publisher")) {
+        launch {
             val peerMailboxes = hashSetOf<PeerMailbox>()
             var subscriptions = SubscriptionTrie<PeerMailbox>()
 

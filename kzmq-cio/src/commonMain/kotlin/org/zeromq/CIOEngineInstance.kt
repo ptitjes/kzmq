@@ -7,6 +7,7 @@ package org.zeromq
 
 import kotlinx.coroutines.*
 import org.zeromq.internal.*
+import org.zeromq.internal.inproc.*
 import org.zeromq.internal.tcp.*
 import kotlin.coroutines.*
 
@@ -15,14 +16,15 @@ internal class CIOEngineInstance internal constructor(
 ) : EngineInstance, CoroutineScope {
 
     private val job = SupervisorJob()
-    private val handler = CoroutineExceptionHandler { _, throwable ->
+    private val exceptionHandler = CoroutineExceptionHandler { _, throwable ->
         logger.e(throwable) { "An error occurred in CIO engine" }
     }
-    override val coroutineContext = context + job + handler
+    override val coroutineContext = context + job + exceptionHandler
 
     val transportRegistry = TransportRegistry(
         listOf(
             TcpTransport(coroutineContext),
+            InprocTransport(coroutineContext),
         )
     )
 

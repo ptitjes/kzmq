@@ -14,7 +14,7 @@ import org.zeromq.tests.utils.*
 @Suppress("unused")
 class TcpTests : FunSpec({
 
-    withEngines("bind-connect") { (ctx1, ctx2) ->
+    withContexts("bind-connect") { (ctx1, ctx2) ->
         val address = randomAddress(Protocol.TCP)
         val message = Message("Hello 0MQ!".encodeToByteArray())
 
@@ -30,7 +30,7 @@ class TcpTests : FunSpec({
         }
     }
 
-    withEngines("connect-bind") { (ctx1, ctx2) ->
+    withContexts("connect-bind") { (ctx1, ctx2) ->
         val address = randomAddress(Protocol.TCP)
         val message = Message("Hello 0MQ!".encodeToByteArray())
 

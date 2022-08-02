@@ -48,15 +48,14 @@ import org.zeromq.internal.*
  */
 internal class CIOPushSocket(
     engineInstance: CIOEngineInstance,
-) : CIOSocket(engineInstance), CIOSendSocket, PushSocket {
+) : CIOSocket(engineInstance, Type.PUSH), CIOSendSocket, PushSocket {
 
-    override val type: Type get() = Type.PUSH
     override val validPeerTypes: Set<Type> get() = validPeerSocketTypes
 
     override val sendChannel = Channel<Message>()
 
     init {
-        launch(CoroutineName("zmq-push")) {
+        launch {
             val forwardJobs = JobMap<PeerMailbox>()
 
             while (isActive) {

@@ -14,7 +14,7 @@ import org.zeromq.tests.utils.*
 @Suppress("unused")
 class PublisherXSubscriberTests : FunSpec({
 
-    withEngines("subscription filter") { (ctx1, ctx2) ->
+    withContexts("subscription filter") { (ctx1, ctx2) ->
         val address = randomAddress()
 
         val sent = listOf("prefixed data", "non-prefixed data", "prefix is good")

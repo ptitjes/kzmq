@@ -86,9 +86,8 @@ import org.zeromq.internal.*
  */
 internal class CIOXSubscriberSocket(
     engineInstance: CIOEngineInstance,
-) : CIOSocket(engineInstance), CIOSendSocket, CIOReceiveSocket, XSubscriberSocket {
+) : CIOSocket(engineInstance, Type.XSUB), CIOSendSocket, CIOReceiveSocket, XSubscriberSocket {
 
-    override val type: Type get() = Type.XSUB
     override val validPeerTypes: Set<Type> get() = validPeerSocketTypes
 
     override val sendChannel = Channel<Message>()
@@ -98,7 +97,7 @@ internal class CIOXSubscriberSocket(
     private var lateSubscriptionCommands = Channel<Command>(10)
 
     init {
-        launch(CoroutineName("zmq-xsubscriber")) {
+        launch {
             val peerMailboxes = hashSetOf<PeerMailbox>()
 
             while (isActive) {

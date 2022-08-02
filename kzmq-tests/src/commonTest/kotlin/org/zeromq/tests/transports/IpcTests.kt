@@ -14,7 +14,7 @@ import org.zeromq.tests.utils.*
 @Suppress("unused")
 class IpcTests : FunSpec({
 
-    withEngines("bind-connect").config(skipEngines = listOf("jeromq")) { (ctx1, ctx2) ->
+    withContexts("bind-connect").config(skipEngines = listOf("jeromq")) { (ctx1, ctx2) ->
         val address = randomAddress(Protocol.IPC)
         val message = Message("Hello 0MQ!".encodeToByteArray())
 
@@ -30,7 +30,7 @@ class IpcTests : FunSpec({
         }
     }
 
-    withEngines("connect-bind").config(skipEngines = listOf("jeromq")) { (ctx1, ctx2) ->
+    withContexts("connect-bind").config(skipEngines = listOf("jeromq")) { (ctx1, ctx2) ->
         val address = randomAddress(Protocol.IPC)
         val message = Message("Hello 0MQ!".encodeToByteArray())
 

@@ -48,16 +48,15 @@ import org.zeromq.internal.*
  */
 internal class CIOPairSocket(
     engineInstance: CIOEngineInstance,
-) : CIOSocket(engineInstance), CIOReceiveSocket, CIOSendSocket, PairSocket {
+) : CIOSocket(engineInstance, Type.PAIR), CIOReceiveSocket, CIOSendSocket, PairSocket {
 
-    override val type: Type get() = Type.PAIR
     override val validPeerTypes: Set<Type> get() = validPeerSocketTypes
 
     override val receiveChannel = Channel<Message>()
     override val sendChannel = Channel<Message>()
 
     init {
-        launch(CoroutineName("zmq-pair")) {
+        launch {
             var forwardJob: Job? = null
 
             while (isActive) {

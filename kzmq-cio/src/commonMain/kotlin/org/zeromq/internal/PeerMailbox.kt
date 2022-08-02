@@ -7,7 +7,7 @@ package org.zeromq.internal
 
 import kotlinx.coroutines.channels.*
 
-internal class PeerMailbox(private val endpoint: String, socketOptions: SocketOptions) {
+internal class PeerMailbox(val endpoint: String, socketOptions: SocketOptions) {
     val receiveChannel = Channel<CommandOrMessage>(socketOptions.receiveQueueSize)
     val sendChannel = Channel<CommandOrMessage>(socketOptions.sendQueueSize)
 

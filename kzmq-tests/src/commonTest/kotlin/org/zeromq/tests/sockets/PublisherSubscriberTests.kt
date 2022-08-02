@@ -17,7 +17,7 @@ import org.zeromq.tests.utils.*
 @Suppress("unused")
 class PublisherSubscriberTests : FunSpec({
 
-    withEngines("bind-connect") { (ctx1, ctx2) ->
+    withContexts("bind-connect") { (ctx1, ctx2) ->
         val address = randomAddress()
         val message = Message("Hello 0MQ!".encodeToByteArray())
 
@@ -37,7 +37,7 @@ class PublisherSubscriberTests : FunSpec({
     }
 
     // TODO Figure out why this test is hanging with JeroMQ and ZeroMQ.js
-    withEngines("connect-bind").config(skipEngines = listOf("jeromq", "zeromq.js")) { (ctx1, ctx2) ->
+    withContexts("connect-bind").config(skipEngines = listOf("jeromq", "zeromq.js")) { (ctx1, ctx2) ->
         val address = randomAddress()
         val message = Message("Hello 0MQ!".encodeToByteArray())
 
@@ -56,7 +56,7 @@ class PublisherSubscriberTests : FunSpec({
         }
     }
 
-    withEngines("flow") { (ctx1, ctx2) ->
+    withContexts("flow") { (ctx1, ctx2) ->
         val address = randomAddress()
         val messageCount = 10
         val sent = generateMessages(messageCount).asFlow()
@@ -82,7 +82,7 @@ class PublisherSubscriberTests : FunSpec({
         }
     }
 
-    withEngines("select").config(skipEngines = listOf("jeromq", "zeromq.js")) { (ctx1, ctx2) ->
+    withContexts("select").config(skipEngines = listOf("jeromq", "zeromq.js")) { (ctx1, ctx2) ->
         val address1 = randomAddress()
         val address2 = randomAddress()
 
@@ -125,7 +125,7 @@ class PublisherSubscriberTests : FunSpec({
         }
     }
 
-    withEngines("subscription filter") { (ctx1, ctx2) ->
+    withContexts("subscription filter") { (ctx1, ctx2) ->
         val address = randomAddress()
 
         val sent = listOf("prefixed data", "non-prefixed data", "prefix is good")

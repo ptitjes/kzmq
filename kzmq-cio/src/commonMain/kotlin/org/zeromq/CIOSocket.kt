@@ -10,15 +10,18 @@ import org.zeromq.internal.*
 
 internal abstract class CIOSocket(
     engineInstance: CIOEngineInstance,
+    final override val type: Type,
 ) : Socket, SocketInfo, CoroutineScope {
 
     override val options = SocketOptions()
 
-    private val job = Job()
+    private val job = SupervisorJob()
     private val exceptionHandler = CoroutineExceptionHandler { _, throwable ->
         logger.e(throwable) { "An error occurred in socket" }
     }
-    final override val coroutineContext = engineInstance.coroutineContext + job + exceptionHandler
+    final override val coroutineContext =
+        engineInstance.coroutineContext + job + exceptionHandler +
+            CoroutineName("zmq-${type.toString().lowercase()}")
 
     override fun close() {
         job.cancel()

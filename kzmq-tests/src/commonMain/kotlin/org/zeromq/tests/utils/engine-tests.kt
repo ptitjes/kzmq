@@ -11,15 +11,81 @@ import kotlinx.coroutines.*
 import org.zeromq.*
 import kotlin.time.*
 
-typealias EngineTest = suspend ContainerScope.(Pair<Context, Context>) -> Unit
+typealias ContainedTest<T> = suspend ContainerScope.(T) -> Unit
+typealias SingleContextTest = ContainedTest<Context>
+typealias DualContextTest = ContainedTest<Pair<Context, Context>>
 
-fun <T : RootScope> T.withEngines(name: String, test: EngineTest) =
-    withEngines(name).config(test = test)
+fun <T : RootScope> T.withContext(name: String, test: SingleContextTest) =
+    withContext(name).config(test = test)
 
-fun <T : RootScope> T.withEngines(name: String): EngineTestBuilder =
-    EngineTestBuilder(name, this)
+fun <T : RootScope> T.withContext(name: String): SingleContextTestBuilder =
+    SingleContextTestBuilder(name, this)
 
-class EngineTestBuilder(
+fun <T : RootScope> T.withContexts(name: String, test: DualContextTest) =
+    withContexts(name).config(test = test)
+
+fun <T : RootScope> T.withContexts(name: String): DualContextTestBuilder =
+    DualContextTestBuilder(name, this)
+
+class SingleContextTestBuilder(
+    private val name: String,
+    private val context: RootScope,
+) {
+    fun config(
+        skipEngines: List<String> = listOf(),
+        onlyEngines: List<String>? = null,
+        timeout: Duration? = null,
+        test: SingleContextTest,
+    ) {
+        context.runSingleContextTest(name, skipEngines, onlyEngines, timeout, test)
+    }
+}
+
+private fun RootScope.runSingleContextTest(
+    name: String,
+    skipEngines: List<String>,
+    onlyEngines: List<String>?,
+    timeout: Duration?,
+    test: SingleContextTest,
+) {
+    val engines = computeEngines(skipEngines, onlyEngines)
+
+    withData(
+        nameFn = { engine -> "$name (${engine.name})" },
+        engines,
+    ) { engine ->
+        launch {
+            if (timeout != null) {
+                withTimeout(timeout) {
+                    test(Context(engine))
+                }
+            } else {
+                test(Context(engine))
+            }
+        }.join()
+    }
+}
+
+private fun computeEngines(
+    skipEngines: List<String>,
+    onlyEngines: List<String>?,
+): List<Engine> {
+    val skipEnginesLowerCase = skipEngines.map { it.lowercase() }.toSet()
+    val onlyEnginesLowerCase = onlyEngines?.map { e1 -> e1.lowercase() }
+
+    val engines = engines.filter { engine ->
+        val engineName = engine.name.lowercase()
+        !skipEnginesLowerCase.any { it.contains(engineName) }
+    }
+
+    return engines.filter { e ->
+        onlyEnginesLowerCase?.any { oe ->
+            oe.contains(e.name)
+        } ?: true
+    }
+}
+
+class DualContextTestBuilder(
     private val name: String,
     private val context: RootScope,
 ) {
@@ -27,18 +93,18 @@ class EngineTestBuilder(
         skipEngines: List<String> = listOf(),
         onlyEnginePairs: List<Pair<String, String>>? = null,
         timeout: Duration? = null,
-        test: EngineTest,
+        test: DualContextTest,
     ) {
-        context.runEngineTests(name, skipEngines, onlyEnginePairs, timeout, test)
+        context.runDualContextTest(name, skipEngines, onlyEnginePairs, timeout, test)
     }
 }
 
-private fun RootScope.runEngineTests(
+private fun RootScope.runDualContextTest(
     name: String,
     skipEngines: List<String>,
     onlyEnginePairs: List<Pair<String, String>>?,
     timeout: Duration?,
-    test: EngineTest,
+    test: DualContextTest,
 ) {
     val enginePairs = computeEnginePairs(skipEngines, onlyEnginePairs)
 
@@ -46,13 +112,15 @@ private fun RootScope.runEngineTests(
         nameFn = { (engine1, engine2) -> "$name (${engine1.name}, ${engine2.name})" },
         enginePairs,
     ) { (engine1, engine2) ->
-        if (timeout != null) {
-            withTimeout(timeout) {
+        launch {
+            if (timeout != null) {
+                withTimeout(timeout) {
+                    test(Context(engine1) to Context(engine2))
+                }
+            } else {
                 test(Context(engine1) to Context(engine2))
             }
-        } else {
-            test(Context(engine1) to Context(engine2))
-        }
+        }.join()
     }
 }
 

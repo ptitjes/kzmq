@@ -13,7 +13,7 @@ import org.zeromq.tests.utils.*
 @Suppress("unused")
 class PairTests : FunSpec({
 
-    withEngines("bind-connect") { (ctx1, ctx2) ->
+    withContexts("bind-connect") { (ctx1, ctx2) ->
         val address = randomAddress()
         val message = Message("Hello 0MQ!".encodeToByteArray())
 
@@ -30,7 +30,7 @@ class PairTests : FunSpec({
         pair1.receive() shouldBe message
     }
 
-    withEngines("connect-bind") { (ctx1, ctx2) ->
+    withContexts("connect-bind") { (ctx1, ctx2) ->
         val address = randomAddress()
         val message = Message("Hello 0MQ!".encodeToByteArray())
 

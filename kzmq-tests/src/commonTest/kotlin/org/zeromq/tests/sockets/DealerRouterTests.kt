@@ -18,7 +18,7 @@ private const val REPLY_MARKER = "REP"
 @Suppress("unused")
 class DealerRouterTests : FunSpec({
 
-    withEngines("base") { (ctx1, ctx2) ->
+    withContexts("base") { (ctx1, ctx2) ->
 
         val dealerCount = 2
         val routerCount = 3
