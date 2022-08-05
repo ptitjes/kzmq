@@ -7,8 +7,8 @@ package org.zeromq
 
 import kotlin.coroutines.*
 
-object JeroMQ : Engine {
-    override val name = "jeromq"
+public object JeroMQ : Engine {
+    override val name: String = "jeromq"
     override fun createInstance(coroutineContext: CoroutineContext): EngineInstance =
         JeroMQInstance()
 }

@@ -9,14 +9,14 @@ import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.*
 import kotlinx.coroutines.flow.*
 
-fun ReceiveSocket.consumeAsFlow(): Flow<Message> = flow {
+public fun ReceiveSocket.consumeAsFlow(): Flow<Message> = flow {
     while (currentCoroutineContext().isActive) emit(receive())
 }
 
-suspend fun Flow<Message>.collectToSocket(socket: SendSocket) = collect {
+public suspend fun Flow<Message>.collectToSocket(socket: SendSocket): Unit = collect {
     socket.send(it)
 }
 
 @OptIn(FlowPreview::class)
-fun ReceiveSocket.produceIn(scope: CoroutineScope): ReceiveChannel<Message> =
+public fun ReceiveSocket.produceIn(scope: CoroutineScope): ReceiveChannel<Message> =
     consumeAsFlow().produceIn(scope)

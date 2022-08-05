@@ -5,7 +5,7 @@
 
 package org.zeromq
 
-interface SocketIterator {
-    suspend operator fun hasNext(): Boolean
-    operator fun next(): Message
+public interface SocketIterator {
+    public suspend operator fun hasNext(): Boolean
+    public operator fun next(): Message
 }

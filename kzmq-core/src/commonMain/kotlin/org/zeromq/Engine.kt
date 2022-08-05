@@ -7,9 +7,9 @@ package org.zeromq
 
 import kotlin.coroutines.*
 
-interface Engine {
+public interface Engine {
 
-    val name: String
+    public val name: String
 
-    fun createInstance(coroutineContext: CoroutineContext): EngineInstance
+    public fun createInstance(coroutineContext: CoroutineContext): EngineInstance
 }

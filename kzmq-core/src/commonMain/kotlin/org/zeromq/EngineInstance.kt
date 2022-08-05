@@ -5,6 +5,4 @@
 
 package org.zeromq
 
-interface EngineInstance: SocketFactory {
-    fun close()
-}
+public interface EngineInstance : SocketFactory, Closeable

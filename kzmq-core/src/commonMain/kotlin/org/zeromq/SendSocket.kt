@@ -5,7 +5,7 @@
 
 package org.zeromq
 
-interface SendSocket {
+public interface SendSocket {
     /**
      * Sends a message on the socket. Queues the message immediately if possible. If the message
      * cannot be queued because the high watermark has been reached, it will suspend until the
@@ -13,7 +13,7 @@ interface SendSocket {
      *
      * @param message the message to send.
      */
-    suspend fun send(message: Message)
+    public suspend fun send(message: Message)
 
     /**
      * Sends a message on the socket. Queues the message immediately if possible. If the message
@@ -23,7 +23,7 @@ interface SendSocket {
      * @param message the message to send.
      * @return
      */
-    suspend fun sendCatching(message: Message): SocketResult<Unit>
+    public suspend fun sendCatching(message: Message): SocketResult<Unit>
 
     /**
      * Tries to send a message on the socket. Queues the message immediately. If the message cannot
@@ -32,7 +32,7 @@ interface SendSocket {
      * @param message the message to send.
      * @return
      */
-    fun trySend(message: Message): SocketResult<Unit>
+    public fun trySend(message: Message): SocketResult<Unit>
 
     /**
      * Sets the time-to-live field in every multicast packet sent from this socket. The default is
@@ -40,7 +40,7 @@ interface SendSocket {
      *
      * See [ZMQ_MULTICAST_HOPS](http://api.zeromq.org/master:zmq-getsockopt)
      */
-    var multicastHops: Int
+    public var multicastHops: Int
 
     /**
      * Underlying kernel transmit buffer size in bytes. A value of -1 means leave the OS default
@@ -48,7 +48,7 @@ interface SendSocket {
      *
      * See [ZMQ_SNDBUF](http://api.zeromq.org/master:zmq-getsockopt)
      */
-    var sendBufferSize: Int
+    public var sendBufferSize: Int
 
     /**
      * The high watermark is a hard limit on the maximum number of outgoing messages ØMQ shall
@@ -61,7 +61,7 @@ interface SendSocket {
      *
      * See [ZMQ_SNDHWM](http://api.zeromq.org/master:zmq-getsockopt)
      */
-    var sendHighWaterMark: Int
+    public var sendHighWaterMark: Int
 
     /**
      * Sets the timeout for sending messages on the socket. If the value is 0, [send] will return a
@@ -71,5 +71,5 @@ interface SendSocket {
      *
      * See [ZMQ_SNDTIMEO](http://api.zeromq.org/master:zmq-getsockopt)
      */
-    var sendTimeout: Int
+    public var sendTimeout: Int
 }

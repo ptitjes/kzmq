@@ -7,6 +7,8 @@ val kotlinxCoroutinesVersion: String by project
 val jeromqVersion: String by project
 
 kotlin {
+    explicitApi()
+
     js(IR) {
         nodejs {}
     }

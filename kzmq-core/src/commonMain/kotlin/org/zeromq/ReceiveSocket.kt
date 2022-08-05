@@ -7,14 +7,14 @@ package org.zeromq
 
 import kotlinx.coroutines.selects.*
 
-interface ReceiveSocket {
+public interface ReceiveSocket {
     /**
      * Waits for the next message to become available on the socket. Reads a message immediately if
      * possible. If no messages can be read, it will suspend until the next message is available.
      *
      * @return the message received.
      */
-    suspend fun receive(): Message
+    public suspend fun receive(): Message
 
     /**
      * Waits for the next message to become available on the socket. Reads a message immediately if
@@ -22,7 +22,7 @@ interface ReceiveSocket {
      *
      * @return the message received.
      */
-    suspend fun receiveCatching(): SocketResult<Message>
+    public suspend fun receiveCatching(): SocketResult<Message>
 
     /**
      * Tries to receive a message from the socket. Reads a message immediately. If no messages can
@@ -30,9 +30,9 @@ interface ReceiveSocket {
      *
      * @return the message received.
      */
-    fun tryReceive(): SocketResult<Message>
+    public fun tryReceive(): SocketResult<Message>
 
-    val onReceive: SelectClause1<Message>
+    public val onReceive: SelectClause1<Message>
 
     /**
      * Returns a new iterator to receive messages from this socket using a for loop. Iteration
@@ -40,7 +40,7 @@ interface ReceiveSocket {
      *
      * @return the message received.
      */
-    operator fun iterator(): SocketIterator
+    public operator fun iterator(): SocketIterator
 
     /**
      * Underlying kernel receive buffer size in bytes. A value of -1 means leave the OS default
@@ -48,7 +48,7 @@ interface ReceiveSocket {
      *
      * See [ZMQ_RCVBUF](http://api.zeromq.org/master:zmq-getsockopt)
      */
-    var receiveBufferSize: Int
+    public var receiveBufferSize: Int
 
     /**
      * The high watermark is a hard limit on the maximum number of incoming messages ØMQ shall
@@ -61,7 +61,7 @@ interface ReceiveSocket {
      *
      * See [ZMQ_RCVHWM](http://api.zeromq.org/master:zmq-getsockopt)
      */
-    var receiveHighWaterMark: Int
+    public var receiveHighWaterMark: Int
 
     /**
      * Sets the timeout receiving messages on the socket. If the value is 0, [receive] will return
@@ -71,5 +71,5 @@ interface ReceiveSocket {
      *
      * See [ZMQ_RCVTIMEO](http://api.zeromq.org/master:zmq-getsockopt)
      */
-    var receiveTimeout: Int
+    public var receiveTimeout: Int
 }

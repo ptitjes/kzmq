@@ -7,7 +7,7 @@ package org.zeromq
 
 import kotlin.js.*
 
-enum class Type(@JsName("__type") val type: Int) {
+public enum class Type(@JsName("__type") private val type: Int) {
     /**
      * <p>Flag to specify a exclusive pair of sockets.</p>
      *
@@ -343,12 +343,8 @@ enum class Type(@JsName("__type") val type: Int) {
      */
     STREAM(11);
 
-    fun type(): Int {
-        return type
-    }
-
-    companion object {
-        fun type(baseType: Int): Type {
+    public companion object {
+        public fun type(baseType: Int): Type {
             for (type in values()) {
                 if (type.type == baseType) {
                     return type

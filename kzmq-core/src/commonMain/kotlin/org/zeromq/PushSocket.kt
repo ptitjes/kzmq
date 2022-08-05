@@ -5,7 +5,7 @@
 
 package org.zeromq
 
-interface PushSocket : Socket, SendSocket {
+public interface PushSocket : Socket, SendSocket {
 
     /**
      * If set to `true`, a socket shall keep only one message in its inbound/outbound queue: the
@@ -15,5 +15,5 @@ interface PushSocket : Socket, SendSocket {
      *
      * See [ZMQ_CONFLATE](http://api.zeromq.org/master:zmq-getsockopt)
      */
-    var conflate: Boolean
+    public var conflate: Boolean
 }
