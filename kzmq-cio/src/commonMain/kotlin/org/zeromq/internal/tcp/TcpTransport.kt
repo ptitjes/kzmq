@@ -80,8 +80,9 @@ internal class TcpTransport(
                     socketHandler.handleTraffic()
                 } catch (e: CancellationException) {
                     // Ignore
+                    throw e
                 } catch (t: Throwable) {
-                    logger.d { "Failed to connect [${t.message}]" }
+                    // Ignore connection errors
                 } finally {
                     peerManager.notify(PeerEvent.Kind.DISCONNECTION, mailbox)
                     rawSocket?.close()
