@@ -5,11 +5,11 @@
 
 package org.zeromq
 
-interface Socket : Closeable {
+public interface Socket : Closeable {
     /**
      * The socket type of this socket.
      */
-    val type: Type
+    public val type: Type
 
     /**
      * Closes this socket.
@@ -25,7 +25,7 @@ interface Socket : Closeable {
      *
      * @param endpoint the endpoint to bind to
      */
-    suspend fun bind(endpoint: String)
+    public suspend fun bind(endpoint: String)
 
     /**
      * Unbinds to the endpoint.
@@ -36,7 +36,7 @@ interface Socket : Closeable {
      *
      * @param endpoint the endpoint to unbind from
      */
-    suspend fun unbind(endpoint: String)
+    public suspend fun unbind(endpoint: String)
 
     /**
      * Connects the socket to an endpoint and then accepts incoming connections on that endpoint.
@@ -47,12 +47,12 @@ interface Socket : Closeable {
      *
      * @param endpoint the endpoint to connect to
      */
-    fun connect(endpoint: String)
+    public fun connect(endpoint: String)
 
     /**
      * Disconnecting a socket from an endpoint.
      *
      * @param endpoint the endpoint to disconnect from
      */
-    fun disconnect(endpoint: String)
+    public fun disconnect(endpoint: String)
 }

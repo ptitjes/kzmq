@@ -5,59 +5,59 @@
 
 package org.zeromq
 
-interface SocketFactory {
+public interface SocketFactory {
     /**
      * Creates a [PairSocket].
      */
-    fun createPair(): PairSocket
+    public fun createPair(): PairSocket
 
     /**
      * Creates a [PublisherSocket].
      */
-    fun createPublisher(): PublisherSocket
+    public fun createPublisher(): PublisherSocket
 
     /**
      * Creates a [SubscriberSocket].
      */
-    fun createSubscriber(): SubscriberSocket
+    public fun createSubscriber(): SubscriberSocket
 
     /**
      * Creates a [XPublisherSocket].
      */
-    fun createXPublisher(): XPublisherSocket
+    public fun createXPublisher(): XPublisherSocket
 
     /**
      * Creates a [XSubscriberSocket].
      */
-    fun createXSubscriber(): XSubscriberSocket
+    public fun createXSubscriber(): XSubscriberSocket
 
     /**
      * Creates a [PushSocket].
      */
-    fun createPush(): PushSocket
+    public fun createPush(): PushSocket
 
     /**
      * Creates a [PullSocket].
      */
-    fun createPull(): PullSocket
+    public fun createPull(): PullSocket
 
     /**
      * Creates a [RequestSocket].
      */
-    fun createRequest(): RequestSocket
+    public fun createRequest(): RequestSocket
 
     /**
      * Creates a [ReplySocket].
      */
-    fun createReply(): ReplySocket
+    public fun createReply(): ReplySocket
 
     /**
      * Creates a [DealerSocket].
      */
-    fun createDealer(): DealerSocket
+    public fun createDealer(): DealerSocket
 
     /**
      * Creates a [RouterSocket].
      */
-    fun createRouter(): RouterSocket
+    public fun createRouter(): RouterSocket
 }

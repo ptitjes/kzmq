@@ -5,20 +5,20 @@
 
 package org.zeromq
 
-data class Message(val parts: List<ByteArray>) {
+public data class Message(val parts: List<ByteArray>) {
     init {
         require(parts.isNotEmpty()) { "parts should contain at least one part" }
     }
 
-    constructor(vararg parts: ByteArray) : this(parts.toList())
+    public constructor(vararg parts: ByteArray) : this(parts.toList())
 
     val isSingle: Boolean get() = parts.size == 1
     val isMultipart: Boolean get() = parts.size > 1
 
-    fun singleOrThrow(): ByteArray =
+    public fun singleOrThrow(): ByteArray =
         if (isSingle) parts[0] else error("Message is multipart")
 
-    fun firstOrThrow(): ByteArray =
+    public fun firstOrThrow(): ByteArray =
         parts.getOrNull(0) ?: error("Message has no parts")
 
     override fun equals(other: Any?): Boolean {

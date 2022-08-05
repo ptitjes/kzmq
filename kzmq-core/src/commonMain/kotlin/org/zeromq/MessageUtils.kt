@@ -5,7 +5,7 @@
 
 package org.zeromq
 
-fun subscriptionMessageOf(subscribe: Boolean, topic: ByteArray): Message {
+public fun subscriptionMessageOf(subscribe: Boolean, topic: ByteArray): Message {
     val bytes = ByteArray(topic.size + 1) { index ->
         if (index == 0) if (subscribe) 1 else 0
         else topic[index - 1]
@@ -13,7 +13,7 @@ fun subscriptionMessageOf(subscribe: Boolean, topic: ByteArray): Message {
     return Message(bytes)
 }
 
-fun destructureSubscriptionMessage(message: Message): Pair<Boolean, ByteArray>? {
+public fun destructureSubscriptionMessage(message: Message): Pair<Boolean, ByteArray>? {
     if (message.isSingle) {
         val bytes = message.singleOrThrow()
         val firstByte = bytes[0].toInt()

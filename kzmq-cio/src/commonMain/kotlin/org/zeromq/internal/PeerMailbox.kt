@@ -33,7 +33,7 @@ internal class PeerMailbox(val endpoint: String, socketOptions: SocketOptions) {
     }
 }
 
-class Identity(val value: ByteArray) {
+internal class Identity(val value: ByteArray) {
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (other == null || this::class != other::class) return false

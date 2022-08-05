@@ -5,7 +5,7 @@
 
 package org.zeromq
 
-interface XPublisherSocket : Socket, SendSocket, ReceiveSocket {
+public interface XPublisherSocket : Socket, SendSocket, ReceiveSocket {
 
     /**
      * Sets the socket behaviour to return an error if the high watermark is reached and the
@@ -14,7 +14,7 @@ interface XPublisherSocket : Socket, SendSocket, ReceiveSocket {
      *
      * See [ZMQ_XPUB_NODROP](http://api.zeromq.org/master:zmq-getsockopt)
      */
-    var noDrop: Boolean
+    public var noDrop: Boolean
 
     /**
      * Causes messages to be sent to all connected sockets except those subscribed to a prefix that
@@ -22,7 +22,7 @@ interface XPublisherSocket : Socket, SendSocket, ReceiveSocket {
      *
      * See [ZMQ_INVERT_MATCHING](http://api.zeromq.org/master:zmq-getsockopt)
      */
-    var invertMatching: Boolean
+    public var invertMatching: Boolean
 
     /**
      * Sets the socket subscription handling mode to manual/automatic. A value of true will change
@@ -30,7 +30,7 @@ interface XPublisherSocket : Socket, SendSocket, ReceiveSocket {
      *
      * See [ZMQ_XPUB_MANUAL](http://api.zeromq.org/master:zmq-getsockopt)
      */
-    var manual: Boolean
+    public var manual: Boolean
 
     /**
      * Sets a welcome message that will be received by subscriber when connecting. Subscriber must
@@ -39,5 +39,5 @@ interface XPublisherSocket : Socket, SendSocket, ReceiveSocket {
      *
      * See [ZMQ_XPUB_WELCOME_MSG](http://api.zeromq.org/master:zmq-getsockopt)
      */
-    var welcomeMessage: String?
+    public var welcomeMessage: String?
 }

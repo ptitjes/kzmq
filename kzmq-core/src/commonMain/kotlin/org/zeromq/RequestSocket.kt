@@ -5,14 +5,14 @@
 
 package org.zeromq
 
-interface RequestSocket : Socket, SendSocket, ReceiveSocket {
+public interface RequestSocket : Socket, SendSocket, ReceiveSocket {
 
     /**
      * The identity of this socket when connecting to a [RouterSocket].
      *
      * See [ZMQ_ROUTING_ID](http://api.zeromq.org/master:zmq-getsockopt)
      */
-    var routingId: ByteArray?
+    public var routingId: ByteArray?
 
     /**
      * When set to `true`, the socket will automatically send an empty message when a new
@@ -25,7 +25,7 @@ interface RequestSocket : Socket, SendSocket, ReceiveSocket {
      *
      * See [ZMQ_PROBE_ROUTER](http://api.zeromq.org/master:zmq-getsockopt)
      */
-    var probeRouter: Boolean
+    public var probeRouter: Boolean
 
     /**
      * The default behaviour of [RequestSocket] is to rely on the ordering of messages to match
@@ -36,7 +36,7 @@ interface RequestSocket : Socket, SendSocket, ReceiveSocket {
      *
      * See [ZMQ_REQ_CORRELATE](http://api.zeromq.org/master:zmq-getsockopt)
      */
-    var correlate: Boolean
+    public var correlate: Boolean
 
     /**
      * By default, a [RequestSocket] does not allow initiating a new request until the reply to the
@@ -50,5 +50,5 @@ interface RequestSocket : Socket, SendSocket, ReceiveSocket {
      *
      * See [ZMQ_REQ_RELAXED](http://api.zeromq.org/master:zmq-getsockopt)
      */
-    var relaxed: Boolean
+    public var relaxed: Boolean
 }

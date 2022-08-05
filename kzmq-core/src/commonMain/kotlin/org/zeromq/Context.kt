@@ -8,7 +8,7 @@ package org.zeromq
 import kotlinx.coroutines.*
 import kotlin.coroutines.*
 
-fun CoroutineScope.Context(
+public fun CoroutineScope.Context(
     engine: Engine,
     additionalContext: CoroutineContext = EmptyCoroutineContext,
 ): Context {
@@ -16,7 +16,7 @@ fun CoroutineScope.Context(
     return Context(newContext, engine)
 }
 
-class Context internal constructor(
+public class Context internal constructor(
     coroutineContext: CoroutineContext,
     engine: Engine,
 ) : AbstractCoroutineContextElement(Context), SocketFactory, Closeable {
@@ -40,5 +40,5 @@ class Context internal constructor(
     /**
      * Key for [Context] instance in the coroutine context.
      */
-    companion object Key : CoroutineContext.Key<Context>
+    public companion object Key : CoroutineContext.Key<Context>
 }

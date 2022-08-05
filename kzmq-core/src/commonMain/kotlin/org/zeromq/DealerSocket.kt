@@ -5,7 +5,7 @@
 
 package org.zeromq
 
-interface DealerSocket : Socket, SendSocket, ReceiveSocket {
+public interface DealerSocket : Socket, SendSocket, ReceiveSocket {
 
     /**
      * If set to `true`, a socket shall keep only one message in its inbound/outbound queue: the
@@ -15,14 +15,14 @@ interface DealerSocket : Socket, SendSocket, ReceiveSocket {
      *
      * See [ZMQ_CONFLATE](http://api.zeromq.org/master:zmq-getsockopt)
      */
-    var conflate: Boolean
+    public var conflate: Boolean
 
     /**
      * The identity of this socket when connecting to a [RouterSocket].
      *
      * See [ZMQ_ROUTING_ID](http://api.zeromq.org/master:zmq-getsockopt)
      */
-    var routingId: ByteArray?
+    public var routingId: ByteArray?
 
     /**
      * When set to `true`, the socket will automatically send an empty message when a new
@@ -35,5 +35,5 @@ interface DealerSocket : Socket, SendSocket, ReceiveSocket {
      *
      * See [ZMQ_PROBE_ROUTER](http://api.zeromq.org/master:zmq-getsockopt)
      */
-    var probeRouter: Boolean
+    public var probeRouter: Boolean
 }

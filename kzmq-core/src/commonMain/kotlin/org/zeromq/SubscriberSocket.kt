@@ -5,7 +5,7 @@
 
 package org.zeromq
 
-interface SubscriberSocket : Socket, ReceiveSocket {
+public interface SubscriberSocket : Socket, ReceiveSocket {
 
     /**
      * Establishes a new message filter. Newly created [SubscriberSocket] sockets will filter out
@@ -15,7 +15,7 @@ interface SubscriberSocket : Socket, ReceiveSocket {
      * accepted if it matches at least one filter. Subscribing without any filters shall subscribe
      * to all incoming messages.
      */
-    suspend fun subscribe()
+    public suspend fun subscribe()
 
     /**
      * Establishes a new message filter. Newly created [SubscriberSocket] sockets will filter out
@@ -28,7 +28,7 @@ interface SubscriberSocket : Socket, ReceiveSocket {
      *
      * @param topics the topics to subscribe to
      */
-    suspend fun subscribe(vararg topics: ByteArray)
+    public suspend fun subscribe(vararg topics: ByteArray)
 
     /**
      * Establishes a new message filter. Newly created [SubscriberSocket] sockets will filter out
@@ -41,7 +41,7 @@ interface SubscriberSocket : Socket, ReceiveSocket {
      *
      * @param topics the topics to subscribe to
      */
-    suspend fun subscribe(vararg topics: String)
+    public suspend fun subscribe(vararg topics: String)
 
     /**
      * Removes the "subscribe all" message filter which was previously established with
@@ -50,7 +50,7 @@ interface SubscriberSocket : Socket, ReceiveSocket {
      * Unsubscribing without any filters shall unsubscribe from the "subscribe all" filter that is
      * added by calling [subscribe] without arguments.
      */
-    suspend fun unsubscribe()
+    public suspend fun unsubscribe()
 
     /**
      * Removes the specified existing message filter previously established with [subscribe].
@@ -60,7 +60,7 @@ interface SubscriberSocket : Socket, ReceiveSocket {
      *
      * @param topics the topics to unsubscribe from
      */
-    suspend fun unsubscribe(vararg topics: ByteArray)
+    public suspend fun unsubscribe(vararg topics: ByteArray)
 
     /**
      * Removes the specified existing message filter previously established with [subscribe].
@@ -70,7 +70,7 @@ interface SubscriberSocket : Socket, ReceiveSocket {
      *
      * @param topics the topics to unsubscribe from
      */
-    suspend fun unsubscribe(vararg topics: String)
+    public suspend fun unsubscribe(vararg topics: String)
 
     /**
      * If set to true, a socket shall keep only one message in its inbound/outbound queue: the last
@@ -79,7 +79,7 @@ interface SubscriberSocket : Socket, ReceiveSocket {
      *
      * See [ZMQ_CONFLATE](http://api.zeromq.org/master:zmq-getsockopt)
      */
-    var conflate: Boolean
+    public var conflate: Boolean
 
     /**
      * Causes messages to be sent to all connected sockets except those subscribed to a prefix that
@@ -87,5 +87,5 @@ interface SubscriberSocket : Socket, ReceiveSocket {
      *
      * See [ZMQ_INVERT_MATCHING](http://api.zeromq.org/master:zmq-getsockopt)
      */
-    var invertMatching: Boolean
+    public var invertMatching: Boolean
 }

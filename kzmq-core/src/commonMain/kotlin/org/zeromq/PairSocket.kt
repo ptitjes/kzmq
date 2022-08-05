@@ -5,4 +5,4 @@
 
 package org.zeromq
 
-interface PairSocket : Socket, SendSocket, ReceiveSocket
+public interface PairSocket : Socket, SendSocket, ReceiveSocket

@@ -8,8 +8,8 @@ package org.zeromq
 import kotlinx.coroutines.*
 import kotlin.coroutines.*
 
-actual object CIO : Engine {
-    override val name = "cio"
+public actual object CIO : Engine {
+    override val name: String = "cio"
     override fun createInstance(coroutineContext: CoroutineContext): EngineInstance =
         CIOEngineInstance(coroutineContext + Dispatchers.IO)
 }

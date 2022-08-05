@@ -5,14 +5,14 @@
 
 package org.zeromq
 
-interface RouterSocket : Socket, SendSocket, ReceiveSocket {
+public interface RouterSocket : Socket, SendSocket, ReceiveSocket {
 
     /**
      * The identity of this socket when connecting to a [RouterSocket].
      *
      * See [ZMQ_ROUTING_ID](http://api.zeromq.org/master:zmq-getsockopt)
      */
-    var routingId: ByteArray?
+    public var routingId: ByteArray?
 
     /**
      * When set to `true`, the socket will automatically send an empty message when a new
@@ -25,7 +25,7 @@ interface RouterSocket : Socket, SendSocket, ReceiveSocket {
      *
      * See [ZMQ_PROBE_ROUTER](http://api.zeromq.org/master:zmq-getsockopt)
      */
-    var probeRouter: Boolean
+    public var probeRouter: Boolean
 
     /**
      * A value of `false` is the default and discards the message silently when it cannot be routed
@@ -34,7 +34,7 @@ interface RouterSocket : Socket, SendSocket, ReceiveSocket {
      *
      * See [ZMQ_ROUTER_MANDATORY](http://api.zeromq.org/master:zmq-getsockopt)
      */
-    var mandatory: Boolean
+    public var mandatory: Boolean
 
     /**
      * If two clients use the same identity when connecting to a [RouterSocket], the results shall
@@ -45,5 +45,5 @@ interface RouterSocket : Socket, SendSocket, ReceiveSocket {
      *
      * See [ZMQ_ROUTER_HANDOVER](http://api.zeromq.org/master:zmq-getsockopt)
      */
-    var handover: Boolean
+    public var handover: Boolean
 }

@@ -5,10 +5,10 @@
 
 package org.zeromq
 
-class ZeroMQException(val error: ZeroMQError, cause: Throwable? = null) :
+public class ZeroMQException(public val error: ZeroMQError, cause: Throwable? = null) :
     RuntimeException(error.message, cause) {
 
-    constructor(errno: Int, cause: Throwable? = null) : this(
+    public constructor(errno: Int, cause: Throwable? = null) : this(
         ZeroMQError.fromErrno(errno) ?: throw IllegalArgumentException("Unknown error code $errno"),
         cause
     )
@@ -16,7 +16,7 @@ class ZeroMQException(val error: ZeroMQError, cause: Throwable? = null) :
 
 private const val ZMQ_HAUSNUMERO = 156384712
 
-enum class ZeroMQError(val errno: Int, val message: String) {
+public enum class ZeroMQError(public val errno: Int, public val message: String) {
     ENOENT(2, "The provided endpoint is not connected"),
     EINTR(4, "The operation was interrupted by delivery of a signal before the message was sent"),
     EACCESS(13, ""),
@@ -70,9 +70,9 @@ enum class ZeroMQError(val errno: Int, val message: String) {
 
     ;
 
-    companion object {
+    public companion object {
         private val errnoToError = values().associateBy { e -> e.errno }
 
-        fun fromErrno(errno: Int) = errnoToError[errno]
+        public fun fromErrno(errno: Int): ZeroMQError? = errnoToError[errno]
     }
 }

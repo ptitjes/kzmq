@@ -10,6 +10,8 @@ val kotlinLoggingVersion: String by project
 val mingwPath = File(System.getenv("MINGW64_DIR") ?: "C:/msys64/mingw64")
 
 kotlin {
+    explicitApi()
+
     jvm {
         compilations.all {
             kotlinOptions.jvmTarget = "1.8"

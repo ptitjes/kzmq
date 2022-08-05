@@ -5,7 +5,7 @@
 
 package org.zeromq
 
-interface PublisherSocket : Socket, SendSocket {
+public interface PublisherSocket : Socket, SendSocket {
 
     /**
      * If set to `true`, a socket shall keep only one message in its inbound/outbound queue: the
@@ -15,7 +15,7 @@ interface PublisherSocket : Socket, SendSocket {
      *
      * See [ZMQ_CONFLATE](http://api.zeromq.org/master:zmq-getsockopt)
      */
-    var conflate: Boolean
+    public var conflate: Boolean
 
     /**
      * Causes messages to be sent to all connected sockets except those subscribed to a prefix that
@@ -23,7 +23,7 @@ interface PublisherSocket : Socket, SendSocket {
      *
      * See [ZMQ_INVERT_MATCHING](http://api.zeromq.org/master:zmq-getsockopt)
      */
-    var invertMatching: Boolean
+    public var invertMatching: Boolean
 
     /**
      * Sets the socket behaviour to return an error if the high watermark is reached and the
@@ -32,5 +32,5 @@ interface PublisherSocket : Socket, SendSocket {
      *
      * See [ZMQ_XPUB_NODROP](http://api.zeromq.org/master:zmq-getsockopt)
      */
-    var noDrop: Boolean
+    public var noDrop: Boolean
 }

@@ -7,7 +7,7 @@ package org.zeromq
 
 import kotlin.coroutines.*
 
-object JS : Engine {
-    override val name = "zeromq.js"
+public object JS : Engine {
+    override val name: String = "zeromq.js"
     override fun createInstance(coroutineContext: CoroutineContext): EngineInstance = JSInstance()
 }

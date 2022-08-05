@@ -9,6 +9,8 @@ val jeromqVersion: String by project
 val mingwPath = File(System.getenv("MINGW64_DIR") ?: "C:/msys64/mingw64")
 
 kotlin {
+    explicitApi()
+
     val hostOs = System.getProperty("os.name")
 
     val hostTarget = when {
