@@ -36,8 +36,8 @@ internal class PeerManager(
     private val _peerEvents = Channel<PeerEvent>()
     val peerEvents: ReceiveChannel<PeerEvent> get() = _peerEvents
 
-    suspend fun notify(eventKind: PeerEvent.Kind, peerMailbox: PeerMailbox) {
-        _peerEvents.send(PeerEvent(eventKind, peerMailbox))
+    suspend fun notify(event: PeerEvent) {
+        logger.d { "Peer event: $event" }
+        _peerEvents.send(event)
     }
 }
-

@@ -106,4 +106,20 @@ class PushPullTests : FunSpec({
             }
         }
     }
+
+    // TODO we are not handling peer availability (i.e. send queue is full)
+    withContexts("Push SHALL route outgoing messages to available peers using a round-robin strategy") { (ctx1, ctx2) ->
+        val address = randomAddress(Protocol.TCP)
+
+        val push = ctx1.createPush().apply { bind(address) }
+        val pulls = List(5) { ctx2.createPull().apply { connect(address) } }
+
+        waitForSubscriptions()
+
+        testRoundRobinDispatch(
+            { push.send(it) },
+            pulls.map { pull -> { pull.receive() } },
+            10,
+        )
+    }
 })

@@ -58,16 +58,8 @@ internal class CIOPullSocket(
             while (isActive) {
                 val (kind, peerMailbox) = peerEvents.receive()
                 when (kind) {
-                    PeerEvent.Kind.ADDITION -> {
-                        logger.d { "Peer added: $peerMailbox" }
-                        forwardJobs.add(peerMailbox) { forwardFrom(peerMailbox) }
-                    }
-
-                    PeerEvent.Kind.REMOVAL -> {
-                        logger.d { "Peer removed: $peerMailbox" }
-                        forwardJobs.remove(peerMailbox)
-                    }
-
+                    PeerEvent.Kind.ADDITION -> forwardJobs.add(peerMailbox) { forwardFrom(peerMailbox) }
+                    PeerEvent.Kind.REMOVAL -> forwardJobs.remove(peerMailbox)
                     else -> {}
                 }
             }

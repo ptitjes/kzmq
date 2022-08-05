@@ -66,14 +66,12 @@ internal class CIOPairSocket(
                         // FIXME what should we do if it already has a peer?
                         if (forwardJob != null) continue
 
-                        logger.d { "Peer added: $peerMailbox" }
                         forwardJob = forwardJob(peerMailbox)
                     }
 
                     PeerEvent.Kind.REMOVAL -> {
                         if (forwardJob == null) continue
 
-                        logger.d { "Peer removed: $peerMailbox" }
                         forwardJob.cancel()
                         forwardJob = null
                     }
