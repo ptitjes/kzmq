@@ -105,7 +105,6 @@ internal class CIOXSubscriberSocket(
                     peerEvents.onReceive { (kind, peerMailbox) ->
                         when (kind) {
                             PeerEvent.Kind.ADDITION -> {
-                                logger.d { "Peer added: $peerMailbox" }
                                 peerMailboxes.add(peerMailbox)
 
                                 for (subscription in subscriptions) {
@@ -116,11 +115,7 @@ internal class CIOXSubscriberSocket(
                                 }
                             }
 
-                            PeerEvent.Kind.REMOVAL -> {
-                                logger.d { "Peer removed: $peerMailbox" }
-                                peerMailboxes.remove(peerMailbox)
-                            }
-
+                            PeerEvent.Kind.REMOVAL -> peerMailboxes.remove(peerMailbox)
                             else -> {}
                         }
                     }

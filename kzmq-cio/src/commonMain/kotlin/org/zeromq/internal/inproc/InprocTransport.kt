@@ -9,6 +9,7 @@ import io.ktor.util.*
 import kotlinx.atomicfu.*
 import kotlinx.coroutines.*
 import org.zeromq.internal.*
+import org.zeromq.internal.PeerEvent.Kind.*
 import kotlin.coroutines.*
 import kotlin.random.*
 
@@ -64,13 +65,13 @@ internal class InprocTransport(
         val handler = getOrCreateHandlerFor(endpoint)
         try {
             handler.acquire()
-            peerManager.notify(PeerEvent.Kind.ADDITION, mailbox)
+            peerManager.notify(PeerEvent(ADDITION, mailbox))
             handler.notify(InprocEndpointEvent.Connecting(mailbox, peerManager))
 
             awaitCancellation()
         } finally {
             handler.notify(InprocEndpointEvent.Disconnecting(mailbox))
-            peerManager.notify(PeerEvent.Kind.REMOVAL, mailbox)
+            peerManager.notify(PeerEvent(REMOVAL, mailbox))
             handler.release()
         }
     }

@@ -98,16 +98,8 @@ internal class CIOPublisherSocket(
                 select<Unit> {
                     peerEvents.onReceive { (kind, peerMailbox) ->
                         when (kind) {
-                            PeerEvent.Kind.ADDITION -> {
-                                logger.d { "Peer added: $peerMailbox" }
-                                peerMailboxes.add(peerMailbox)
-                            }
-
-                            PeerEvent.Kind.REMOVAL -> {
-                                logger.d { "Peer removed: $peerMailbox" }
-                                peerMailboxes.remove(peerMailbox)
-                            }
-
+                            PeerEvent.Kind.ADDITION -> peerMailboxes.add(peerMailbox)
+                            PeerEvent.Kind.REMOVAL -> peerMailboxes.remove(peerMailbox)
                             else -> {}
                         }
                     }

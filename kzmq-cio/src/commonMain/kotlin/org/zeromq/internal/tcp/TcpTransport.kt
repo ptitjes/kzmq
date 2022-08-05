@@ -9,6 +9,7 @@ import io.ktor.network.selector.*
 import io.ktor.network.sockets.*
 import kotlinx.coroutines.*
 import org.zeromq.internal.*
+import org.zeromq.internal.PeerEvent.Kind.*
 import kotlin.coroutines.*
 
 internal class TcpTransport(
@@ -43,12 +44,12 @@ internal class TcpTransport(
                     socketHandler.handleInitialization()
 
                     try {
-                        peerManager.notify(PeerEvent.Kind.ADDITION, mailbox)
-                        peerManager.notify(PeerEvent.Kind.CONNECTION, mailbox)
+                        peerManager.notify(PeerEvent(ADDITION, mailbox))
+                        peerManager.notify(PeerEvent(CONNECTION, mailbox))
                         socketHandler.handleTraffic()
                     } finally {
-                        peerManager.notify(PeerEvent.Kind.DISCONNECTION, mailbox)
-                        peerManager.notify(PeerEvent.Kind.REMOVAL, mailbox)
+                        peerManager.notify(PeerEvent(DISCONNECTION, mailbox))
+                        peerManager.notify(PeerEvent(REMOVAL, mailbox))
                     }
                 } catch (t: Throwable) {
                     logger.d { "Peer disconnected [${t.message}]" }
@@ -68,7 +69,7 @@ internal class TcpTransport(
         val mailbox = PeerMailbox(endpoint, socketInfo.options)
 
         try {
-            peerManager.notify(PeerEvent.Kind.ADDITION, mailbox)
+            peerManager.notify(PeerEvent(ADDITION, mailbox))
 
             while (isActive) {
                 var rawSocket: Socket? = null
@@ -76,7 +77,7 @@ internal class TcpTransport(
                     rawSocket = rawSocketBuilder.tcp().connect(remoteAddress)
                     val socketHandler = TcpSocketHandler(socketInfo, false, mailbox, rawSocket)
                     socketHandler.handleInitialization()
-                    peerManager.notify(PeerEvent.Kind.CONNECTION, mailbox)
+                    peerManager.notify(PeerEvent(CONNECTION, mailbox))
                     socketHandler.handleTraffic()
                 } catch (e: CancellationException) {
                     // Ignore
@@ -84,14 +85,14 @@ internal class TcpTransport(
                 } catch (t: Throwable) {
                     // Ignore connection errors
                 } finally {
-                    peerManager.notify(PeerEvent.Kind.DISCONNECTION, mailbox)
+                    peerManager.notify(PeerEvent(DISCONNECTION, mailbox))
                     rawSocket?.close()
                 }
 
                 // TODO Wait before reconnecting ? (have a strategy)
             }
         } finally {
-            peerManager.notify(PeerEvent.Kind.REMOVAL, mailbox)
+            peerManager.notify(PeerEvent(REMOVAL, mailbox))
         }
     }
 }

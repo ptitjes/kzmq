@@ -86,8 +86,6 @@ internal class CIORouterSocket(
                     peerEvents.onReceive { (kind, peerMailbox) ->
                         when (kind) {
                             PeerEvent.Kind.CONNECTION -> {
-                                logger.d { "Peer connected: $peerMailbox" }
-
                                 val identity =
                                     peerMailbox.identity ?: generateNewIdentity().also { peerMailbox.identity = it }
                                 perIdentityMailboxes[identity] = peerMailbox
@@ -96,8 +94,6 @@ internal class CIORouterSocket(
                             }
 
                             PeerEvent.Kind.DISCONNECTION -> {
-                                logger.d { "Peer disconnected: $peerMailbox" }
-
                                 peerMailbox.identity?.let { identity ->
                                     perIdentityMailboxes[identity] = peerMailbox
                                 }

@@ -9,6 +9,7 @@ import kotlinx.atomicfu.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.*
 import org.zeromq.internal.*
+import org.zeromq.internal.PeerEvent.Kind.*
 import kotlin.coroutines.*
 
 internal class InprocEndpointHandler(
@@ -76,6 +77,7 @@ internal class InprocEndpointHandler(
             }
         } finally {
             forwardJobs.removeAll()
+            logger.d { "Stopping handler" }
         }
     }
 
@@ -91,16 +93,16 @@ internal class InprocEndpointHandler(
                 try {
                     setupMailboxForwarding(boundPeerMailbox, connectedPeerMailbox)
 
-                    boundPeerManager.notify(PeerEvent.Kind.ADDITION, boundPeerMailbox)
-                    boundPeerManager.notify(PeerEvent.Kind.CONNECTION, boundPeerMailbox)
-                    connectedPeerManager.notify(PeerEvent.Kind.CONNECTION, connectedPeerMailbox)
+                    boundPeerManager.notify(PeerEvent(ADDITION, boundPeerMailbox))
+                    boundPeerManager.notify(PeerEvent(CONNECTION, boundPeerMailbox))
+                    connectedPeerManager.notify(PeerEvent(CONNECTION, connectedPeerMailbox))
 
                     awaitCancellation()
                 } finally {
                     logger.d { "Stopping forwarding between $boundPeerMailbox and $connectedPeerMailbox" }
-                    connectedPeerManager.notify(PeerEvent.Kind.DISCONNECTION, connectedPeerMailbox)
-                    boundPeerManager.notify(PeerEvent.Kind.DISCONNECTION, boundPeerMailbox)
-                    boundPeerManager.notify(PeerEvent.Kind.REMOVAL, boundPeerMailbox)
+                    connectedPeerManager.notify(PeerEvent(DISCONNECTION, connectedPeerMailbox))
+                    boundPeerManager.notify(PeerEvent(DISCONNECTION, boundPeerMailbox))
+                    boundPeerManager.notify(PeerEvent(REMOVAL, boundPeerMailbox))
                 }
             }
         }
@@ -109,7 +111,6 @@ internal class InprocEndpointHandler(
     private fun removeForwarding(peerMailbox: PeerMailbox) {
         forwardJobs.remove(peerMailbox)
     }
-
 }
 
 private fun CoroutineScope.setupMailboxForwarding(mailbox1: PeerMailbox, mailbox2: PeerMailbox) {

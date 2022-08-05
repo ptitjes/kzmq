@@ -7,6 +7,7 @@ package org.zeromq
 
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.*
+import kotlinx.coroutines.selects.*
 import org.zeromq.internal.*
 
 /**
@@ -56,32 +57,28 @@ internal class CIOPushSocket(
 
     init {
         launch {
-            val forwardJobs = JobMap<PeerMailbox>()
+            val peerMailboxes = mutableListOf<PeerMailbox>()
 
             while (isActive) {
-                val (kind, peerMailbox) = peerEvents.receive()
-                when (kind) {
-                    PeerEvent.Kind.ADDITION -> {
-                        logger.d { "Peer added: $peerMailbox" }
-                        forwardJobs.add(peerMailbox) { forwardTo(peerMailbox) }
+                select<Unit> {
+                    peerEvents.onReceive { (kind, peerMailbox) ->
+                        when (kind) {
+                            PeerEvent.Kind.ADDITION -> peerMailboxes.add(peerMailbox)
+                            PeerEvent.Kind.REMOVAL -> peerMailboxes.remove(peerMailbox)
+                            else -> {}
+                        }
                     }
 
-                    PeerEvent.Kind.REMOVAL -> {
-                        logger.d { "Peer removed: $peerMailbox" }
-                        forwardJobs.remove(peerMailbox)
+                    if (peerMailboxes.isNotEmpty()) {
+                        sendChannel.onReceive { message ->
+                            val peerMailbox = peerMailboxes.removeFirst()
+                            logger.d { "Sending $message to $peerMailbox" }
+                            peerMailbox.sendChannel.send(CommandOrMessage(message))
+                            peerMailboxes.add(peerMailbox)
+                        }
                     }
-
-                    else -> {}
                 }
             }
-        }
-    }
-
-    private fun forwardTo(peerMailbox: PeerMailbox) = launch {
-        while (isActive) {
-            val message = sendChannel.receive()
-            logger.d { "Sending $message to $peerMailbox" }
-            peerMailbox.sendChannel.send(CommandOrMessage(message))
         }
     }
 
@@ -93,4 +90,3 @@ internal class CIOPushSocket(
         private val validPeerSocketTypes = setOf(Type.PULL)
     }
 }
-
