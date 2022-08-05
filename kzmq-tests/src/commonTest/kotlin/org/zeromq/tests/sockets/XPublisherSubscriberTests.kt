@@ -11,15 +11,11 @@ import io.kotest.matchers.collections.*
 import kotlinx.coroutines.*
 import org.zeromq.*
 import org.zeromq.tests.utils.*
-import kotlin.time.Duration.Companion.seconds
 
 @Suppress("unused")
 class XPublisherSubscriberTests : FunSpec({
 
-    withContexts("subscription filter").config(
-//        onlyEnginePairs = listOf("jeromq" to "jeromq"),
-        timeout = 5.seconds,
-    ) { (ctx1, ctx2) ->
+    withContexts("subscription filter") { (ctx1, ctx2) ->
         val address = randomAddress()
 
         val sent = listOf("prefixed data", "non-prefixed data", "prefix is good")
@@ -32,12 +28,10 @@ class XPublisherSubscriberTests : FunSpec({
         subscriber.connect(address)
 
         waitForSubscriptions()
-        subscriber.subscribe("prefix")
-        waitForSubscriptions()
 
         coroutineScope {
             launch {
-                sent.forEach { publisher.send(Message(it.encodeToByteArray())) }
+                subscriber.subscribe("prefix")
             }
 
             launch {
@@ -48,6 +42,14 @@ class XPublisherSubscriberTests : FunSpec({
                     subscribe shouldBe true
                     topic.decodeToString() shouldBe "prefix"
                 }
+            }
+        }
+
+        waitForSubscriptions()
+
+        coroutineScope {
+            launch {
+                sent.forEach { publisher.send(Message(it.encodeToByteArray())) }
             }
 
             launch {

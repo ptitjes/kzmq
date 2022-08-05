@@ -10,6 +10,7 @@ import io.kotest.datatest.*
 import kotlinx.coroutines.*
 import org.zeromq.*
 import kotlin.time.*
+import kotlin.time.Duration.Companion.seconds
 
 typealias ContainedTest<T> = suspend ContainerScope.(T) -> Unit
 typealias SingleContextTest = ContainedTest<Context>
@@ -41,6 +42,8 @@ class SingleContextTestBuilder(
     }
 }
 
+private val DEFAULT_TEST_TIMEOUT = 5.seconds
+
 private fun RootScope.runSingleContextTest(
     name: String,
     skipEngines: List<String>,
@@ -54,15 +57,11 @@ private fun RootScope.runSingleContextTest(
         nameFn = { engine -> "$name (${engine.name})" },
         engines,
     ) { engine ->
-        launch {
-            if (timeout != null) {
-                withTimeout(timeout) {
-                    test(Context(engine))
-                }
-            } else {
-                test(Context(engine))
+        Context(engine).use {
+            withTimeout(timeout ?: DEFAULT_TEST_TIMEOUT) {
+                test(it)
             }
-        }.join()
+        }
     }
 }
 
@@ -112,15 +111,11 @@ private fun RootScope.runDualContextTest(
         nameFn = { (engine1, engine2) -> "$name (${engine1.name}, ${engine2.name})" },
         enginePairs,
     ) { (engine1, engine2) ->
-        launch {
-            if (timeout != null) {
-                withTimeout(timeout) {
-                    test(Context(engine1) to Context(engine2))
-                }
-            } else {
-                test(Context(engine1) to Context(engine2))
+        withTimeout(timeout ?: DEFAULT_TEST_TIMEOUT) {
+            (Context(engine1) to Context(engine2)).use {
+                test(it)
             }
-        }.join()
+        }
     }
 }
 
