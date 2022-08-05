@@ -19,11 +19,11 @@ fun CoroutineScope.Context(
 class Context internal constructor(
     coroutineContext: CoroutineContext,
     engine: Engine,
-) : AbstractCoroutineContextElement(Context), SocketFactory {
+) : AbstractCoroutineContextElement(Context), SocketFactory, Closeable {
 
     private val instance: EngineInstance = engine.createInstance(coroutineContext)
 
-    fun close() = instance.close()
+    override fun close(): Unit = instance.close()
 
     override fun createPair(): PairSocket = instance.createPair()
     override fun createPublisher(): PublisherSocket = instance.createPublisher()

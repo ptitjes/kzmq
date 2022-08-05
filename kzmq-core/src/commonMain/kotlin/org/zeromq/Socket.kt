@@ -5,7 +5,7 @@
 
 package org.zeromq
 
-interface Socket {
+interface Socket : Closeable {
     /**
      * The socket type of this socket.
      */
@@ -14,7 +14,7 @@ interface Socket {
     /**
      * Closes this socket.
      */
-    fun close()
+    override fun close()
 
     /**
      * Creates an endpoint for accepting connections and binds to it.
