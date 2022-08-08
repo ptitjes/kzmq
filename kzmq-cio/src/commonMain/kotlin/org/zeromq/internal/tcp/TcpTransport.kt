@@ -77,15 +77,18 @@ internal class TcpTransport(
                     rawSocket = rawSocketBuilder.tcp().connect(remoteAddress)
                     val socketHandler = TcpSocketHandler(socketInfo, false, mailbox, rawSocket)
                     socketHandler.handleInitialization()
-                    peerManager.notify(PeerEvent(CONNECTION, mailbox))
-                    socketHandler.handleTraffic()
+                    try {
+                        socketHandler.handleTraffic()
+                        peerManager.notify(PeerEvent(CONNECTION, mailbox))
+                    } finally {
+                        peerManager.notify(PeerEvent(DISCONNECTION, mailbox))
+                    }
                 } catch (e: CancellationException) {
                     // Ignore
                     throw e
                 } catch (t: Throwable) {
                     // Ignore connection errors
                 } finally {
-                    peerManager.notify(PeerEvent(DISCONNECTION, mailbox))
                     rawSocket?.close()
                 }
 
