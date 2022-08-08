@@ -71,6 +71,7 @@ internal class CIOPullSocket(
             val commandOrMessage = peerMailbox.receiveChannel.receive()
             val message = commandOrMessage.messageOrThrow()
             logger.d { "Receiving $message from $peerMailbox" }
+            yield()
             receiveChannel.send(message)
         }
     }

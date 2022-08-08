@@ -130,7 +130,7 @@ class PushPullTests : FunSpec({
         val pushSockets = List(5) { ctx2.createPush().apply { connect(address) } }
         val pullSocket = ctx1.createPull().apply { bind(address) }
 
-        delay(500.milliseconds)
+        delay(1000.milliseconds)
 
         testFairQueuing(
             pushSockets.map { pushSocket -> { pushSocket.send(it) } },

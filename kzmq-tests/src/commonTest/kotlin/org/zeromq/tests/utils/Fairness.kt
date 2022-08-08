@@ -40,7 +40,7 @@ suspend fun testFairQueuing(
     }
 
     // Wait for messages to fill the receiver's peer queues
-    delay(500.milliseconds)
+    delay(1000.milliseconds)
 
     // Check we received all messages fair-queued
     repeat(messageCount) { messageIndex ->
