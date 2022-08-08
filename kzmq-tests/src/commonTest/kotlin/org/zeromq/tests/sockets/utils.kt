@@ -8,3 +8,5 @@ package org.zeromq.tests.sockets
 import kotlinx.coroutines.*
 
 internal suspend fun waitForSubscriptions() = delay(200)
+
+internal fun Int.packToByteArray() = ByteArray(1) { toByte() }

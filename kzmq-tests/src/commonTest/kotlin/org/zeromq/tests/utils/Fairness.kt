@@ -6,14 +6,17 @@
 package org.zeromq.tests.utils
 
 import io.kotest.matchers.*
+import kotlinx.coroutines.*
 import org.zeromq.*
+import org.zeromq.tests.sockets.*
+import kotlin.time.Duration.Companion.milliseconds
 
-suspend fun testRoundRobinDispatch(
+suspend fun testRoundRobin(
     sender: suspend (Message) -> Unit,
     receivers: List<suspend () -> Message>,
     messageCount: Int = 10,
 ) {
-    val messages = List(messageCount) { index -> Message(ByteArray(1) { index.toByte() }) }
+    val messages = List(messageCount) { index -> Message(index.packToByteArray()) }
 
     // Send each message once per receiver
     messages.forEach { message -> repeat(receivers.size) { sender(message) } }
@@ -21,5 +24,28 @@ suspend fun testRoundRobinDispatch(
     // Check each receiver got every messages
     receivers.forEach { receiver ->
         List(messages.size) { receiver() } shouldBe messages
+    }
+}
+
+suspend fun testFairQueuing(
+    senders: List<suspend (Message) -> Unit>,
+    receiver: suspend () -> Message,
+    messageCount: Int = 10,
+) {
+    // Send a consecutive messages for each sender
+    senders.forEachIndexed { senderIndex, sender ->
+        repeat(messageCount) { messageIndex ->
+            sender(Message(messageIndex.packToByteArray(), senderIndex.packToByteArray()))
+        }
+    }
+
+    // Wait for messages to fill the receiver's peer queues
+    delay(500.milliseconds)
+
+    // Check we received all messages fair-queued
+    repeat(messageCount) { messageIndex ->
+        List(senders.size) { receiver() }.toSet() shouldBe List(senders.size) { senderIndex ->
+            Message(messageIndex.packToByteArray(), senderIndex.packToByteArray())
+        }.toSet()
     }
 }

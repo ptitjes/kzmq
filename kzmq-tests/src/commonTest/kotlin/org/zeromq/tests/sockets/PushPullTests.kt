@@ -13,6 +13,7 @@ import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.selects.*
 import org.zeromq.*
 import org.zeromq.tests.utils.*
+import kotlin.time.Duration.Companion.milliseconds
 
 @Suppress("unused")
 class PushPullTests : FunSpec({
@@ -111,14 +112,29 @@ class PushPullTests : FunSpec({
     withContexts("Push SHALL route outgoing messages to available peers using a round-robin strategy") { (ctx1, ctx2) ->
         val address = randomAddress(Protocol.TCP)
 
-        val push = ctx1.createPush().apply { bind(address) }
-        val pulls = List(5) { ctx2.createPull().apply { connect(address) } }
+        val pushSocket = ctx1.createPush().apply { bind(address) }
+        val pullSockets = List(5) { ctx2.createPull().apply { connect(address) } }
 
-        waitForSubscriptions()
+        delay(500.milliseconds)
 
-        testRoundRobinDispatch(
-            { push.send(it) },
-            pulls.map { pull -> { pull.receive() } },
+        testRoundRobin(
+            { pushSocket.send(it) },
+            pullSockets.map { pullSocket -> { pullSocket.receive() } },
+            10,
+        )
+    }
+
+    withContexts("Pull SHALL receive incoming messages from its peers using a fair-queuing strategy") { (ctx1, ctx2) ->
+        val address = randomAddress(Protocol.TCP)
+
+        val pushSockets = List(5) { ctx2.createPush().apply { connect(address) } }
+        val pullSocket = ctx1.createPull().apply { bind(address) }
+
+        delay(500.milliseconds)
+
+        testFairQueuing(
+            pushSockets.map { pushSocket -> { pushSocket.send(it) } },
+            { pullSocket.receive() },
             10,
         )
     }
