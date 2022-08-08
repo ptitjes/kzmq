@@ -19,6 +19,7 @@
             <option value="$PROJECT_DIR$/kzmq-js" />
             <option value="$PROJECT_DIR$/kzmq-libzmq" />
             <option value="$PROJECT_DIR$/kzmq-tests" />
+            <option value="$PROJECT_DIR$/kzmq-tools" />
           </set>
         </option>
       </GradleProjectSettings>

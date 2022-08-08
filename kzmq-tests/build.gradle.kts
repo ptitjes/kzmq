@@ -44,14 +44,6 @@ kotlin {
         else -> throw GradleException("Host OS is not supported in Kotlin/Native.")
     }
 
-    hostTarget.apply {
-        binaries {
-            executable("test-publisher") { entryPoint = "temp.mainPublisher" }
-            executable("test-subscriber") { entryPoint = "temp.mainSubscriber" }
-            executable("test-throughput") { entryPoint = "temp.mainThroughput" }
-        }
-    }
-
     sourceSets {
         val commonMain by getting {
             dependencies {
