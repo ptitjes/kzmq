@@ -9,29 +9,37 @@ import kotlinx.coroutines.*
 import org.zeromq.internal.*
 
 internal abstract class CIOSocket(
-    engineInstance: CIOEngineInstance,
+    private val engineInstance: CIOEngineInstance,
     final override val type: Type,
-) : Socket, SocketInfo, CoroutineScope {
+) : Socket, SocketInfo {
 
     override val options = SocketOptions()
 
-    private val job = SupervisorJob()
-    private val exceptionHandler = CoroutineExceptionHandler { _, throwable ->
-        logger.e(throwable) { "An error occurred in socket" }
-    }
-    final override val coroutineContext =
-        engineInstance.coroutineContext + job + exceptionHandler +
-            CoroutineName("zmq-${type.toString().lowercase()}")
-
-    override fun close() {
-        job.cancel()
-    }
-
     private val peerManager = PeerManager(
-        coroutineContext,
+        engineInstance.mainScope,
+        engineInstance.lingerScope,
         engineInstance.transportRegistry
     )
     protected val peerEvents = peerManager.peerEvents
+
+    private val exceptionHandler = CoroutineExceptionHandler { _, throwable ->
+        logger.e(throwable) { "An error occurred in socket" }
+    }
+    private val coroutineName = CoroutineName("zmq-${type.toString().lowercase()}")
+
+    private lateinit var socketJob: Job
+
+    fun setHandler(block: suspend CoroutineScope.() -> Unit) {
+        socketJob = engineInstance.mainScope.launch(exceptionHandler + coroutineName) {
+            block()
+        }
+    }
+
+    override fun close() {
+        peerEvents.cancel()
+        socketJob.cancel()
+        peerManager.close()
+    }
 
     override suspend fun bind(endpoint: String) = peerManager.bind(endpoint, this)
     override suspend fun unbind(endpoint: String) = peerManager.unbind(endpoint)

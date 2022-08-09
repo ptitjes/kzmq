@@ -8,6 +8,7 @@ package org.zeromq
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.*
 import org.zeromq.internal.*
+import org.zeromq.internal.utils.*
 
 /**
  * An implementation of the [PULL socket](https://rfc.zeromq.org/spec/30/).
@@ -52,7 +53,7 @@ internal class CIOPullSocket(
     override val receiveChannel = Channel<Message>()
 
     init {
-        launch {
+        setHandler {
             val forwardJobs = JobMap<PeerMailbox>()
 
             while (isActive) {
@@ -66,12 +67,16 @@ internal class CIOPullSocket(
         }
     }
 
-    private fun forwardFrom(peerMailbox: PeerMailbox) = launch {
-        while (isActive) {
-            val commandOrMessage = peerMailbox.receiveChannel.receive()
-            val message = commandOrMessage.messageOrThrow()
-            logger.d { "Receiving $message from $peerMailbox" }
-            receiveChannel.send(message)
+    private fun CoroutineScope.forwardFrom(peerMailbox: PeerMailbox) = launch {
+        try {
+            while (isActive) {
+                val message = peerMailbox.receiveChannel.receive().messageOrThrow()
+                logger.t { "Receiving $message from $peerMailbox" }
+                receiveChannel.send(message)
+            }
+        } catch (e: ClosedReceiveChannelException) {
+            // Coroutine's cancellation happened while suspending on receive
+            // and the receiveChannel of the peerMailbox has already been closed
         }
     }
 

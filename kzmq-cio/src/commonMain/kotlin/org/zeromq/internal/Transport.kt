@@ -5,12 +5,35 @@
 
 package org.zeromq.internal
 
+import kotlinx.coroutines.*
+
 internal interface Transport {
     fun supportsSchemes(scheme: String): Boolean
     val isMulticast: Boolean
 
     fun close()
 
-    suspend fun bind(peerManager: PeerManager, socketInfo: SocketInfo, endpoint: String)
-    suspend fun connect(peerManager: PeerManager, socketInfo: SocketInfo, endpoint: String)
+    fun bind(
+        mainScope: CoroutineScope,
+        lingerScope: CoroutineScope,
+        peerManager: PeerManager,
+        socketInfo: SocketInfo,
+        address: String,
+    ): BindingHolder
+
+    fun connect(
+        mainScope: CoroutineScope,
+        lingerScope: CoroutineScope,
+        peerManager: PeerManager,
+        socketInfo: SocketInfo,
+        address: String,
+    ): ConnectionHolder
+}
+
+internal interface BindingHolder {
+    fun close()
+}
+
+internal interface ConnectionHolder {
+    fun close()
 }

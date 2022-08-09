@@ -13,24 +13,24 @@ import kotlin.coroutines.*
 
 internal class CIOEngineInstance internal constructor(
     context: CoroutineContext,
-) : EngineInstance, CoroutineScope {
+) : EngineInstance {
 
-    private val job = SupervisorJob()
-    private val exceptionHandler = CoroutineExceptionHandler { _, throwable ->
-        logger.e(throwable) { "An error occurred in CIO engine" }
-    }
-    override val coroutineContext = context + job + exceptionHandler
+    private val mainJob = SupervisorJob()
+    private val lingerJob = SupervisorJob()
+
+    internal val mainScope = CoroutineScope(context + mainJob)
+    internal val lingerScope = CoroutineScope(context + lingerJob)
 
     val transportRegistry = TransportRegistry(
         listOf(
-            TcpTransport(coroutineContext),
-            InprocTransport(coroutineContext),
+            TcpTransport(mainScope.coroutineContext),
+            InprocTransport(mainScope.coroutineContext),
         )
     )
 
     override fun close() {
         transportRegistry.close()
-        job.cancel()
+        mainJob.cancel()
     }
 
     override fun createPair(): PairSocket = CIOPairSocket(this)

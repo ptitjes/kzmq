@@ -9,12 +9,14 @@ package org.zeromq.internal
 
 import io.ktor.utils.io.*
 import io.ktor.utils.io.core.*
+import io.ktor.utils.io.errors.*
+import kotlinx.coroutines.channels.*
 import org.zeromq.*
 
 internal val GREETING_PART1_SIZE = SIGNATURE.size + 1
 internal val GREETING_PART2_SIZE = 1 + MECHANISM_SIZE + 1 + FILLER.size
 
-internal suspend fun ByteReadChannel.readGreetingPart1(): Int {
+internal suspend fun ByteReadChannel.readGreetingPart1(): Int = wrapExceptions {
     return readPacket(GREETING_PART1_SIZE).run {
         if (readUByte() != signatureHeadByte) invalidFrame("Invalid signature header byte")
         discardExact(8)
@@ -23,7 +25,7 @@ internal suspend fun ByteReadChannel.readGreetingPart1(): Int {
     }
 }
 
-internal suspend fun ByteReadChannel.readGreetingPart2(): Pair<Int, SecuritySpec> {
+internal suspend fun ByteReadChannel.readGreetingPart2(): Pair<Int, SecuritySpec> = wrapExceptions {
     return readPacket(GREETING_PART2_SIZE).run {
         val minorVersion = readByte().toInt()
         val mechanism = readMechanism()
@@ -40,13 +42,13 @@ private fun ByteReadPacket.readMechanism(): Mechanism {
     return Mechanism.values().find { it.name == string } ?: invalidFrame("Invalid security mechanism")
 }
 
-internal suspend fun ByteReadChannel.readCommandOrMessage(): CommandOrMessage {
+internal suspend fun ByteReadChannel.readCommandOrMessage(): CommandOrMessage = wrapExceptions {
     val flags = readZmqFlags()
     return if (flags.isCommand) CommandOrMessage(readCommandContent(flags))
     else CommandOrMessage(readMessageContent(flags))
 }
 
-internal suspend fun ByteReadChannel.readCommand(): Command {
+internal suspend fun ByteReadChannel.readCommand(): Command = wrapExceptions {
     val flags = readZmqFlags()
     if (!flags.isCommand) invalidFrame("Expected command")
     return readCommandContent(flags)
@@ -146,3 +148,11 @@ private suspend fun ByteReadChannel.readBytes(size: Int): ByteArray {
 private suspend inline fun ByteReadChannel.readUByte() = readByte().toUByte()
 
 private suspend inline fun ByteReadChannel.readZmqFlags() = ZmqFlags(readUByte())
+
+internal inline fun <T> ByteReadChannel.wrapExceptions(block: ByteReadChannel.() -> T): T {
+    try {
+        return block()
+    } catch (e: ClosedReceiveChannelException) {
+        throw IOException(e.message ?: "Error while reading", e)
+    }
+}

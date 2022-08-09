@@ -35,17 +35,50 @@ internal class InprocTransport(
         }[name] ?: error("Failed to get handler for endpoint: $endpoint")
     }
 
-    override suspend fun bind(
+    override fun bind(
+        mainScope: CoroutineScope,
+        lingerScope: CoroutineScope,
         peerManager: PeerManager,
         socketInfo: SocketInfo,
-        endpoint: String,
-    ) = coroutineScope {
-        val handler = getOrCreateHandlerFor(endpoint)
+        address: String,
+    ): BindingHolder = InprocBindingHolder(
+        this::getOrCreateHandlerFor,
+        mainScope,
+        peerManager,
+        socketInfo,
+        address
+    )
+
+    override fun connect(
+        mainScope: CoroutineScope,
+        lingerScope: CoroutineScope,
+        peerManager: PeerManager,
+        socketInfo: SocketInfo,
+        address: String,
+    ): ConnectionHolder = InprocConnectionHolder(
+        this::getOrCreateHandlerFor,
+        mainScope,
+        lingerScope,
+        peerManager,
+        socketInfo,
+        address
+    )
+}
+
+internal class InprocBindingHolder(
+    handlerFactory: (endpoint: String) -> InprocEndpointHandler,
+    mainScope: CoroutineScope,
+    peerManager: PeerManager,
+    socketInfo: SocketInfo,
+    address: String,
+) : BindingHolder {
+    private val mainJob = mainScope.launch {
+        val handler = handlerFactory(address)
         try {
             handler.acquire()
             handler.notify(InprocEndpointEvent.Binding(peerManager) {
                 val randomId = Random.Default.nextBytes(8).encodeBase64()
-                PeerMailbox("$endpoint/$randomId", socketInfo.options)
+                PeerMailbox("$address/$randomId", socketInfo.options)
             })
 
             awaitCancellation()
@@ -55,14 +88,24 @@ internal class InprocTransport(
         }
     }
 
-    override suspend fun connect(
-        peerManager: PeerManager,
-        socketInfo: SocketInfo,
-        endpoint: String,
-    ) = coroutineScope {
-        val mailbox = PeerMailbox(endpoint, socketInfo.options)
+    override fun close() {
+        mainJob.cancel()
+    }
+}
 
-        val handler = getOrCreateHandlerFor(endpoint)
+internal class InprocConnectionHolder(
+    handlerFactory: (endpoint: String) -> InprocEndpointHandler,
+    mainScope: CoroutineScope,
+    private val lingerScope: CoroutineScope,
+    peerManager: PeerManager,
+    socketInfo: SocketInfo,
+    address: String,
+) : ConnectionHolder {
+
+    private val mainJob = mainScope.launch {
+        val mailbox = PeerMailbox(address, socketInfo.options)
+
+        val handler = handlerFactory(address)
         try {
             handler.acquire()
             peerManager.notify(PeerEvent(ADDITION, mailbox))
@@ -73,6 +116,12 @@ internal class InprocTransport(
             handler.notify(InprocEndpointEvent.Disconnecting(mailbox))
             peerManager.notify(PeerEvent(REMOVAL, mailbox))
             handler.release()
+        }
+    }
+
+    override fun close() {
+        lingerScope.launch {
+            mainJob.cancelAndJoin()
         }
     }
 }

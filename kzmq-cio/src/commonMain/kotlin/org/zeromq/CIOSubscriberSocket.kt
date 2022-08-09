@@ -85,7 +85,7 @@ internal class CIOSubscriberSocket(
     private var lateSubscriptionCommands = Channel<Command>(10)
 
     init {
-        launch {
+        setHandler {
             val peerMailboxes = hashSetOf<PeerMailbox>()
 
             while (isActive) {
@@ -117,8 +117,8 @@ internal class CIOSubscriberSocket(
 
                     for (peerMailbox in peerMailboxes) {
                         peerMailbox.receiveChannel.onReceive { commandOrMessage ->
-                            logger.d { "Receiving $commandOrMessage from $peerMailbox" }
                             val message = commandOrMessage.messageOrThrow()
+                            logger.t { "Receiving $message from $peerMailbox" }
                             receiveChannel.send(message)
                         }
                     }

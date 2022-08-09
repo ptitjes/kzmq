@@ -7,7 +7,12 @@ package org.zeromq.internal
 
 internal open class ProtocolError(
     override val message: String,
-    override val cause: Throwable? = null
+    override val cause: Throwable? = null,
+    val isFatal: Boolean = false,
 ) : Throwable(message, cause)
 
-internal fun protocolError(message: String): Nothing = throw ProtocolError(message)
+internal fun protocolError(message: String, cause: Throwable? = null): Nothing =
+    throw ProtocolError(message, cause)
+
+internal fun fatalProtocolError(message: String, cause: Throwable? = null): Nothing =
+    throw ProtocolError(message, cause, isFatal = true)

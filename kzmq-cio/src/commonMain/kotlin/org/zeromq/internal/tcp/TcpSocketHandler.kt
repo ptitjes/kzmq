@@ -15,10 +15,11 @@ internal class TcpSocketHandler(
     private val socketInfo: SocketInfo,
     private val isServer: Boolean,
     private val mailbox: PeerMailbox,
-    rawSocket: Socket,
+    private val rawSocket: Socket,
 ) {
     private var input = rawSocket.openReadChannel()
     private var output = rawSocket.openWriteChannel(autoFlush = true)
+    // TODO do manual flushes
 
     private var peerMinorVersion: Int = 1
 
@@ -28,22 +29,26 @@ internal class TcpSocketHandler(
 
         logger.t { "Reading greeting part 1" }
         val peerMajorVersion = input.readGreetingPart1()
-        if (peerMajorVersion != 3) protocolError("Incompatible version $peerMajorVersion.x")
+        if (peerMajorVersion != 3) protocolError("Incompatible peer version $peerMajorVersion.x")
 
         logger.t { "Writing greeting part 2" }
-        output.writeGreetingPart2(Mechanism.NULL, false)
+        val mechanism = socketInfo.options.getSelectedSecurityMechanism()
+        output.writeGreetingPart2(mechanism, false)
 
         logger.t { "Reading greeting part 2" }
         val (peerMinorVersion, peerSecuritySpec) = input.readGreetingPart2()
+
+        if (mechanism != peerSecuritySpec.mechanism)
+            protocolError("Invalid peer security mechanism: ${peerSecuritySpec.mechanism}")
 
         val localProperties = mutableMapOf<PropertyName, ByteArray>().apply {
             put(PropertyName.SOCKET_TYPE, socketInfo.type.name.encodeToByteArray())
             socketInfo.options.routingId?.let { identity -> put(PropertyName.IDENTITY, identity) }
         }
 
-        val peerProperties = when (peerSecuritySpec.mechanism) {
+        val peerProperties = when (mechanism) {
             Mechanism.NULL -> nullMechanismHandshake(localProperties, isServer, input, output)
-            else -> protocolError("Unsupported mechanism ${peerSecuritySpec.mechanism}")
+            else -> TODO("Security mechanism $mechanism not yet supported")
         }
 
         validateSocketType(peerProperties, socketInfo.validPeerTypes)
@@ -58,17 +63,38 @@ internal class TcpSocketHandler(
         logger.t { "Finished initialization (peerMinorVersion: $peerMinorVersion)" }
     }
 
-    suspend fun handleTraffic(): Unit = coroutineScope {
-        launch {
-            while (isActive) {
-                readIncoming().let { mailbox.receiveChannel.send(it) }
+    suspend fun handleTraffic() {
+        try {
+            logger.d { "Started handling traffic" }
+            coroutineScope {
+                launch {
+                    val incoming = mailbox.receiveChannel
+                    while (isActive) incoming.send(readIncoming())
+                }
+                launch {
+                    val outgoing = mailbox.sendChannel
+                    while (isActive) writeOutgoing(outgoing.receive())
+                }
+            }
+        } finally {
+            logger.d { "Stopped handling traffic" }
+        }
+    }
+
+    suspend fun handleLinger() {
+        withTimeout(socketInfo.options.lingerTimeout) {
+            try {
+                logger.d { "Started lingering" }
+                val outgoing = mailbox.sendChannel
+                while (!outgoing.isClosedForReceive) writeOutgoing(outgoing.receive())
+            } finally {
+                logger.d { "Stopped lingering" }
             }
         }
-        launch {
-            while (isActive) {
-                mailbox.sendChannel.receive().let { writeOutgoing(it) }
-            }
-        }
+    }
+
+    fun close() {
+        rawSocket.close()
     }
 
     private val isPublisher: Boolean get() = socketInfo.type == Type.PUB || socketInfo.type == Type.XPUB

@@ -90,7 +90,7 @@ internal class CIOPublisherSocket(
     override val sendChannel = Channel<Message>()
 
     init {
-        launch {
+        setHandler {
             val peerMailboxes = hashSetOf<PeerMailbox>()
             var subscriptions = SubscriptionTrie<PeerMailbox>()
 
@@ -140,4 +140,3 @@ internal class CIOPublisherSocket(
         private val validPeerSocketTypes = setOf(Type.SUB, Type.XSUB)
     }
 }
-

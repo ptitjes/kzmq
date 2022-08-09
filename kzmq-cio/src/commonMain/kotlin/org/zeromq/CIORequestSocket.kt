@@ -8,6 +8,7 @@ package org.zeromq
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.*
 import org.zeromq.internal.*
+import org.zeromq.internal.utils.*
 
 /**
  * An implementation of the [REQ socket](https://rfc.zeromq.org/spec/28/).
@@ -61,55 +62,62 @@ internal class CIORequestSocket(
     private val repliesChannel = Channel<Pair<PeerMailbox, Message>>()
 
     init {
-        launch {
-            val forwardJobs = JobMap<PeerMailbox>()
-
-            while (isActive) {
-                val (kind, peerMailbox) = peerEvents.receive()
-                when (kind) {
-                    PeerEvent.Kind.ADDITION -> forwardJobs.add(peerMailbox) { dispatchRequestsReplies(peerMailbox) }
-                    PeerEvent.Kind.REMOVAL -> forwardJobs.remove(peerMailbox)
-                    else -> {}
-                }
-            }
-        }
-        launch {
-            while (isActive) {
-                val (peerMailbox, requestData) = requestsChannel.receive()
-
-                val request = addPrefixAddress(requestData)
-                logger.d { "Sending request $request to $peerMailbox" }
-                peerMailbox.sendChannel.send(CommandOrMessage(request))
+        setHandler {
+            launch {
+                val forwardJobs = JobMap<PeerMailbox>()
 
                 while (isActive) {
-                    val (otherPeerMailbox, reply) = repliesChannel.receive()
-                    if (otherPeerMailbox != peerMailbox) {
-                        logger.d { "Ignoring reply $reply from $otherPeerMailbox" }
-                        continue
+                    val (kind, peerMailbox) = peerEvents.receive()
+                    when (kind) {
+                        PeerEvent.Kind.ADDITION -> forwardJobs.add(peerMailbox) { dispatchRequestsReplies(peerMailbox) }
+                        PeerEvent.Kind.REMOVAL -> forwardJobs.remove(peerMailbox)
+                        else -> {}
                     }
+                }
+            }
+            launch {
+                while (isActive) {
+                    val (peerMailbox, requestData) = requestsChannel.receive()
 
-                    logger.d { "Sending back reply $reply from $peerMailbox" }
-                    val (_, replyData) = extractPrefixAddress(reply)
-                    receiveChannel.send(replyData)
-                    break
+                    val request = addPrefixAddress(requestData)
+                    logger.t { "Sending request $request to $peerMailbox" }
+                    peerMailbox.sendChannel.send(CommandOrMessage(request))
+
+                    while (isActive) {
+                        val (otherPeerMailbox, reply) = repliesChannel.receive()
+                        if (otherPeerMailbox != peerMailbox) {
+                            logger.w { "Ignoring reply $reply from $otherPeerMailbox" }
+                            continue
+                        }
+
+                        logger.t { "Sending back reply $reply from $peerMailbox" }
+                        val (_, replyData) = extractPrefixAddress(reply)
+                        receiveChannel.send(replyData)
+                        break
+                    }
                 }
             }
         }
     }
 
-    private fun dispatchRequestsReplies(peerMailbox: PeerMailbox) = launch {
+    private fun CoroutineScope.dispatchRequestsReplies(peerMailbox: PeerMailbox) = launch {
         launch {
             while (isActive) {
                 val request = sendChannel.receive()
-                logger.d { "Dispatching request $request to $peerMailbox" }
+                logger.t { "Dispatching request $request to $peerMailbox" }
                 requestsChannel.send(peerMailbox to request)
             }
         }
         launch {
-            while (isActive) {
-                val reply = peerMailbox.receiveChannel.receive().messageOrThrow()
-                logger.d { "Dispatching reply $reply from $peerMailbox" }
-                repliesChannel.send(peerMailbox to reply)
+            try {
+                while (isActive) {
+                    val reply = peerMailbox.receiveChannel.receive().messageOrThrow()
+                    logger.t { "Dispatching reply $reply from $peerMailbox" }
+                    repliesChannel.send(peerMailbox to reply)
+                }
+            } catch (e: ClosedReceiveChannelException) {
+                // Coroutine's cancellation happened while suspending on receive
+                // and the receiveChannel of the peerMailbox has already been closed
             }
         }
     }

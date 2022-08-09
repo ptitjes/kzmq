@@ -10,6 +10,7 @@ import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.*
 import org.zeromq.internal.*
 import org.zeromq.internal.PeerEvent.Kind.*
+import org.zeromq.internal.utils.JobMap
 import kotlin.coroutines.*
 
 internal class InprocEndpointHandler(

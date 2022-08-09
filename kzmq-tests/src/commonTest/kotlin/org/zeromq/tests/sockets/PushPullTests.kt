@@ -13,9 +13,72 @@ import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.selects.*
 import org.zeromq.*
 import org.zeromq.tests.utils.*
+import kotlin.time.Duration.Companion.milliseconds
 
 @Suppress("unused")
 class PushPullTests : FunSpec({
+
+    withContexts("lingers after disconnect") { (ctx1, ctx2) ->
+        val address = randomAddress()
+        val messageCount = 100
+
+        val pushSocket = ctx1.createPush().apply { connect(address) }
+        val pullSocket = ctx2.createPull().apply { bind(address) }
+
+        // Wait for connection
+        delay(100.milliseconds)
+
+        var sent = 0
+        while (sent < messageCount) {
+            val message = Message(sent.encodeToByteArray())
+            pushSocket.send(message)
+            sent++
+        }
+        pushSocket.disconnect(address)
+
+        var received = 0
+        while (received < messageCount) {
+            val message = pullSocket.receive()
+            message.singleOrThrow().decodeToInt() shouldBe received
+            received++
+        }
+        received shouldBe messageCount
+
+        pushSocket.close()
+        pullSocket.close()
+    }
+
+    withContexts("lingers after close").config(
+        // TODO figure out why this fails
+        skipEnginePairs = listOf("jeromq" to "cio"),
+    ) { (ctx1, ctx2) ->
+        val address = randomAddress()
+        val messageCount = 100
+
+        val pushSocket = ctx1.createPush().apply { connect(address) }
+        val pullSocket = ctx2.createPull().apply { bind(address) }
+
+        // Wait for connection
+        delay(100.milliseconds)
+
+        var sent = 0
+        while (sent < messageCount) {
+            val message = Message(sent.encodeToByteArray())
+            pushSocket.send(message)
+            sent++
+        }
+        pushSocket.close()
+
+        var received = 0
+        while (received < messageCount) {
+            val message = pullSocket.receive()
+            message.singleOrThrow().decodeToInt() shouldBe received
+            received++
+        }
+        received shouldBe messageCount
+
+        pullSocket.close()
+    }
 
     withContexts("bind-connect") { (ctx1, ctx2) ->
         val address = randomAddress()

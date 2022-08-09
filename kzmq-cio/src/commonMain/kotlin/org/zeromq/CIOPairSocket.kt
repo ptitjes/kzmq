@@ -56,7 +56,7 @@ internal class CIOPairSocket(
     override val sendChannel = Channel<Message>()
 
     init {
-        launch {
+        setHandler {
             var forwardJob: Job? = null
 
             while (isActive) {
@@ -82,11 +82,11 @@ internal class CIOPairSocket(
         }
     }
 
-    private fun forwardJob(mailbox: PeerMailbox) = launch {
+    private fun CoroutineScope.forwardJob(mailbox: PeerMailbox) = launch {
         launch {
             while (isActive) {
                 val message = sendChannel.receive()
-                logger.d { "Sending $message to $mailbox" }
+                logger.t { "Sending $message to $mailbox" }
                 mailbox.sendChannel.send(CommandOrMessage(message))
             }
         }
@@ -94,7 +94,7 @@ internal class CIOPairSocket(
             while (isActive) {
                 val commandOrMessage = mailbox.receiveChannel.receive()
                 val message = commandOrMessage.messageOrThrow()
-                logger.d { "Receiving $message from $mailbox" }
+                logger.t { "Receiving $message from $mailbox" }
                 receiveChannel.send(message)
             }
         }

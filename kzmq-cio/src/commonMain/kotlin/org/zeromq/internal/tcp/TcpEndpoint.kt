@@ -6,7 +6,6 @@
 package org.zeromq.internal.tcp
 
 import io.ktor.network.sockets.*
-import org.zeromq.internal.*
 
 internal class TcpEndpoint(val address: SocketAddress) {
 
@@ -41,4 +40,4 @@ internal fun parseTcpEndpointOrNull(endpoint: String): TcpEndpoint? {
 }
 
 internal fun parseTcpEndpoint(endpoint: String): TcpEndpoint =
-    parseTcpEndpointOrNull(endpoint) ?: protocolError("Endpoint not supported: $endpoint")
+    parseTcpEndpointOrNull(endpoint) ?: error("Should be a 'tcp://' or 'ipc://' address")

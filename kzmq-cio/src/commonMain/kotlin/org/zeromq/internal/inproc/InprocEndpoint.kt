@@ -5,8 +5,6 @@
 
 package org.zeromq.internal.inproc
 
-import org.zeromq.internal.*
-
 internal class InprocEndpoint(val name: String) {
     override fun toString(): String = "inproc://$name"
 }
@@ -18,4 +16,4 @@ internal fun parseInprocEndpointOrNull(endpoint: String): InprocEndpoint? {
 }
 
 internal fun parseInprocEndpoint(endpoint: String): InprocEndpoint =
-    parseInprocEndpointOrNull(endpoint) ?: protocolError("Endpoint not supported: $endpoint")
+    parseInprocEndpointOrNull(endpoint) ?: error("Should be an 'inproc://' address")

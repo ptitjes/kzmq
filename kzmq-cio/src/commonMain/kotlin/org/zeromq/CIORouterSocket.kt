@@ -9,6 +9,7 @@ import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.*
 import kotlinx.coroutines.selects.*
 import org.zeromq.internal.*
+import org.zeromq.internal.utils.*
 import kotlin.random.*
 
 /**
@@ -70,7 +71,7 @@ internal class CIORouterSocket(
     override val sendChannel = Channel<Message>()
 
     init {
-        launch {
+        setHandler {
             val forwardJobs = JobMap<PeerMailbox>()
             val perIdentityMailboxes = hashMapOf<Identity, PeerMailbox>()
 
@@ -117,13 +118,18 @@ internal class CIORouterSocket(
         }
     }
 
-    private fun routeRequests(peerMailbox: PeerMailbox) = launch {
-        while (isActive) {
-            val message = peerMailbox.receiveChannel.receive().messageOrThrow()
-            peerMailbox.identity?.let { identity ->
-                logger.d { "Forwarding request $message from $peerMailbox with identity $identity" }
-                receiveChannel.send(prependIdentity(message, identity))
+    private fun CoroutineScope.routeRequests(peerMailbox: PeerMailbox) = launch {
+        try {
+            while (isActive) {
+                val message = peerMailbox.receiveChannel.receive().messageOrThrow()
+                peerMailbox.identity?.let { identity ->
+                    logger.d { "Forwarding request $message from $peerMailbox with identity $identity" }
+                    receiveChannel.send(prependIdentity(message, identity))
+                }
             }
+        } catch (e: ClosedReceiveChannelException) {
+            // Coroutine's cancellation happened while suspending on receive
+            // and the receiveChannel of the peerMailbox has already been closed
         }
     }
 
