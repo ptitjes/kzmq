@@ -98,7 +98,7 @@ internal class CIOXPublisherSocket(
     override val receiveChannel = Channel<Message>()
 
     init {
-        launch {
+        setHandler {
             val peerMailboxes = hashSetOf<PeerMailbox>()
             var subscriptions = SubscriptionTrie<PeerMailbox>()
 
@@ -163,4 +163,3 @@ internal class CIOXPublisherSocket(
         private val validPeerSocketTypes = setOf(Type.SUB, Type.XSUB)
     }
 }
-

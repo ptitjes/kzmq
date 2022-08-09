@@ -16,17 +16,13 @@ typealias ContainedTest<T> = suspend ContainerScope.(T) -> Unit
 typealias SingleContextTest = ContainedTest<Context>
 typealias DualContextTest = ContainedTest<Pair<Context, Context>>
 
-fun <T : RootScope> T.withContext(name: String, test: SingleContextTest) =
-    withContext(name).config(test = test)
+fun <T : RootScope> T.withContext(name: String, test: SingleContextTest) = withContext(name).config(test = test)
 
-fun <T : RootScope> T.withContext(name: String): SingleContextTestBuilder =
-    SingleContextTestBuilder(name, this)
+fun <T : RootScope> T.withContext(name: String): SingleContextTestBuilder = SingleContextTestBuilder(name, this)
 
-fun <T : RootScope> T.withContexts(name: String, test: DualContextTest) =
-    withContexts(name).config(test = test)
+fun <T : RootScope> T.withContexts(name: String, test: DualContextTest) = withContexts(name).config(test = test)
 
-fun <T : RootScope> T.withContexts(name: String): DualContextTestBuilder =
-    DualContextTestBuilder(name, this)
+fun <T : RootScope> T.withContexts(name: String): DualContextTestBuilder = DualContextTestBuilder(name, this)
 
 class SingleContextTestBuilder(
     private val name: String,
@@ -90,22 +86,24 @@ class DualContextTestBuilder(
 ) {
     fun config(
         skipEngines: List<String> = listOf(),
+        skipEnginePairs: List<Pair<String, String>>? = null,
         onlyEnginePairs: List<Pair<String, String>>? = null,
         timeout: Duration? = null,
         test: DualContextTest,
     ) {
-        context.runDualContextTest(name, skipEngines, onlyEnginePairs, timeout, test)
+        context.runDualContextTest(name, skipEngines, skipEnginePairs, onlyEnginePairs, timeout, test)
     }
 }
 
 private fun RootScope.runDualContextTest(
     name: String,
     skipEngines: List<String>,
+    skipEnginePairs: List<Pair<String, String>>?,
     onlyEnginePairs: List<Pair<String, String>>?,
     timeout: Duration?,
     test: DualContextTest,
 ) {
-    val enginePairs = computeEnginePairs(skipEngines, onlyEnginePairs)
+    val enginePairs = computeEnginePairs(skipEngines, skipEnginePairs, onlyEnginePairs)
 
     withData(
         nameFn = { (engine1, engine2) -> "$name (${engine1.name}, ${engine2.name})" },
@@ -121,9 +119,11 @@ private fun RootScope.runDualContextTest(
 
 private fun computeEnginePairs(
     skipEngines: List<String>,
+    skipEnginePairs: List<Pair<String, String>>?,
     onlyEnginePairs: List<Pair<String, String>>?,
 ): List<Pair<Engine, Engine>> {
     val skipEnginesLowerCase = skipEngines.map { it.lowercase() }.toSet()
+    val skipEnginePairsLowerCase = skipEnginePairs?.map { (e1, e2) -> e1.lowercase() to e2.lowercase() }
     val onlyEnginePairsLowerCase = onlyEnginePairs?.map { (e1, e2) -> e1.lowercase() to e2.lowercase() }
 
     val filteredEngines = engines.filter { engine ->
@@ -136,8 +136,10 @@ private fun computeEnginePairs(
     }
 
     return enginePairs.filter { (e1, e2) ->
-        onlyEnginePairsLowerCase?.any { (oe1, oe2) ->
+        (onlyEnginePairsLowerCase?.any { (oe1, oe2) ->
             oe1.contains(e1.name) && oe2.contains(e2.name)
-        } ?: true
+        } ?: true) && !(skipEnginePairsLowerCase?.any { (oe1, oe2) ->
+            oe1.contains(e1.name) && oe2.contains(e2.name)
+        } ?: false)
     }
 }

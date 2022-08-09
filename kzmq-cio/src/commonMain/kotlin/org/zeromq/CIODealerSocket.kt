@@ -8,6 +8,7 @@ package org.zeromq
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.*
 import org.zeromq.internal.*
+import org.zeromq.internal.utils.*
 
 /**
  * An implementation of the [DEALER socket](https://rfc.zeromq.org/spec/28/).
@@ -64,7 +65,7 @@ internal class CIODealerSocket(
     override val receiveChannel = Channel<Message>()
 
     init {
-        launch {
+        setHandler {
             val forwardJobs = JobMap<PeerMailbox>()
 
             while (isActive) {
@@ -78,7 +79,7 @@ internal class CIODealerSocket(
         }
     }
 
-    private fun dispatchRequestsReplies(peerMailbox: PeerMailbox) = launch {
+    private fun CoroutineScope.dispatchRequestsReplies(peerMailbox: PeerMailbox) = launch {
         launch {
             while (isActive) {
                 val request = sendChannel.receive()
@@ -87,10 +88,15 @@ internal class CIODealerSocket(
             }
         }
         launch {
-            while (isActive) {
-                val reply = peerMailbox.receiveChannel.receive().messageOrThrow()
-                logger.d { "Dispatching reply $reply from $peerMailbox" }
-                receiveChannel.send(reply)
+            try {
+                while (isActive) {
+                    val reply = peerMailbox.receiveChannel.receive().messageOrThrow()
+                    logger.d { "Dispatching reply $reply from $peerMailbox" }
+                    receiveChannel.send(reply)
+                }
+            } catch (e: ClosedReceiveChannelException) {
+                // Coroutine's cancellation happened while suspending on receive
+                // and the receiveChannel of the peerMailbox has already been closed
             }
         }
     }

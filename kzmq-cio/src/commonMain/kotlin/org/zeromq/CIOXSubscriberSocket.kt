@@ -97,7 +97,7 @@ internal class CIOXSubscriberSocket(
     private var lateSubscriptionCommands = Channel<Command>(10)
 
     init {
-        launch {
+        setHandler {
             val peerMailboxes = hashSetOf<PeerMailbox>()
 
             while (isActive) {
@@ -127,7 +127,7 @@ internal class CIOXSubscriberSocket(
                             if (subscribe) subscribe(listOf(topic)) else unsubscribe(listOf(topic))
                         } else {
                             peerMailboxes.forEach { peerMailbox ->
-                                logger.d { "Sending message $message to $peerMailbox" }
+                                logger.t { "Sending message $message to $peerMailbox" }
                                 peerMailbox.sendChannel.send(CommandOrMessage(message))
                             }
                         }
@@ -142,8 +142,8 @@ internal class CIOXSubscriberSocket(
 
                     for (peerMailbox in peerMailboxes) {
                         peerMailbox.receiveChannel.onReceive { commandOrMessage ->
-                            logger.d { "Receiving $commandOrMessage from $peerMailbox" }
                             val message = commandOrMessage.messageOrThrow()
+                            logger.t { "Receiving $message from $peerMailbox" }
                             receiveChannel.send(message)
                         }
                     }

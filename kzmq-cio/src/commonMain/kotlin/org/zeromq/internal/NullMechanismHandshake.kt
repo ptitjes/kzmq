@@ -30,7 +30,7 @@ internal suspend fun nullMechanismHandshake(
 private suspend fun expectReadyCommand(input: ByteReadChannel): Map<PropertyName, ByteArray> {
     return when (val command = input.readCommand()) {
         is ReadyCommand -> command.properties
-        is ErrorCommand -> protocolError("Peer error occurred: ${command.reason}")
+        is ErrorCommand -> fatalProtocolError("Peer error occurred: ${command.reason}")
         else -> protocolError("Expected READY or ERROR, but got ${command.name}")
     }
 }

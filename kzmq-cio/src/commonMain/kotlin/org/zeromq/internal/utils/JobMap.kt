@@ -3,7 +3,7 @@
  * Use of this source code is governed by the Apache 2.0 license.
  */
 
-package org.zeromq.internal
+package org.zeromq.internal.utils
 
 import kotlinx.atomicfu.*
 import kotlinx.coroutines.*
