@@ -143,6 +143,13 @@ internal class TcpConnectionHolder(
                             peerManager.notify(PeerEvent(DISCONNECTION, mailbox))
                         }
                     }
+                } catch (e: IllegalStateException) {
+                    if (e is CancellationException) throw e
+
+                    // SelectorManager has been closed while suspending to connect
+                    shouldReconnect = false
+                    socketHandler?.close()
+                    socketHandler = null
                 } catch (e: ProtocolError) {
                     shouldReconnect = !e.isFatal
                     socketHandler?.close()
