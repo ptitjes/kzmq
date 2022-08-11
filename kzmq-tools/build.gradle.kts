@@ -34,7 +34,7 @@ kotlin {
 
     hostTarget.apply {
         binaries {
-            executable("throughput") { entryPoint = "org.zeromq.tools.ThroughputKt" }
+            executable("throughput") { entryPoint = "org.zeromq.tools.main" }
         }
         compilations["main"].enableEndorsedLibs = false
     }
