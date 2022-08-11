@@ -3,10 +3,13 @@
  * Use of this source code is governed by the Apache 2.0 license.
  */
 
+import kotlinx.kover.api.KoverMergedConfig
+
 buildscript {
     val kotlinVersion: String by project
     val kotlinxAtomicFuVersion: String by project
     val dokkaVersion: String by project
+    val kotlinxKoverVersion: String by project
     val kotestPluginVersion: String by project
 
     repositories {
@@ -18,6 +21,7 @@ buildscript {
         classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlinVersion")
         classpath("org.jetbrains.kotlinx:atomicfu-gradle-plugin:$kotlinxAtomicFuVersion")
         classpath("org.jetbrains.dokka:dokka-gradle-plugin:$dokkaVersion")
+        classpath("org.jetbrains.kotlinx:kover:$kotlinxKoverVersion")
 
         classpath("io.kotest:kotest-framework-multiplatform-plugin-gradle:$kotestPluginVersion")
     }
@@ -32,8 +36,23 @@ subprojects {
     apply(plugin = "kotlin-multiplatform")
     apply(plugin = "kotlinx-atomicfu")
     apply(plugin = "org.jetbrains.dokka")
+    apply(plugin = "kover")
 }
 
 println("Using Kotlin compiler version: ${org.jetbrains.kotlin.config.KotlinCompilerVersion.VERSION}")
 
 apply(plugin = "org.jetbrains.dokka")
+apply(plugin = "kover")
+
+extensions.configure<KoverMergedConfig> {
+    enable()
+
+    filters {
+        classes {
+            excludes += "org.zeromq.tests.utils.*"
+        }
+        projects {
+            excludes += ":kzmq-tools"
+        }
+    }
+}
