@@ -168,7 +168,12 @@ internal class TcpConnectionHolder(
                 peerManager.notify(PeerEvent(REMOVAL, mailbox))
             }
             lastSocketHandler = socketHandler
-            mailbox.receiveChannel.close()
+
+            try {
+                mailbox.receiveChannel.close()
+            } catch (e: ClosedReceiveChannelException) {
+                // Channel may already have been closed
+            }
         }
     }
 
