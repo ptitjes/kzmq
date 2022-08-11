@@ -55,25 +55,42 @@ internal suspend fun ByteReadChannel.readCommand(): Command = wrapExceptions {
 }
 
 private suspend fun ByteReadChannel.readCommandContent(flags: ZmqFlags): Command {
-    val size = if (!flags.isLongSize) {
-        readUByte().toLong()
-    } else {
-        readLong().toULong().toLong()
-    }
+    val size = readSize(flags)
+    return readRemaining(size).readCommandContent()
+}
 
-    val commandNameString = readShortString()
-    val commandName = CommandName.find(commandNameString) ?: invalidFrame("Invalid command name: $commandNameString")
-
-    val remaining = size - (1 + commandNameString.length)
-
-    return when (commandName) {
-        CommandName.READY -> ReadyCommand(readProperties(remaining))
+private fun ByteReadPacket.readCommandContent(): Command {
+    return when (CommandName.find(readShortString())) {
+        null -> invalidFrame("Invalid command name: ${readShortString()}")
+        CommandName.READY -> ReadyCommand(readProperties())
         CommandName.ERROR -> ErrorCommand(readShortString())
-        CommandName.SUBSCRIBE -> SubscribeCommand(readBytes(remaining.toInt()))
-        CommandName.CANCEL -> CancelCommand(readBytes(remaining.toInt()))
-        CommandName.PING -> PingCommand(readShort().toUShort(), readBytes(remaining.toInt() - 2))
-        CommandName.PONG -> PongCommand(readBytes(remaining.toInt()))
+        CommandName.SUBSCRIBE -> SubscribeCommand(readBytes())
+        CommandName.CANCEL -> CancelCommand(readBytes())
+        CommandName.PING -> PingCommand(readShort().toUShort(), readBytes())
+        CommandName.PONG -> PongCommand(readBytes())
     }
+}
+
+private fun ByteReadPacket.readProperties(): Map<PropertyName, ByteArray> {
+    val properties = mutableMapOf<PropertyName, ByteArray>()
+    while (remaining > 0) {
+        val (propertyName, value) = readProperty()
+        properties[propertyName] = value
+    }
+    return properties
+}
+
+private fun ByteReadPacket.readProperty(): Pair<PropertyName, ByteArray> {
+    val propertyNameString = readShortString()
+    val propertyName = PropertyName.find(propertyNameString) ?: invalidFrame("Can't read property")
+    val valueSize = readInt()
+    val valueBytes = readBytes(valueSize)
+    return propertyName to valueBytes
+}
+
+private fun ByteReadPacket.readShortString(): String {
+    val size = readUByte().toInt()
+    return readBytes(size).decodeToString()
 }
 
 private suspend fun ByteReadChannel.readMessageContent(initialFlags: ZmqFlags): Message {
@@ -93,61 +110,17 @@ private suspend fun ByteReadChannel.readMessageContent(initialFlags: ZmqFlags): 
 }
 
 private suspend fun ByteReadChannel.readMessagePartContent(flags: ZmqFlags): ByteArray {
-    val size = if (!flags.isLongSize) {
-        readUByte().toLong()
-    } else {
-        readLong().toULong().toLong()
-    }
-
-    // FIXME casting to int for now
-    return readBytes(size.toInt())
-//    return readMessagePartBody(size.toInt())
+    val size = readSize(flags)
+    return readRemaining(size).readBytes()
 }
 
-private suspend fun ByteReadChannel.readMessagePartBody(size: Int): ByteArray {
-    return readMessagePartPacket(size).readBytes(size)
-//    val bytes = borrowBuffer()
-//    readFully(bytes, 0, size)
-//    return bytes
+private suspend fun ByteReadChannel.readSize(flags: ZmqFlags): Long {
+    return if (!flags.isLongSize) readUByte().toLong() else readULong().toLong()
 }
-
-private suspend fun ByteReadChannel.readMessagePartPacket(size: Int): ByteReadPacket {
-    return readPacket(size)
-}
-
-private suspend fun ByteReadChannel.readProperties(dataSize: Long): Map<PropertyName, ByteArray> {
-    var remaining = dataSize
-    val properties = mutableMapOf<PropertyName, ByteArray>()
-    while (remaining > 0) {
-        val (propertyName, value) = readProperty()
-        properties[propertyName] = value
-        remaining -= 1 + propertyName.bytes.size + 4 + value.size
-    }
-    return properties
-}
-
-private suspend fun ByteReadChannel.readProperty(): Pair<PropertyName, ByteArray> {
-    val propertyNameString = readShortString()
-    val propertyName = PropertyName.find(propertyNameString) ?: invalidFrame("Can't read property")
-    val valueSize = readInt()
-    val valueBytes = readBytes(valueSize)
-    return propertyName to valueBytes
-}
-
-private suspend fun ByteReadChannel.readShortString(): String {
-    val size = readUByte().toInt()
-    return readBytes(size).decodeToString()
-}
-
-private suspend fun ByteReadChannel.readBytes(size: Int): ByteArray {
-    val bytes = ByteArray(size)
-    readFully(bytes)
-    return bytes
-}
-
-private suspend inline fun ByteReadChannel.readUByte() = readByte().toUByte()
 
 private suspend inline fun ByteReadChannel.readZmqFlags() = ZmqFlags(readUByte())
+private suspend fun ByteReadChannel.readULong() = readLong().toULong()
+private suspend inline fun ByteReadChannel.readUByte() = readByte().toUByte()
 
 internal inline fun <T> ByteReadChannel.wrapExceptions(block: ByteReadChannel.() -> T): T {
     try {
