@@ -150,7 +150,7 @@ internal class CIORouterSocket(
 }
 
 private fun prependIdentity(message: Message, identity: Identity): Message =
-    Message(listOf(identity.value) + message.parts)
+    Message(listOf(identity.value) + message.frames)
 
 private fun extractIdentity(message: Message): Pair<Identity, Message> =
-    Identity(message.parts[0]) to Message(message.parts.subList(1, message.parts.size))
+    Identity(message.frames[0]) to Message(message.frames.subList(1, message.frames.size))

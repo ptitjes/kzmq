@@ -11,7 +11,7 @@ import org.zeromq.internal.zeromqjs.*
 internal class ZeroMQJsSendSocket(private val underlying: Writable) : SendSocket {
 
     override suspend fun send(message: Message): Unit =
-        underlying.send(message.parts.map { it.toBuffer() }.toTypedArray()).await()
+        underlying.send(message.frames.map { it.toBuffer() }.toTypedArray()).await()
 
     override suspend fun sendCatching(message: Message): SocketResult<Unit> = try {
         SocketResult.success(send(message))

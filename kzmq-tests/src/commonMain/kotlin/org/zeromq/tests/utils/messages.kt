@@ -9,8 +9,8 @@ import org.zeromq.*
 
 object MessageComparator : Comparator<Message> {
     override fun compare(a: Message, b: Message): Int {
-        val aAsString = a.parts.joinToString { it.decodeToString() }
-        val bAsString = b.parts.joinToString { it.decodeToString() }
+        val aAsString = a.frames.joinToString { it.decodeToString() }
+        val bAsString = b.frames.joinToString { it.decodeToString() }
         return if (aAsString < bAsString) -1
         else if (aAsString > bAsString) +1
         else 0

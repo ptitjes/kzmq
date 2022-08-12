@@ -63,10 +63,10 @@ class DealerRouterTests : FunSpec({
                     repeat(dealerCount) {
                         val request = router.receive()
 
-                        request.parts.size shouldBe 3
-                        val dealerId = request.parts[0]
-                        request.parts[1].decodeToString() shouldBe REQUEST_MARKER
-                        val requestId = request.parts[2]
+                        request.frames.size shouldBe 3
+                        val dealerId = request.frames[0]
+                        request.frames[1].decodeToString() shouldBe REQUEST_MARKER
+                        val requestId = request.frames[2]
 
                         router.send(
                             Message(
@@ -84,10 +84,10 @@ class DealerRouterTests : FunSpec({
                     repeat(routerCount) {
                         val reply = dealer.receive()
 
-                        reply.parts.size shouldBe 3
-                        reply.parts[0].decodeToString() shouldBe REPLY_MARKER
-                        val requestIdFrame = reply.parts[1]
-                        val dealerIdFrame = reply.parts[2]
+                        reply.frames.size shouldBe 3
+                        reply.frames[0].decodeToString() shouldBe REPLY_MARKER
+                        val requestIdFrame = reply.frames[1]
+                        val dealerIdFrame = reply.frames[2]
 
                         val requestId = requestIdFrame[0].toInt()
                         val dealerId = dealerIdFrame.decodeRoutingId()

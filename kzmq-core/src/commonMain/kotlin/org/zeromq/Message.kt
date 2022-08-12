@@ -5,21 +5,21 @@
 
 package org.zeromq
 
-public data class Message(val parts: List<ByteArray>) {
+public data class Message(val frames: List<ByteArray>) {
     init {
-        require(parts.isNotEmpty()) { "parts should contain at least one part" }
+        require(frames.isNotEmpty()) { "A message should contain at least one frame" }
     }
 
-    public constructor(vararg parts: ByteArray) : this(parts.toList())
+    public constructor(vararg frames: ByteArray) : this(frames.toList())
 
-    val isSingle: Boolean get() = parts.size == 1
-    val isMultipart: Boolean get() = parts.size > 1
+    val isSingle: Boolean get() = frames.size == 1
+    val isMultipart: Boolean get() = frames.size > 1
 
     public fun singleOrThrow(): ByteArray =
-        if (isSingle) parts[0] else error("Message is multipart")
+        if (isSingle) frames[0] else error("Message is multipart")
 
     public fun firstOrThrow(): ByteArray =
-        parts.getOrNull(0) ?: error("Message has no parts")
+        frames.getOrNull(0) ?: error("Message contains no frame")
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
@@ -27,23 +27,23 @@ public data class Message(val parts: List<ByteArray>) {
 
         other as Message
 
-        if (parts.size != other.parts.size) return false
-        for (i in parts.indices) {
-            if (!parts[i].contentEquals(other.parts[i])) return false
+        if (frames.size != other.frames.size) return false
+        for (i in frames.indices) {
+            if (!frames[i].contentEquals(other.frames[i])) return false
         }
 
         return true
     }
 
     override fun hashCode(): Int {
-        var result: Int = 0
-        for (part in parts) {
-            result = 31 * result + part.contentHashCode()
+        var result = 0
+        for (frame in frames) {
+            result = 31 * result + frame.contentHashCode()
         }
         return result
     }
 
     override fun toString(): String {
-        return "Message(parts=${parts.joinToString { it.contentToString() }})"
+        return "Message(parts=${frames.joinToString { it.contentToString() }})"
     }
 }

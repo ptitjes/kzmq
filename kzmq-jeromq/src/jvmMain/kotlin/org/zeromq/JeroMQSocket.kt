@@ -52,7 +52,7 @@ internal abstract class JeroMQSocket internal constructor(
     fun trySend(message: Message): SocketResult<Unit> = catching { sendImmediate(message) }
 
     private suspend fun sendSuspend(message: Message) = trace("sendSuspend") {
-        val parts = message.parts
+        val parts = message.frames
         val lastIndex = parts.size - 1
         for ((index, part) in parts.withIndex()) {
             sendPartSuspend(part, index < lastIndex)
@@ -64,7 +64,7 @@ internal abstract class JeroMQSocket internal constructor(
     }
 
     private fun sendImmediate(message: Message) = trace("sendImmediate") {
-        val parts = message.parts
+        val parts = message.frames
         val lastIndex = parts.size - 1
         for ((index, part) in parts.withIndex()) {
             sendPartImmediate(part, index < lastIndex)
