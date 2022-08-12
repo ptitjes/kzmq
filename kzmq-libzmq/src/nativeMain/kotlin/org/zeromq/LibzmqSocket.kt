@@ -92,7 +92,7 @@ internal abstract class LibzmqSocket internal constructor(
     }
 
     private fun doSend(message: Message, blocking: Boolean) {
-        val parts = message.parts
+        val parts = message.frames
         val lastPartIndex = parts.lastIndex
 
         val baseFlags = if (blocking) 0 else ZMQ_DONTWAIT

@@ -116,7 +116,7 @@ private fun BytePacketBuilder.writeShortString(bytes: ByteArray) {
 }
 
 private suspend fun ByteWriteChannel.writeMessage(message: Message) = writePacket {
-    val parts = message.parts
+    val parts = message.frames
     val lastIndex = parts.lastIndex
     for ((index, part) in parts.withIndex()) {
         val hasMore = index < lastIndex

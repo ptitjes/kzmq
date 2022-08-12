@@ -8,11 +8,11 @@ package org.zeromq.internal
 import org.zeromq.*
 
 internal fun addPrefixAddress(message: Message, identities: List<ByteArray> = listOf()): Message =
-    Message(identities + ByteArray(0) + message.parts)
+    Message(identities + ByteArray(0) + message.frames)
 
 internal fun extractPrefixAddress(message: Message): Pair<List<ByteArray>, Message> {
-    val delimiterIndex = message.parts.indexOfFirst { it.isEmpty() }
-    val identities = message.parts.subList(0, delimiterIndex)
-    val data = Message(message.parts.subList(delimiterIndex + 1, message.parts.size))
+    val delimiterIndex = message.frames.indexOfFirst { it.isEmpty() }
+    val identities = message.frames.subList(0, delimiterIndex)
+    val data = Message(message.frames.subList(delimiterIndex + 1, message.frames.size))
     return identities to data
 }
