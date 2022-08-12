@@ -5,4 +5,7 @@
 
 package org.zeromq
 
+/**
+ * A ZeroMQ backend engine implementation instance. Should not be used directly. Use [Context] instead.
+ */
 public interface EngineInstance : SocketFactory, Closeable

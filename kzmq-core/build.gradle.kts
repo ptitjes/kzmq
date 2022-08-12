@@ -3,6 +3,9 @@
  * Use of this source code is governed by the Apache 2.0 license.
  */
 
+import org.jetbrains.dokka.gradle.DokkaTask
+import java.net.URL
+
 val kotlinxCoroutinesVersion: String by project
 
 val mingwPath = File(System.getenv("MINGW64_DIR") ?: "C:/msys64/mingw64")
@@ -46,6 +49,18 @@ kotlin {
         val commonTest by getting {
             dependencies {
                 implementation(kotlin("test"))
+            }
+        }
+    }
+}
+
+tasks.withType<DokkaTask> {
+    dokkaSourceSets {
+        named("commonMain") {
+            sourceLink {
+                localDirectory.set(file("src/commonMain/kotlin"))
+                remoteUrl.set(URL("https://github.com/ptitjes/kzmq/tree/master/kzmq-core/src/commonMain/kotlin"))
+                remoteLineSuffix.set("#L")
             }
         }
     }
