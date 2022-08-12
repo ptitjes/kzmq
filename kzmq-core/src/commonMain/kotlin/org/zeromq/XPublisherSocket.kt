@@ -5,6 +5,26 @@
 
 package org.zeromq
 
+/**
+ * A ZeroMQ socket of type [XPUB][Type.XPUB].
+ *
+ * The behavior of an [XPublisherSocket] is the same as a [PublisherSocket],
+ * except that you can receive subscription/unsubscription messages from the peers.
+ *
+ * Subscription messages contain a unique frame starting with a '1' byte.
+ * Subscription cancellation messages contain a unique frame starting with a '0' byte.
+ * Other messages are distributed as is.
+ *
+ * <br/><table>
+ * <tr><th colspan="2">Summary of socket characteristics</th></tr>
+ * <tr><td>Compatible peer sockets</td><td>SUB, XSUB</td></tr>
+ * <tr><td>Direction</td><td>Unidirectional</td></tr>
+ * <tr><td>Send/receive pattern</td><td>Send messages, receive subscriptions</td></tr>
+ * <tr><td>Incoming routing strategy</td><td>N/A</td></tr>
+ * <tr><td>Outgoing routing strategy</td><td>Fan-out</td></tr>
+ * <tr><td>Action in mute state</td><td>Drop</td></tr>
+ * </table><br/>
+ */
 public interface XPublisherSocket : Socket, SendSocket, ReceiveSocket {
 
     /**

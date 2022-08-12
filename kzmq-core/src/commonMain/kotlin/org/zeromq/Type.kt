@@ -9,339 +9,298 @@ import kotlin.js.*
 
 public enum class Type(@JsName("__type") private val type: Int) {
     /**
-     * <p>Flag to specify a exclusive pair of sockets.</p>
+     * Flag to specify an exclusive [PairSocket].
+     * A [PairSocket] can only be connected to a single peer of type [PairSocket] at any one time.
      *
-     * A socket of type PAIR can only be connected to a single peer at any one time.
-     * <br>
-     * No message routing or filtering is performed on messages sent over a PAIR socket.
-     * <br>
-     * When a PAIR socket enters the mute state due to having reached the high water mark for the connected peer,
-     * or if no peer is connected, then any send() operations on the socket shall block until the peer becomes available for sending;
-     * messages are not discarded.
-     * <br>
-     * <table border="1" >
-     * <caption> </caption>
+     * No message routing or filtering is performed on messages sent over a [PairSocket].
+     *
+     * When a [PairSocket] enters the mute state due to having reached the high watermark for the connected peer,
+     * or if no peer is connected, then any [send()][SendSocket.send] operations on the socket shall suspend
+     * until the peer becomes available for sending; messages are not discarded.
+     *
+     * <br/><table>
      * <tr><th colspan="2">Summary of socket characteristics</th></tr>
      * <tr><td>Compatible peer sockets</td><td>PAIR</td></tr>
      * <tr><td>Direction</td><td>Bidirectional</td></tr>
      * <tr><td>Send/receive pattern</td><td>Unrestricted</td></tr>
      * <tr><td>Incoming routing strategy</td><td>N/A</td></tr>
      * <tr><td>Outgoing routing strategy</td><td>N/A</td></tr>
-     * <tr><td>Action in mute state</td><td>Block</td></tr>
-     * </table>
-     * <p>
-     * <strong>PAIR sockets are designed for inter-thread communication across the inproc transport
+     * <tr><td>Action in mute state</td><td>Suspend</td></tr>
+     * </table><br/>
+     *
+     * **[PairSocket]s are designed for inter-thread communication across the `inproc` transport
      * and do not implement functionality such as auto-reconnection.
-     * PAIR sockets are considered experimental and may have other missing or broken aspects.</strong>
+     * [PairSocket]s are considered experimental and may have other missing or broken aspects.**
      */
     PAIR(0),
 
     /**
-     * <p>Flag to specify a PUB socket, receiving side must be a SUB or XSUB.</p>
+     * Flag to specify a [PublisherSocket].
+     * Peers must be [SubscriberSocket]s or [XSubscriberSocket]s.
      *
-     * A socket of type PUB is used by a publisher to distribute data.
-     * <br>
-     * Messages sent are distributed in a fan out fashion to all connected peers.
-     * <br>
-     * The {@link org.zeromq.ZMQ.Socket#recv()} function is not implemented for this socket type.
-     * <br>
-     * When a PUB socket enters the mute state due to having reached the high water mark for a subscriber,
-     * then any messages that would be sent to the subscriber in question shall instead be dropped until the mute state ends.
-     * <br>
-     * The send methods shall never block for this socket type.
-     * <br>
-     * <table border="1">
-     * <caption> </caption>
+     * A [PublisherSocket] is used by a publisher to distribute data.
+     *
+     * Messages sent are distributed in a fan-out fashion to all connected peers.
+     *
+     * When a [PublisherSocket] enters the mute state due to having reached the high watermark for a subscriber,
+     * then any messages that would be sent to the subscriber in question shall instead be dropped until the mute
+     * state ends.
+     *
+     * The [send][SendSocket.send] methods shall never block for this socket type.
+     *
+     * <br/><table>
      * <tr><th colspan="2">Summary of socket characteristics</th></tr>
-     * <tr><td>Compatible peer sockets</td><td>{@link org.zeromq.ZMQ#SUB}, {@link org.zeromq.ZMQ#XSUB}</td></tr>
+     * <tr><td>Compatible peer sockets</td><td>SUB, XSUB</td></tr>
      * <tr><td>Direction</td><td>Unidirectional</td></tr>
      * <tr><td>Send/receive pattern</td><td>Send only</td></tr>
      * <tr><td>Incoming routing strategy</td><td>N/A</td></tr>
-     * <tr><td>Outgoing routing strategy</td><td>Fan out</td></tr>
+     * <tr><td>Outgoing routing strategy</td><td>Fan-out</td></tr>
      * <tr><td>Action in mute state</td><td>Drop</td></tr>
-     * </table>
+     * </table><br/>
      */
     PUB(1),
 
     /**
-     * <p>Flag to specify the receiving part of the PUB or XPUB socket.</p>
+     * Flag to specify [SubscriberSocket].
+     * Peers must be [PublisherSocket]s or [XPublisherSocket]s.
      *
-     * A socket of type SUB is used by a subscriber to subscribe to data distributed by a publisher.
-     * <br>
-     * Initially a SUB socket is not subscribed to any messages,
-     * use the {@link org.zeromq.ZMQ.Socket#subscribe(byte[])} option to specify which messages to subscribe to.
-     * <br>
-     * The send methods are not implemented for this socket type.
-     * <br>
-     * <table border="1">
-     * <caption> </caption>
+     * A [SubscriberSocket] is used by a subscriber to subscribe to data distributed by a publisher.
+     *
+     * Initially a [SubscriberSocket] is not subscribed to any messages.
+     * Use [subscribe][SubscriberSocket.subscribe] methods to specify which messages to subscribe to.
+     *
+     * <br/><table>
      * <tr><th colspan="2">Summary of socket characteristics</th></tr>
-     * <tr><td>Compatible peer sockets</td><td>{@link org.zeromq.ZMQ#PUB}, {@link org.zeromq.ZMQ#XPUB}</td></tr>
+     * <tr><td>Compatible peer sockets</td><td>PUB, XPUB</td></tr>
      * <tr><td>Direction</td><td>Unidirectional</td></tr>
      * <tr><td>Send/receive pattern</td><td>Receive only</td></tr>
      * <tr><td>Incoming routing strategy</td><td>Fair-queued</td></tr>
      * <tr><td>Outgoing routing strategy</td><td>N/A</td></tr>
-     * </table>
+     * </table><br/>
      */
     SUB(2),
 
     /**
-     * <p>Flag to specify a REQ socket, receiving side must be a REP or ROUTER.</p>
+     * Flag to specify a [RequestSocket].
+     * Peers must be [ReplySocket]s or [RouterSocket]s.
      *
-     * A socket of type REQ is used by a client to send requests to and receive replies from a service.
-     * <br>
-     * This socket type allows only an alternating sequence of send(request) and subsequent recv(reply) calls.
-     * <br>
-     * Each request sent is round-robined among all services, and each reply received is matched with the last issued request.
-     * <br>
-     * If no services are available, then any send operation on the socket shall block until at least one service becomes available.
-     * <br>
-     * The REQ socket shall not discard messages.
-     * <br>
-     * <table border="1">
-     * <caption> </caption>
+     * A [RequestSocket] is used by a client to send requests to and receive replies from a service.
+     *
+     * This socket type only allows an alternating sequence of [send()][SendSocket.send] and subsequent
+     * [receive()][RequestSocket] calls.
+     *
+     * Each request sent is distributed in a round-robin fashion among all connected peers,
+     * and each reply received is matched with the last issued request.
+     *
+     * If no services are available, then any [send][SendSocket.send] operation on the socket shall suspend
+     * until at least one service becomes available.
+     *
+     * The [RequestSocket] shall not discard messages.
+     *
+     * <br/><table>
      * <tr><th colspan="2">Summary of socket characteristics</th></tr>
-     * <tr><td>Compatible peer sockets</td><td>{@link org.zeromq.ZMQ#REP}, {@link org.zeromq.ZMQ#ROUTER}</td></tr>
+     * <tr><td>Compatible peer sockets</td><td>REP, ROUTER</td></tr>
      * <tr><td>Direction</td><td>Bidirectional</td></tr>
      * <tr><td>Send/receive pattern</td><td>Send, Receive, Send, Receive, ...</td></tr>
      * <tr><td>Incoming routing strategy</td><td>Last peer</td></tr>
      * <tr><td>Outgoing routing strategy</td><td>Round-robin</td></tr>
-     * <tr><td>Action in mute state</td><td>Block</td></tr>
-     * </table>
+     * <tr><td>Action in mute state</td><td>Suspend</td></tr>
+     * </table><br/>
      */
     REQ(3),
 
     /**
-     * <p>Flag to specify the receiving part of a REQ or DEALER socket.</p>
+     * Flag to specify a [ReplySocket].
+     * Peers must be [RequestSocket]s or [DealerSocket]s.
      *
-     * A socket of type REP is used by a service to receive requests from and send replies to a client.
-     * <br>
-     * This socket type allows only an alternating sequence of recv(request) and subsequent send(reply) calls.
-     * <br>
-     * Each request received is fair-queued from among all clients, and each reply sent is routed to the client that issued the last request.
-     * <br>
+     * A [ReplySocket] is used by a service to receive requests from and send replies to a client.
+     *
+     * This socket type only allows an alternating sequence of [send()][SendSocket.send] and subsequent
+     * [receive()][SendSocket.receive] calls.
+     *
+     * Each request received is fair-queued from all connected peers,
+     * and each reply sent is routed to the peer that issued the last request.
+     *
      * If the original requester does not exist any more the reply is silently discarded.
-     * <br>
-     * <table border="1">
-     * <caption> </caption>
+     *
+     * <br/><table>
      * <tr><th colspan="2">Summary of socket characteristics</th></tr>
-     * <tr><td>Compatible peer sockets</td><td>{@link org.zeromq.ZMQ#REQ}, {@link org.zeromq.ZMQ#DEALER}</td></tr>
+     * <tr><td>Compatible peer sockets</td><td>REQ, DEALER</td></tr>
      * <tr><td>Direction</td><td>Bidirectional</td></tr>
      * <tr><td>Send/receive pattern</td><td>Receive, Send, Receive, Send, ...</td></tr>
      * <tr><td>Incoming routing strategy</td><td>Fair-queued</td></tr>
      * <tr><td>Outgoing routing strategy</td><td>Last peer</td></tr>
-     * </table>
+     * </table><br/>
      */
     REP(4),
 
     /**
-     * <p>Flag to specify a DEALER socket (aka XREQ).</p>
+     * Flag to specify a [DealerSocket].
+     * Peers must be [ReplySocket]s or [RouterSocket]s.
      *
-     * DEALER is really a combined ventilator / sink
-     * that does load-balancing on output and fair-queuing on input
-     * with no other semantics. It is the only socket type that lets
-     * you shuffle messages out to N nodes and shuffle the replies
-     * back, in a raw bidirectional asynch pattern.
-     * <br>
-     * A socket of type DEALER is an advanced pattern used for extending request/reply sockets.
-     * <br>
-     * Each message sent is round-robined among all connected peers, and each message received is fair-queued from all connected peers.
-     * <br>
-     * When a DEALER socket enters the mute state due to having reached the high water mark for all peers,
-     * or if there are no peers at all, then any send() operations on the socket shall block
+     * A [DealerSocket] does load-balancing on outputs and fair-queuing on inputs with no other semantics.
+     * It is the only socket type that lets you shuffle messages out to N nodes and shuffle the replies back,
+     * in a raw bidirectional asynchronous pattern.
+     *
+     * A [DealerSocket] is an advanced pattern used for extending request/reply sockets.
+     *
+     * Each message sent is distributed in a round-robin fashion among all connected peers,
+     * and each message received is fair-queued from all connected peers.
+     *
+     * When a [DealerSocket] enters the mute state due to having reached the high watermark for all peers,
+     * or if there are no peers at all, then any [send()][SendSocket.send] operations on the socket shall suspend
      * until the mute state ends or at least one peer becomes available for sending; messages are not discarded.
-     * <br>
-     * When a DEALER socket is connected to a {@link org.zeromq.ZMQ#REP} socket each message sent must consist of
-     * an empty message part, the delimiter, followed by one or more body parts.
-     * <br>
-     * <table border="1">
-     * <caption> </caption>
+     *
+     * When a [DealerSocket] is connected to a [ReplySocket] each message sent must consist of
+     * an empty message frame, the delimiter, followed by one or more body parts.
+     *
+     * <br/><table>
      * <tr><th colspan="2">Summary of socket characteristics</th></tr>
-     * <tr><td>Compatible peer sockets</td><td>{@link org.zeromq.ZMQ#ROUTER}, {@link org.zeromq.ZMQ#REP}, {@link org.zeromq.ZMQ#DEALER}</td></tr>
+     * <tr><td>Compatible peer sockets</td><td>ROUTER, REP, DEALER</td></tr>
      * <tr><td>Direction</td><td>Bidirectional</td></tr>
      * <tr><td>Send/receive pattern</td><td>Unrestricted</td></tr>
      * <tr><td>Incoming routing strategy</td><td>Fair-queued</td></tr>
      * <tr><td>Outgoing routing strategy</td><td>Round-robin</td></tr>
-     * <tr><td>Action in mute state</td><td>Block</td></tr>
-     * </table>
+     * <tr><td>Action in mute state</td><td>Suspend</td></tr>
+     * </table><br/>
      */
     DEALER(5),
 
     /**
-     * <p>Flag to specify ROUTER socket (aka XREP).</p>
+     * Flag to specify [RouterSocket].
+     * Peers must be [RequestSocket]s or [DealerSocket]s.
      *
-     * ROUTER is the socket that creates and consumes request-reply
-     * routing envelopes. It is the only socket type that lets you route
-     * messages to specific connections if you know their identities.
-     * <br>
-     * A socket of type ROUTER is an advanced socket type used for extending request/reply sockets.
-     * <br>
-     * When receiving messages a ROUTER socket shall prepend a message part containing the identity
+     * A [RouterSocket] creates and consumes request-reply routing envelopes.
+     * It is the only socket type that lets you route messages to specific connections if you know their identities.
+     *
+     * A [RouterSocket] is an advanced socket type used for extending request/reply sockets.
+     *
+     * When receiving messages a [RouterSocket] shall prepend a message frame containing the identity
      * of the originating peer to the message before passing it to the application.
-     * <br>
-     * Messages received are fair-queued from among all connected peers.
-     * <br>
-     * When sending messages a ROUTER socket shall remove the first part of the message
+     *
+     * Messages received are fair-queued from all connected peers.
+     *
+     * When sending messages a [RouterSocket] shall remove the first frame of the message
      * and use it to determine the identity of the peer the message shall be routed to.
      * If the peer does not exist anymore the message shall be silently discarded by default,
-     * unless {@link org.zeromq.ZMQ.Socket#setRouterMandatory(boolean)} socket option is set to true.
-     * <br>
-     * When a ROUTER socket enters the mute state due to having reached the high water mark for all peers,
+     * unless [RouterSocket.mandatory] is set to `true`.
+     *
+     * When a [RouterSocket] enters the mute state due to having reached the high watermark for all peers,
      * then any messages sent to the socket shall be dropped until the mute state ends.
-     * <br>
-     * Likewise, any messages routed to a peer for which the individual high water mark has been reached shall also be dropped,
-     * unless {@link org.zeromq.ZMQ.Socket#setRouterMandatory(boolean)} socket option is set to true.
-     * <br>
-     * When a {@link org.zeromq.ZMQ#REQ} socket is connected to a ROUTER socket, in addition to the identity of the originating peer
-     * each message received shall contain an empty delimiter message part.
-     * <br>
-     * Hence, the entire structure of each received message as seen by the application becomes: one or more identity parts,
-     * delimiter part, one or more body parts.
-     * <br>
-     * When sending replies to a REQ socket the application must include the delimiter part.
-     * <br>
-     * <table border="1">
-     * <caption> </caption>
+     *
+     * Likewise, any messages routed to a peer for which the individual high watermark has been reached
+     * shall also be dropped, unless [RouterSocket.mandatory] is set to true.
+     *
+     * When a [RequestSocket] is connected to a [RouterSocket], in addition to the identity of the originating peer
+     * each message received shall contain an empty delimiter message frame.
+     *
+     * Hence, the entire structure of each received message as seen by the application becomes:
+     * one or more identity frames, an empty delimiter frame, one or more body frames.
+     *
+     * When sending replies to a [RequestSocket] the application must include the empty delimiter frame.
+     *
+     * <br/><table>
      * <tr><th colspan="2">Summary of socket characteristics</th></tr>
-     * <tr><td>Compatible peer sockets</td><td>{@link org.zeromq.ZMQ#DEALER}, {@link org.zeromq.ZMQ#REQ}, {@link org.zeromq.ZMQ#ROUTER}</td></tr>
+     * <tr><td>Compatible peer sockets</td><td>DEALER, REQ, ROUTER</td></tr>
      * <tr><td>Direction</td><td>Bidirectional</td></tr>
      * <tr><td>Send/receive pattern</td><td>Unrestricted</td></tr>
      * <tr><td>Incoming routing strategy</td><td>Fair-queued</td></tr>
      * <tr><td>Outgoing routing strategy</td><td>See text</td></tr>
      * <tr><td>Action in mute state</td><td>Drop (See text)</td></tr>
-     * </table>
+     * </table><br/>
      */
     ROUTER(6),
 
     /**
-     * <p>Flag to specify the receiving part of a PUSH socket.</p>
+     * Flag to specify a [PullSocket].
+     * Peers must be [PushSocket]s.
      *
-     * A socket of type ZMQ_PULL is used by a pipeline node to receive messages from upstream pipeline nodes.
-     * <br>
-     * Messages are fair-queued from among all connected upstream nodes.
-     * <br>
-     * The send() function is not implemented for this socket type.
-     * <br>
-     * <table border="1">
-     * <caption> </caption>
+     * A [PullSocket] is used by a pipeline node to receive messages from upstream pipeline nodes.
+     *
+     * Messages are fair-queued from all connected upstream nodes.
+     *
+     * <br/><table>
      * <tr><th colspan="2">Summary of socket characteristics</th></tr>
-     * <tr><td>Compatible peer sockets</td><td>{@link org.zeromq.ZMQ#PUSH}</td></tr>
+     * <tr><td>Compatible peer sockets</td><td>PUSH</td></tr>
      * <tr><td>Direction</td><td>Unidirectional</td></tr>
      * <tr><td>Send/receive pattern</td><td>Receive only</td></tr>
      * <tr><td>Incoming routing strategy</td><td>Fair-queued</td></tr>
      * <tr><td>Outgoing routing strategy</td><td>N/A</td></tr>
-     * <tr><td>Action in mute state</td><td>Block</td></tr>
-     * </table>
+     * <tr><td>Action in mute state</td><td>Suspend</td></tr>
+     * </table><br/>
      */
     PULL(7),
 
     /**
-     * <p>Flag to specify a PUSH socket, receiving side must be a PULL.</p>
+     * Flag to specify a [PushSocket].
+     * Peers must be [PullSocket]s.
      *
-     * A socket of type PUSH is used by a pipeline node to send messages to downstream pipeline nodes.
-     * <br>
-     * Messages are round-robined to all connected downstream nodes.
-     * <br>
-     * The recv() function is not implemented for this socket type.
-     * <br>
-     * When a PUSH socket enters the mute state due to having reached the high water mark for all downstream nodes,
-     * or if there are no downstream nodes at all, then any send() operations on the socket shall block until the mute state ends
-     * or at least one downstream node becomes available for sending; messages are not discarded.
-     * <br>
-     * <table border="1">
-     * <caption> </caption>
+     * A [PushSocket] is used by a pipeline node to send messages to downstream pipeline nodes.
+     *
+     * Messages are distributed round-robin fashion to all connected downstream nodes.
+     *
+     * When a [PushSocket] enters the mute state due to having reached the high watermark for all downstream nodes,
+     * or if there are no downstream nodes at all, then any [send()][SendSocket.send] operations on the socket
+     * shall suspend until the mute state ends or at least one downstream node becomes available for sending;
+     * messages are not discarded.
+     *
+     * <br/><table>
      * <tr><th colspan="2">Summary of socket characteristics</th></tr>
-     * <tr><td>Compatible peer sockets</td><td>{@link org.zeromq.ZMQ#PULL}</td></tr>
+     * <tr><td>Compatible peer sockets</td><td>PULL</td></tr>
      * <tr><td>Direction</td><td>Unidirectional</td></tr>
      * <tr><td>Send/receive pattern</td><td>Send only</td></tr>
      * <tr><td>Incoming routing strategy</td><td>N/A</td></tr>
      * <tr><td>Outgoing routing strategy</td><td>Round-robin</td></tr>
-     * <tr><td>Action in mute state</td><td>Block</td></tr>
-     * </table>
+     * <tr><td>Action in mute state</td><td>Suspend</td></tr>
+     * </table><br/>
      */
     PUSH(8),
 
     /**
-     * <p>Flag to specify a XPUB socket, receiving side must be a SUB or XSUB.</p>
+     * Flag to specify a [XPublisherSocket], receiving side must be a [SubscriberSocket] or an [XSubscriberSocket].
      *
-     * Subscriptions can be received as a message. Subscriptions start with
-     * a '1' byte. Unsubscriptions start with a '0' byte.
-     * <br>
-     * Same as {@link org.zeromq.ZMQ#PUB} except that you can receive subscriptions from the peers in form of incoming messages.
-     * <br>
-     * Subscription message is a byte '1' (for subscriptions) or byte '0' (for unsubscriptions) followed by the subscription body.
-     * <br>
-     * Messages without a sub/unsub prefix are also received, but have no effect on subscription status.
-     * <br>
-     * <table border="1">
-     * <caption> </caption>
+     * The behavior of an [XPublisherSocket] is the same as a [PublisherSocket],
+     * except that you can receive subscription/unsubscription messages from the peers.
+     *
+     * Subscription messages contain a unique frame starting with a '1' byte.
+     * Subscription cancellation messages contain a unique frame starting with a '0' byte.
+     * Other messages are distributed as is.
+     *
+     * <br/><table>
      * <tr><th colspan="2">Summary of socket characteristics</th></tr>
-     * <tr><td>Compatible peer sockets</td><td>{@link org.zeromq.ZMQ#SUB}, {@link org.zeromq.ZMQ#XSUB}</td></tr>
+     * <tr><td>Compatible peer sockets</td><td>SUB, XSUB</td></tr>
      * <tr><td>Direction</td><td>Unidirectional</td></tr>
      * <tr><td>Send/receive pattern</td><td>Send messages, receive subscriptions</td></tr>
      * <tr><td>Incoming routing strategy</td><td>N/A</td></tr>
-     * <tr><td>Outgoing routing strategy</td><td>Fan out</td></tr>
+     * <tr><td>Outgoing routing strategy</td><td>Fan-out</td></tr>
      * <tr><td>Action in mute state</td><td>Drop</td></tr>
-     * </table>
+     * </table><br/>
      */
     XPUB(9),
 
     /**
-     * <p>Flag to specify the receiving part of the PUB or XPUB socket.</p>
+     * Flag to specify a [XSubscriberSocket], sending side must be a [PublisherSocket] or an [XPublisherSocket].
      *
-     * Same as {@link org.zeromq.ZMQ#SUB} except that you subscribe by sending subscription messages to the socket.
-     * <br>
-     * Subscription message is a byte '1' (for subscriptions) or byte '0' (for unsubscriptions) followed by the subscription body.
-     * <br>
-     * Messages without a sub/unsub prefix may also be sent, but have no effect on subscription status.
-     * <br>
-     * <table border="1">
-     * <caption> </caption>
+     * The behavior of an [XSubscriberSocket] is the same as a [SubscriberSocket],
+     * except that you can send subscription/unsubscription messages to the peers.
+     *
+     * Subscription messages contain a unique frame starting with a '1' byte.
+     * Subscription cancellation messages contain a unique frame starting with a '0' byte.
+     * Other messages are distributed as is.
+     *
+     * <br/><table>
      * <tr><th colspan="2">Summary of socket characteristics</th></tr>
-     * <tr><td>Compatible peer sockets</td><td>{@link org.zeromq.ZMQ#PUB}, {@link org.zeromq.ZMQ#XPUB}</td></tr>
+     * <tr><td>Compatible peer sockets</td><td>PUB, XPUB</td></tr>
      * <tr><td>Direction</td><td>Unidirectional</td></tr>
      * <tr><td>Send/receive pattern</td><td>Receive messages, send subscriptions</td></tr>
      * <tr><td>Incoming routing strategy</td><td>Fair-queued</td></tr>
      * <tr><td>Outgoing routing strategy</td><td>N/A</td></tr>
      * <tr><td>Action in mute state</td><td>Drop</td></tr>
-     * </table>
+     * </table><br/>
      */
     XSUB(10),
 
-    /**
-     * <p>Flag to specify a STREAM socket.</p>
-     *
-     * A socket of type STREAM is used to send and receive TCP data from a non-ØMQ peer, when using the tcp:// transport.
-     * A STREAM socket can act as client and/or server, sending and/or receiving TCP data asynchronously.
-     * <br>
-     * When receiving TCP data, a STREAM socket shall prepend a message part containing the identity
-     * of the originating peer to the message before passing it to the application.
-     * <br>
-     * Messages received are fair-queued from among all connected peers.
-     * When sending TCP data, a STREAM socket shall remove the first part of the message
-     * and use it to determine the identity of the peer the message shall be routed to,
-     * and unroutable messages shall cause an EHOSTUNREACH or EAGAIN error.
-     * <br>
-     * To open a connection to a server, use the {@link org.zeromq.ZMQ.Socket#connect(String)} call, and then fetch the socket identity using the {@link org.zeromq.ZMQ.Socket#getIdentity()} call.
-     * To close a specific connection, send the identity frame followed by a zero-length message.
-     * When a connection is made, a zero-length message will be received by the application.
-     * Similarly, when the peer disconnects (or the connection is lost), a zero-length message will be received by the application.
-     * The {@link org.zeromq.ZMQ#SNDMORE} flag is ignored on data frames. You must send one identity frame followed by one data frame.
-     * <br>
-     * Also, please note that omitting the SNDMORE flag will prevent sending further data (from any client) on the same socket.
-     * <br>
-     * <table border="1">
-     * <caption> </caption>
-     * <tr><th colspan="2">Summary of socket characteristics</th></tr>
-     * <tr><td>Compatible peer sockets</td><td>none</td></tr>
-     * <tr><td>Direction</td><td>Bidirectional</td></tr>
-     * <tr><td>Send/receive pattern</td><td>Unrestricted</td></tr>
-     * <tr><td>Incoming routing strategy</td><td>Fair-queued</td></tr>
-     * <tr><td>Outgoing routing strategy</td><td>See text</td></tr>
-     * <tr><td>Action in mute state</td><td>EAGAIN</td></tr>
-     * </table>
-     */
-    STREAM(11);
+    ;
 
     public companion object {
         public fun type(baseType: Int): Type {

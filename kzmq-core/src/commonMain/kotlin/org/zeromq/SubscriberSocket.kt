@@ -5,6 +5,24 @@
 
 package org.zeromq
 
+/**
+ * A ZeroMQ socket of type [SUB][Type.SUB].
+ * Peers must be [PublisherSocket]s or [XPublisherSocket]s.
+ *
+ * A [SubscriberSocket] is used by a subscriber to subscribe to data distributed by a publisher.
+ *
+ * Initially a [SubscriberSocket] is not subscribed to any messages.
+ * Use [subscribe][SubscriberSocket.subscribe] methods to specify which messages to subscribe to.
+ *
+ * <br/><table>
+ * <tr><th colspan="2">Summary of socket characteristics</th></tr>
+ * <tr><td>Compatible peer sockets</td><td>PUB, XPUB</td></tr>
+ * <tr><td>Direction</td><td>Unidirectional</td></tr>
+ * <tr><td>Send/receive pattern</td><td>Receive only</td></tr>
+ * <tr><td>Incoming routing strategy</td><td>Fair-queued</td></tr>
+ * <tr><td>Outgoing routing strategy</td><td>N/A</td></tr>
+ * </table><br/>
+ */
 public interface SubscriberSocket : Socket, ReceiveSocket {
 
     /**

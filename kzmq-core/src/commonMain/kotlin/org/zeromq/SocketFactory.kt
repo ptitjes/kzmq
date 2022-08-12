@@ -5,6 +5,11 @@
 
 package org.zeromq
 
+/**
+ * A ZeroMQ socket factory.
+ *
+ * @see Context
+ */
 public interface SocketFactory {
     /**
      * Creates a [PairSocket].

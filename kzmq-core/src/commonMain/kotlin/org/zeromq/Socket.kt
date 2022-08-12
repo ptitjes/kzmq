@@ -5,6 +5,9 @@
 
 package org.zeromq
 
+/**
+ * A ZeroMQ socket.
+ */
 public interface Socket : Closeable {
     /**
      * The socket type of this socket.
@@ -19,9 +22,9 @@ public interface Socket : Closeable {
     /**
      * Creates an endpoint for accepting connections and binds to it.
      *
-     * The endpoint argument is a string consisting of two parts as follows: transport ://address. The
-     * transport part specifies the underlying transport protocol to use. The meaning of the address
-     * part is specific to the underlying transport protocol selected.
+     * The [endpoint] argument is a string consisting of two parts as follows: `transport://address`.
+     * The transport part specifies the underlying transport protocol to use.
+     * The meaning of the address part is specific to the underlying transport protocol selected.
      *
      * @param endpoint the endpoint to bind to
      */
@@ -30,9 +33,9 @@ public interface Socket : Closeable {
     /**
      * Unbinds to the endpoint.
      *
-     * The endpoint argument is a string consisting of two parts as follows: transport ://address. The
-     * transport part specifies the underlying transport protocol to use. The meaning of the address
-     * part is specific to the underlying transport protocol selected.
+     * The [endpoint] argument is a string consisting of two parts as follows: `transport://address`.
+     * The transport part specifies the underlying transport protocol to use.
+     * The meaning of the address part is specific to the underlying transport protocol selected.
      *
      * @param endpoint the endpoint to unbind from
      */
@@ -41,16 +44,20 @@ public interface Socket : Closeable {
     /**
      * Connects the socket to an endpoint and then accepts incoming connections on that endpoint.
      *
-     * The endpoint is a string consisting of a transport :// followed by an address. The transport
-     * specifies the underlying protocol to use. The address specifies the transport-specific address
-     * to connect to.
+     * The [endpoint] argument is a string consisting of two parts as follows: `transport://address`.
+     * The transport part specifies the underlying transport protocol to use.
+     * The meaning of the address part is specific to the underlying transport protocol selected.
      *
      * @param endpoint the endpoint to connect to
      */
     public fun connect(endpoint: String)
 
     /**
-     * Disconnecting a socket from an endpoint.
+     * Disconnects a socket from an endpoint.
+     *
+     * The [endpoint] argument is a string consisting of two parts as follows: `transport://address`.
+     * The transport part specifies the underlying transport protocol to use.
+     * The meaning of the address part is specific to the underlying transport protocol selected.
      *
      * @param endpoint the endpoint to disconnect from
      */

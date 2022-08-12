@@ -5,6 +5,33 @@
 
 package org.zeromq
 
+/**
+ * A ZeroMQ socket of type [REQ][Type.REQ].
+ * Peers must be [ReplySocket]s or [RouterSocket]s.
+ *
+ * A [RequestSocket] is used by a client to send requests to and receive replies from a service.
+ *
+ * This socket type only allows an alternating sequence of [send()][SendSocket.send] and subsequent
+ * [receive()][RequestSocket] calls.
+ *
+ * Each request sent is distributed in a round-robin fashion among all connected peers,
+ * and each reply received is matched with the last issued request.
+ *
+ * If no services are available, then any [send][SendSocket.send] operation on the socket shall suspend
+ * until at least one service becomes available.
+ *
+ * The [RequestSocket] shall not discard messages.
+ *
+ * <br/><table>
+ * <tr><th colspan="2">Summary of socket characteristics</th></tr>
+ * <tr><td>Compatible peer sockets</td><td>REP, ROUTER</td></tr>
+ * <tr><td>Direction</td><td>Bidirectional</td></tr>
+ * <tr><td>Send/receive pattern</td><td>Send, Receive, Send, Receive, ...</td></tr>
+ * <tr><td>Incoming routing strategy</td><td>Last peer</td></tr>
+ * <tr><td>Outgoing routing strategy</td><td>Round-robin</td></tr>
+ * <tr><td>Action in mute state</td><td>Suspend</td></tr>
+ * </table><br/>
+ */
 public interface RequestSocket : Socket, SendSocket, ReceiveSocket {
 
     /**
