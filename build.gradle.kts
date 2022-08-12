@@ -4,6 +4,7 @@
  */
 
 import kotlinx.kover.api.KoverMergedConfig
+import org.jetbrains.dokka.gradle.DokkaMultiModuleTask
 
 buildscript {
     val kotlinVersion: String by project
@@ -43,6 +44,15 @@ println("Using Kotlin compiler version: ${org.jetbrains.kotlin.config.KotlinComp
 
 apply(plugin = "org.jetbrains.dokka")
 apply(plugin = "kover")
+
+tasks.withType<DokkaMultiModuleTask> {
+    removeChildTasks(
+        listOf(
+            project(":kzmq-tests"),
+            project(":kzmq-tools"),
+        )
+    )
+}
 
 extensions.configure<KoverMergedConfig> {
     enable()
