@@ -39,3 +39,17 @@ kotlin {
         }
     }
 }
+
+tasks {
+    val dokkaHtml = getByName("dokkaHtml")
+
+    val javadocJar by creating(Jar::class) {
+        dependsOn.add(dokkaHtml)
+        archiveClassifier.set("javadoc")
+        from(dokkaHtml)
+    }
+
+    artifacts {
+        archives(javadocJar)
+    }
+}
