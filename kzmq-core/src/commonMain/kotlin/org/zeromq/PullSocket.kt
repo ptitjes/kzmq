@@ -5,6 +5,24 @@
 
 package org.zeromq
 
+/**
+ * A ZeroMQ socket of type [PULL][Type.PULL].
+ * Peers must be [PushSocket]s.
+ *
+ * A [PullSocket] is used by a pipeline node to receive messages from upstream pipeline nodes.
+ *
+ * Messages are fair-queued from all connected upstream nodes.
+ *
+ * <br/><table>
+ * <tr><th colspan="2">Summary of socket characteristics</th></tr>
+ * <tr><td>Compatible peer sockets</td><td>PUSH</td></tr>
+ * <tr><td>Direction</td><td>Unidirectional</td></tr>
+ * <tr><td>Send/receive pattern</td><td>Receive only</td></tr>
+ * <tr><td>Incoming routing strategy</td><td>Fair-queued</td></tr>
+ * <tr><td>Outgoing routing strategy</td><td>N/A</td></tr>
+ * <tr><td>Action in mute state</td><td>Suspend</td></tr>
+ * </table><br/>
+ */
 public interface PullSocket : Socket, ReceiveSocket {
 
     /**

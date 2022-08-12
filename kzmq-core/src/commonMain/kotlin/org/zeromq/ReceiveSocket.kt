@@ -7,6 +7,9 @@ package org.zeromq
 
 import kotlinx.coroutines.selects.*
 
+/**
+ * A socket that can receive messages.
+ */
 public interface ReceiveSocket {
     /**
      * Waits for the next message to become available on the socket. Reads a message immediately if

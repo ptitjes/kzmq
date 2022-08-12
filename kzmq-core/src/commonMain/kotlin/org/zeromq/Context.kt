@@ -8,6 +8,12 @@ package org.zeromq
 import kotlinx.coroutines.*
 import kotlin.coroutines.*
 
+/**
+ * Builds a ZeroMQ [Context] in the receiver [CoroutineScope].
+ *
+ * @param engine the backend engine to use for this context.
+ * @param additionalContext additional context to [CoroutineScope.coroutineContext] context of the coroutine.
+ */
 public fun CoroutineScope.Context(
     engine: Engine,
     additionalContext: CoroutineContext = EmptyCoroutineContext,
@@ -16,13 +22,22 @@ public fun CoroutineScope.Context(
     return Context(newContext, engine)
 }
 
+/**
+ * A ZeroMQ [Context].
+ *
+ * @param coroutineContext the parent coroutine context.
+ * @param engine the backend engine for this context.
+ */
 public class Context internal constructor(
     coroutineContext: CoroutineContext,
     engine: Engine,
-) : AbstractCoroutineContextElement(Context), SocketFactory, Closeable {
+) : SocketFactory, Closeable {
 
     private val instance: EngineInstance = engine.createInstance(coroutineContext)
 
+    /**
+     * Closes this context.
+     */
     override fun close(): Unit = instance.close()
 
     override fun createPair(): PairSocket = instance.createPair()
@@ -36,9 +51,4 @@ public class Context internal constructor(
     override fun createReply(): ReplySocket = instance.createReply()
     override fun createDealer(): DealerSocket = instance.createDealer()
     override fun createRouter(): RouterSocket = instance.createRouter()
-
-    /**
-     * Key for [Context] instance in the coroutine context.
-     */
-    public companion object Key : CoroutineContext.Key<Context>
 }

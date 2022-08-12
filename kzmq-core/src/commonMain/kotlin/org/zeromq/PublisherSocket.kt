@@ -5,6 +5,30 @@
 
 package org.zeromq
 
+/**
+ * A ZeroMQ socket of type [PUB][Type.PUB].
+ * Peers must be [SubscriberSocket]s or [XSubscriberSocket]s.
+ *
+ * A [PublisherSocket] is used by a publisher to distribute data.
+ *
+ * Messages sent are distributed in a fan-out fashion to all connected peers.
+ *
+ * When a [PublisherSocket] enters the mute state due to having reached the high watermark for a subscriber,
+ * then any messages that would be sent to the subscriber in question shall instead be dropped until the mute
+ * state ends.
+ *
+ * The [send][SendSocket.send] methods shall never block for this socket type.
+ *
+ * <br/><table>
+ * <tr><th colspan="2">Summary of socket characteristics</th></tr>
+ * <tr><td>Compatible peer sockets</td><td>SUB, XSUB</td></tr>
+ * <tr><td>Direction</td><td>Unidirectional</td></tr>
+ * <tr><td>Send/receive pattern</td><td>Send only</td></tr>
+ * <tr><td>Incoming routing strategy</td><td>N/A</td></tr>
+ * <tr><td>Outgoing routing strategy</td><td>Fan-out</td></tr>
+ * <tr><td>Action in mute state</td><td>Drop</td></tr>
+ * </table><br/>
+ */
 public interface PublisherSocket : Socket, SendSocket {
 
     /**

@@ -5,6 +5,36 @@
 
 package org.zeromq
 
+/**
+ * A ZeroMQ socket of type [DEALER][Type.DEALER].
+ * Peers must be [ReplySocket]s or [RouterSocket]s.
+ *
+ * A [DealerSocket] does load-balancing on outputs and fair-queuing on inputs with no other semantics.
+ * It is the only socket type that lets you shuffle messages out to N nodes and shuffle the replies back,
+ * in a raw bidirectional asynchronous pattern.
+ *
+ * A [DealerSocket] is an advanced pattern used for extending request/reply sockets.
+ *
+ * Each message sent is distributed in a round-robin fashion among all connected peers,
+ * and each message received is fair-queued from all connected peers.
+ *
+ * When a [DealerSocket] enters the mute state due to having reached the high watermark for all peers,
+ * or if there are no peers at all, then any [send()][SendSocket.send] operations on the socket shall suspend
+ * until the mute state ends or at least one peer becomes available for sending; messages are not discarded.
+ *
+ * When a [DealerSocket] is connected to a [ReplySocket] each message sent must consist of
+ * an empty message frame, the delimiter, followed by one or more body parts.
+ *
+ * <br/><table>
+ * <tr><th colspan="2">Summary of socket characteristics</th></tr>
+ * <tr><td>Compatible peer sockets</td><td>ROUTER, REP, DEALER</td></tr>
+ * <tr><td>Direction</td><td>Bidirectional</td></tr>
+ * <tr><td>Send/receive pattern</td><td>Unrestricted</td></tr>
+ * <tr><td>Incoming routing strategy</td><td>Fair-queued</td></tr>
+ * <tr><td>Outgoing routing strategy</td><td>Round-robin</td></tr>
+ * <tr><td>Action in mute state</td><td>Suspend</td></tr>
+ * </table><br/>
+ */
 public interface DealerSocket : Socket, SendSocket, ReceiveSocket {
 
     /**

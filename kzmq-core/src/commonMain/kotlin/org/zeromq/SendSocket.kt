@@ -5,6 +5,9 @@
 
 package org.zeromq
 
+/**
+ * A socket that can send messages.
+ */
 public interface SendSocket {
     /**
      * Sends a message on the socket. Queues the message immediately if possible. If the message
