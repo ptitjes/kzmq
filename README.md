@@ -9,10 +9,11 @@
 
 ![Build](https://github.com/ptitjes/kzmq/actions/workflows/main.yml/badge.svg)
 [![Maven Central](https://img.shields.io/maven-central/v/org.zeromq/kzmq)](https://mvnrepository.com/artifact/org.zeromq)
-[![Kotlin](https://img.shields.io/badge/kotlin-1.6.21-blue.svg?logo=kotlin)](http://kotlinlang.org)
+[![Kotlin](https://img.shields.io/badge/kotlin-1.7.10-blue.svg?logo=kotlin)](http://kotlinlang.org)
 [![GitHub License](https://img.shields.io/badge/license-Apache%20License%202.0-blue.svg?style=flat)](http://www.apache.org/licenses/LICENSE-2.0)
 
-> Warning: This library is a work in progress.
+> Note that the library is experimental, and the API is subject to change.
+> See [Implementation status](#implementation-status) for more information.
 
 Kzmq is a Kotlin multi-platform ZeroMQ library. It supports multiple backend engines:
 
@@ -21,9 +22,53 @@ Kzmq is a Kotlin multi-platform ZeroMQ library. It supports multiple backend eng
 - ZeroMQ.JS, a Node.JS addon implementation of ZeroMQ,
 - Libzmq, the main native implementation of ZeroMQ.
 
+# Getting started
+
+## Simple example
+
+Here is how you might implement a server that prints the messages it receives
+and responds to them with "Hello, world!":
+
+```kotlin
+import kotlinx.coroutines.*
+import org.zeromq.*
+
+suspend fun main() = coroutineScope {
+  // Create a ZeroMQ context with the CIO engine
+  Context(CIO).use { context ->
+    // Socket to talk to clients
+    val socket = context.createReply().apply {
+      bind("tcp://localhost:5555")
+    }
+
+    socket.use {
+      while (isActive) {
+        // Suspend until a message is received
+        val message = it.receive()
+
+        // Print the message
+        println(message.singleOrThrow().decodeToString())
+
+        // Send a response
+        it.send(Message("Hello, world!".encodeToByteArray()))
+      }
+    }
+  }
+}
+```
+
+## More examples
+
+For now, you can look at the
+[test suite](https://github.com/ptitjes/kzmq/blob/master/kzmq-tests/src/commonTest/kotlin).
+
+## Documentation
+
+You can generate the Kdoc documentation by running the `dokkaHtmlMultiModule` gradle task.
+
 # Engines
 
-The following tables might help you choose a backend engine depending on your needs.
+The following tables might help you choose an engine depending on your needs.
 
 ## Targets
 
@@ -37,10 +82,13 @@ The following tables might help you choose a backend engine depending on your ne
 
 | Transport/Engine |  CIO  | JeroMQ | ZeroMQ.JS | Libzmq |
 |------------------|:-----:|:------:|:---------:|:------:|
-| TCP              |   Y   |   Y    |     Y     |   Y    |
-| IPC              | Y (♭) |        |     Y     |   Y    |
+| `tcp://`         |   Y   |   Y    |     Y     |   Y    |
+| `ipc://`         | Y (♭) |        |     Y     |   Y    |
+| `inproc://`      | Y (♯) | Y (♯)  |   Y (♯)   | Y (♯)  |
 
 (♭) Supported on Native. Requires JVM >= 16 for the JVM target.
+
+(♯) Each engine only supports the `inproc` transport with itself.
 
 ## Protocol Version
 
@@ -51,8 +99,125 @@ The following tables might help you choose a backend engine depending on your ne
 
 (♭) New ZMTP 3.1 sockets are not yet supported
 
-# Build
+# Implementation status
 
-Install `libncurses5` (`ncurses-compat-libs` on Fedora).
+> Note that the library is experimental, and the API is subject to change.
 
-Install `libzmq` (`zeromq-devel` on Fedora).
+| Engine  |     CIO      |    JeroMQ    |  ZeroMQ.JS   |      Libzmq      |
+|---------|:------------:|:------------:|:------------:|:----------------:|
+| Status  | Experimental | Experimental | Experimental | Work in progress |
+
+# Using in your projects
+
+> Note that the library is experimental, and the API is subject to change.
+
+This library is published to Maven Central.
+
+## Gradle
+
+### Repository
+
+- First, add the Maven Central repository if it is not already there:
+
+```kotlin
+repositories {
+    mavenCentral()
+}
+```
+
+- Add the API package to your `commonMain` source-set dependencies
+  (or to a particular target source-set dependencies, if you only need it on that target):
+
+```kotlin
+kotlin {
+    sourceSets {
+        val commonMain by getting {
+            dependencies {
+                implementation("org.zeromq:kzmq-core:0.1.0")
+            }
+        }
+    }
+}
+```
+
+- Then add one or more engine packages to their corresponding source-sets.
+
+> In case you are lost, you can read more about
+> [multiplatform projects](https://kotlinlang.org/docs/multiplatform-add-dependencies.html).
+
+### CIO engine
+
+The CIO engine supports only the JVM and native targets.
+Add the CIO engine package to your `commonMain` source-set dependencies
+(or to a particular target source-set dependencies):
+
+```kotlin
+kotlin {
+    sourceSets {
+        val commonMain by getting {
+            dependencies {
+                implementation("org.zeromq:kzmq-core:0.1.0")
+                implementation("org.zeromq:kzmq-cio:0.1.0")
+            }
+        }
+    }
+}
+```
+
+### JeroMQ engine
+
+The JeroMQ engine supports only the JVM targets.
+Add the JeroMQ engine package to your `jvmMain` source-set dependencies:
+
+```kotlin
+kotlin {
+    sourceSets {
+        val jvmMain by getting {
+            dependencies {
+                implementation("org.zeromq:kzmq-jeromq:0.1.0")
+            }
+        }
+    }
+}
+```
+
+### ZeroMQ.js engine
+
+The ZeroMQ.js engine supports only the Node.js targets.
+Add the ZeroMQ.js engine package to your `jsMain` source-set dependencies:
+
+```kotlin
+kotlin {
+    sourceSets {
+        val jsMain by getting {
+            dependencies {
+                implementation("org.zeromq:kzmq-js:0.1.0")
+            }
+        }
+    }
+}
+```
+
+### Libzmq engine
+
+The Libzmq engine supports only the native targets.
+Add the Libzmq engine package to your `nativeMain` source-set dependencies:
+
+```kotlin
+kotlin {
+    sourceSets {
+        val nativeMain by getting {
+            dependencies {
+                implementation("org.zeromq:kzmq-libzmq:0.1.0")
+            }
+        }
+    }
+}
+```
+
+# Building
+
+## Native build
+
+In order to build for native targets, you need to have the development package for `libzmq`
+(e.g. `zeromq-devel` on Fedora, or `libzmq3-dev` on Ubuntu).
