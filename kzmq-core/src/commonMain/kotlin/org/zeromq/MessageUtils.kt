@@ -5,6 +5,12 @@
 
 package org.zeromq
 
+/**
+ * Builds a subscription or unsubscription message.
+ *
+ * @param subscribe `true` if the message is a subscription message, false if it is an unsubscription message.
+ * @param topic the topic to subscription/unsubscription message.
+ */
 public fun subscriptionMessageOf(subscribe: Boolean, topic: ByteArray): Message {
     val bytes = ByteArray(topic.size + 1) { index ->
         if (index == 0) if (subscribe) 1 else 0
@@ -13,6 +19,12 @@ public fun subscriptionMessageOf(subscribe: Boolean, topic: ByteArray): Message 
     return Message(bytes)
 }
 
+/**
+ * Destructures a subscription or unsubscription message.
+ *
+ * @return a pair consisting of a boolean indicating if the message is a subscription message or an unsubscription
+ * message, and a topic. Returns `null` if the message is not a subscription/unsubscription message.
+ */
 public fun destructureSubscriptionMessage(message: Message): Pair<Boolean, ByteArray>? {
     if (message.isSingle) {
         val bytes = message.singleOrThrow()

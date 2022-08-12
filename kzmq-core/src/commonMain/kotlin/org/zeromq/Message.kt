@@ -5,21 +5,44 @@
 
 package org.zeromq
 
+/**
+ * A ZeroMQ message container. Messages carry application data and are not generally created, modified,
+ * or filtered by the ZMTP implementation except in some cases. Messages consist of one or more frames
+ * and are always sent and delivered atomically, that is, all the frames of a message, or none of them.
+ *
+ * @param frames the frames of the message.
+ */
 public data class Message(val frames: List<ByteArray>) {
     init {
         require(frames.isNotEmpty()) { "A message should contain at least one frame" }
     }
 
+    /**
+     * Builds a ZeroMQ message.
+     *
+     * @param frames the frames of the message.
+     */
     public constructor(vararg frames: ByteArray) : this(frames.toList())
 
+    /**
+     * Returns `true` if this message contains a single frame.
+     */
     val isSingle: Boolean get() = frames.size == 1
+
+    /**
+     * Returns `true` if this message contains more than one frame.
+     */
     val isMultipart: Boolean get() = frames.size > 1
 
-    public fun singleOrThrow(): ByteArray =
-        if (isSingle) frames[0] else error("Message is multipart")
+    /**
+     * Returns the single frame of this message, or throws if this message is multipart.
+     */
+    public fun singleOrThrow(): ByteArray = if (isSingle) frames[0] else error("Message is multipart")
 
-    public fun firstOrThrow(): ByteArray =
-        frames.getOrNull(0) ?: error("Message contains no frame")
+    /**
+     * Returns the first frame.
+     */
+    public fun first(): ByteArray = frames.first()
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true

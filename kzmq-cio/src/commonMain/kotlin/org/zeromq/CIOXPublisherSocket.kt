@@ -136,7 +136,7 @@ internal class CIOXPublisherSocket(
                     }
 
                     sendChannel.onReceive { message ->
-                        subscriptions.forEachMatching(message.firstOrThrow()) { peerMailbox ->
+                        subscriptions.forEachMatching(message.first()) { peerMailbox ->
                             logger.d { "Dispatching $message to $peerMailbox" }
                             peerMailbox.sendChannel.send(CommandOrMessage(message))
                         }
