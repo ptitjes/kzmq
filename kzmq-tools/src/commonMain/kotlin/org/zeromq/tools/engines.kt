@@ -7,4 +7,4 @@ package org.zeromq.tools
 
 import org.zeromq.*
 
-expect val engines: List<Engine>
+expect val engines: List<EngineFactory>

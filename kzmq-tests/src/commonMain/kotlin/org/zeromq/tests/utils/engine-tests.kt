@@ -64,11 +64,11 @@ private fun RootScope.runSingleContextTest(
 private fun computeEngines(
     skipEngines: List<String>,
     onlyEngines: List<String>?,
-): List<Engine> {
+): List<EngineFactory> {
     val skipEnginesLowerCase = skipEngines.map { it.lowercase() }.toSet()
     val onlyEnginesLowerCase = onlyEngines?.map { e1 -> e1.lowercase() }
 
-    val engines = engines.filter { engine ->
+    val engines = enginesUnderTest.filter { engine ->
         val engineName = engine.name.lowercase()
         !skipEnginesLowerCase.any { it.contains(engineName) }
     }
@@ -121,12 +121,12 @@ private fun computeEnginePairs(
     skipEngines: List<String>,
     skipEnginePairs: List<Pair<String, String>>?,
     onlyEnginePairs: List<Pair<String, String>>?,
-): List<Pair<Engine, Engine>> {
+): List<Pair<EngineFactory, EngineFactory>> {
     val skipEnginesLowerCase = skipEngines.map { it.lowercase() }.toSet()
     val skipEnginePairsLowerCase = skipEnginePairs?.map { (e1, e2) -> e1.lowercase() to e2.lowercase() }
     val onlyEnginePairsLowerCase = onlyEnginePairs?.map { (e1, e2) -> e1.lowercase() to e2.lowercase() }
 
-    val filteredEngines = engines.filter { engine ->
+    val filteredEngines = enginesUnderTest.filter { engine ->
         val engineName = engine.name.lowercase()
         !skipEnginesLowerCase.any { it.contains(engineName) }
     }

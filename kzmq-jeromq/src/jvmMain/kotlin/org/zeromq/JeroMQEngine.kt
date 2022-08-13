@@ -7,9 +7,9 @@ package org.zeromq
 
 internal const val TRACE = false
 
-internal class JeroMQInstance private constructor(
+internal class JeroMQEngine private constructor(
     private val underlying: ZContext,
-) : EngineInstance {
+) : Engine {
 
     constructor(ioThreads: Int = 1) : this(ZContext(ioThreads))
 

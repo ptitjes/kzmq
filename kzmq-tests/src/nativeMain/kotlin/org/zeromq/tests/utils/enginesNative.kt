@@ -7,4 +7,4 @@ package org.zeromq.tests.utils
 
 import org.zeromq.*
 
-actual val engines: List<Engine> = listOf(CIO)
+actual val enginesUnderTest: List<EngineFactory> = listOf(CIO)

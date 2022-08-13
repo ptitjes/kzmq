@@ -5,4 +5,4 @@
 
 package org.zeromq
 
-public expect object CIO : Engine
+public expect object CIO : EngineFactory

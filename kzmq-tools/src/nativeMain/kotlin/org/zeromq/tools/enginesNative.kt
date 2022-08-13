@@ -7,4 +7,4 @@ package org.zeromq.tools
 
 import org.zeromq.*
 
-actual val engines: List<Engine> = listOf(CIO)
+actual val engines: List<EngineFactory> = listOf(CIO)

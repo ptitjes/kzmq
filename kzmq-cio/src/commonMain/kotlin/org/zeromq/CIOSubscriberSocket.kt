@@ -74,8 +74,8 @@ import org.zeromq.internal.*
  *    used.
  */
 internal class CIOSubscriberSocket(
-    engineInstance: CIOEngineInstance,
-) : CIOSocket(engineInstance, Type.SUB), CIOReceiveSocket, SubscriberSocket {
+    engine: CIOEngine,
+) : CIOSocket(engine, Type.SUB), CIOReceiveSocket, SubscriberSocket {
 
     override val validPeerTypes: Set<Type> get() = validPeerSocketTypes
 

@@ -7,7 +7,7 @@ package org.zeromq
 
 import kotlin.coroutines.*
 
-public object Libzmq : Engine {
+public object Libzmq : EngineFactory {
     override val name: String = "libzmq"
-    override fun createInstance(coroutineContext: CoroutineContext): EngineInstance = LibzmqInstance()
+    override fun create(coroutineContext: CoroutineContext): Engine = LibzmqEngine()
 }

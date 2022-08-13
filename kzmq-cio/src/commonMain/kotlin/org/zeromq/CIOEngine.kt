@@ -11,9 +11,9 @@ import org.zeromq.internal.inproc.*
 import org.zeromq.internal.tcp.*
 import kotlin.coroutines.*
 
-internal class CIOEngineInstance internal constructor(
+internal class CIOEngine internal constructor(
     context: CoroutineContext,
-) : EngineInstance {
+) : Engine {
 
     private val mainJob = SupervisorJob()
     private val lingerJob = SupervisorJob()

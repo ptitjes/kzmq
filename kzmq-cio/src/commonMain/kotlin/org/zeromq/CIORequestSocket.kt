@@ -50,8 +50,8 @@ import org.zeromq.internal.utils.*
  * 2. SHALL discard silently any messages received from other peers.
  */
 internal class CIORequestSocket(
-    engineInstance: CIOEngineInstance,
-) : CIOSocket(engineInstance, Type.REQ), CIOSendSocket, CIOReceiveSocket, RequestSocket {
+    engine: CIOEngine,
+) : CIOSocket(engine, Type.REQ), CIOSendSocket, CIOReceiveSocket, RequestSocket {
 
     override val validPeerTypes: Set<Type> get() = validPeerSocketTypes
 

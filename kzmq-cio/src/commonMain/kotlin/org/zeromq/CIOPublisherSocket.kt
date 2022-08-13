@@ -82,8 +82,8 @@ import org.zeromq.internal.*
  * 2. SHALL NOT deliver these commands to its calling application.
  */
 internal class CIOPublisherSocket(
-    engineInstance: CIOEngineInstance,
-) : CIOSocket(engineInstance, Type.PUB), CIOSendSocket, PublisherSocket {
+    engine: CIOEngine,
+) : CIOSocket(engine, Type.PUB), CIOSendSocket, PublisherSocket {
 
     override val validPeerTypes: Set<Type> get() = validPeerSocketTypes
 

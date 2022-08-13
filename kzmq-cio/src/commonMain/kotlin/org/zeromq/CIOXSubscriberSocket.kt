@@ -85,8 +85,8 @@ import org.zeromq.internal.*
  * 3. When closing a connection to a publisher SHOULD send unsubscribe requests for all subscriptions.
  */
 internal class CIOXSubscriberSocket(
-    engineInstance: CIOEngineInstance,
-) : CIOSocket(engineInstance, Type.XSUB), CIOSendSocket, CIOReceiveSocket, XSubscriberSocket {
+    engine: CIOEngine,
+) : CIOSocket(engine, Type.XSUB), CIOSendSocket, CIOReceiveSocket, XSubscriberSocket {
 
     override val validPeerTypes: Set<Type> get() = validPeerSocketTypes
 

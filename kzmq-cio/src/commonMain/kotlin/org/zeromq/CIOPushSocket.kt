@@ -48,8 +48,8 @@ import org.zeromq.internal.*
  * 5. SHALL NOT discard messages that it cannot queue.
  */
 internal class CIOPushSocket(
-    engineInstance: CIOEngineInstance,
-) : CIOSocket(engineInstance, Type.PUSH), CIOSendSocket, PushSocket {
+    engine: CIOEngine,
+) : CIOSocket(engine, Type.PUSH), CIOSendSocket, PushSocket {
 
     override val validPeerTypes: Set<Type> get() = validPeerSocketTypes
 

@@ -47,8 +47,8 @@ import org.zeromq.internal.*
  * 2. SHALL deliver these to its calling application.
  */
 internal class CIOPairSocket(
-    engineInstance: CIOEngineInstance,
-) : CIOSocket(engineInstance, Type.PAIR), CIOReceiveSocket, CIOSendSocket, PairSocket {
+    engine: CIOEngine,
+) : CIOSocket(engine, Type.PAIR), CIOReceiveSocket, CIOSendSocket, PairSocket {
 
     override val validPeerTypes: Set<Type> get() = validPeerSocketTypes
 

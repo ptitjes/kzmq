@@ -62,8 +62,8 @@ import kotlin.random.*
  * 4. SHALL NOT block on sending.
  */
 internal class CIORouterSocket(
-    engineInstance: CIOEngineInstance,
-) : CIOSocket(engineInstance, Type.ROUTER), CIOReceiveSocket, CIOSendSocket, RouterSocket {
+    engine: CIOEngine,
+) : CIOSocket(engine, Type.ROUTER), CIOReceiveSocket, CIOSendSocket, RouterSocket {
 
     override val validPeerTypes: Set<Type> get() = validPeerSocketTypes
 
