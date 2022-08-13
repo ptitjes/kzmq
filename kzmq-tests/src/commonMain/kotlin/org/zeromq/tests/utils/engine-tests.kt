@@ -75,7 +75,7 @@ private fun computeEngines(
 
     return engines.filter { e ->
         onlyEnginesLowerCase?.any { oe ->
-            oe.contains(e.name)
+            oe.contains(e.name.lowercase())
         } ?: true
     }
 }
@@ -137,9 +137,9 @@ private fun computeEnginePairs(
 
     return enginePairs.filter { (e1, e2) ->
         (onlyEnginePairsLowerCase?.any { (oe1, oe2) ->
-            oe1.contains(e1.name) && oe2.contains(e2.name)
+            oe1.contains(e1.name.lowercase()) && oe2.contains(e2.name.lowercase())
         } ?: true) && !(skipEnginePairsLowerCase?.any { (oe1, oe2) ->
-            oe1.contains(e1.name) && oe2.contains(e2.name)
+            oe1.contains(e1.name.lowercase()) && oe2.contains(e2.name.lowercase())
         } ?: false)
     }
 }

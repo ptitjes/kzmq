@@ -48,10 +48,7 @@ class PushPullTests : FunSpec({
         pullSocket.close()
     }
 
-    withContexts("lingers after close").config(
-        // TODO figure out why this fails
-        skipEnginePairs = listOf("jeromq" to "cio"),
-    ) { (ctx1, ctx2) ->
+    withContexts("lingers after close") { (ctx1, ctx2) ->
         val address = randomAddress()
         val messageCount = 100
 
