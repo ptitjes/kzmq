@@ -5,7 +5,7 @@
 
 package org.zeromq
 
-internal class JSEngine : Engine {
+internal class ZeroMQjsEngine : Engine {
 
     override fun close() {}
 

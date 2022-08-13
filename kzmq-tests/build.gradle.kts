@@ -78,7 +78,7 @@ kotlin {
 
         val jsMain by getting {
             dependencies {
-                implementation(project(":kzmq-js"))
+                implementation(project(":kzmq-zeromqjs"))
                 implementation(npm("find-open-port", "2.0.3"))
             }
         }

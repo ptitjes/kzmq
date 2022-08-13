@@ -9,16 +9,16 @@ import org.zeromq.util.*
 import kotlin.coroutines.*
 
 @OptIn(InternalAPI::class)
-public object JS : EngineFactory {
-    override val name: String = "zeromq.js"
-    override fun create(coroutineContext: CoroutineContext): Engine = JSEngine()
+public object ZeroMQjs : EngineFactory {
+    override val name: String = "ZeroMQ.js"
+    override fun create(coroutineContext: CoroutineContext): Engine = ZeroMQjsEngine()
 
     init {
-        engines.append(JS)
+        engines.append(ZeroMQjs)
     }
 }
 
 @Suppress("DEPRECATION", "unused")
 @OptIn(ExperimentalStdlibApi::class)
 @EagerInitialization
-private val initHook = JS
+private val initHook = ZeroMQjs

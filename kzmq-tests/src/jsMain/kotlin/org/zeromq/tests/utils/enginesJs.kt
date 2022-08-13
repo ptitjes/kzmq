@@ -7,4 +7,4 @@ package org.zeromq.tests.utils
 
 import org.zeromq.*
 
-actual val enginesUnderTest: List<EngineFactory> = listOf(JS)
+actual val enginesUnderTest: List<EngineFactory> = listOf(ZeroMQjs)
