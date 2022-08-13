@@ -16,10 +16,10 @@
 > See [Implementation status](#implementation-status) for more information.
 
 Kzmq is a Kotlin multi-platform ZeroMQ library. It supports four backend engines:
-- CIO, a Kotlin coroutine-based implementation (using `ktor-network` and `ktor-io`),
-- JeroMQ, a pure Java implementation of ZeroMQ,
-- ZeroMQ.JS, a Node.JS addon implementation of ZeroMQ,
-- Libzmq, the main native implementation of ZeroMQ.
+- CIO, a pure Kotlin coroutine-based implementation (using `ktor-network` and `ktor-io`),
+- [JeroMQ](https://github.com/zeromq/jeromq), a pure Java implementation of ZeroMQ,
+- [ZeroMQjs](https://github.com/zeromq/zeromq.js), a Node.JS addon implementation of ZeroMQ,
+- [Libzmq](https://github.com/zeromq/libzmq), the main native implementation of ZeroMQ.
 
 # Getting started
 
@@ -68,10 +68,10 @@ You can generate the Kdoc documentation by running the `dokkaHtmlMultiModule` gr
 # Engines
 
 Kzmq supports four backend engines:
-- CIO, a Kotlin coroutine-based implementation (using `ktor-network` and `ktor-io`),
-- JeroMQ, a pure Java implementation of ZeroMQ,
-- ZeroMQ.JS, a Node.JS addon implementation of ZeroMQ,
-- Libzmq, the main native implementation of ZeroMQ.
+- CIO, a pure Kotlin coroutine-based implementation (using `ktor-network` and `ktor-io`),
+- [JeroMQ](https://github.com/zeromq/jeromq), a pure Java implementation of ZeroMQ,
+- [ZeroMQjs](https://github.com/zeromq/zeromq.js), a Node.JS addon implementation of ZeroMQ,
+- [Libzmq](https://github.com/zeromq/libzmq), the main native implementation of ZeroMQ.
 
 The tables below might help you choose an engine depending on your needs.
 
@@ -80,7 +80,7 @@ The tables below might help you choose an engine depending on your needs.
 
 ## Targets
 
-| Target/Engine | CIO | JeroMQ | ZeroMQ.JS | Libzmq |
+| Target/Engine | CIO | JeroMQ | ZeroMQjs  | Libzmq |
 |---------------|:---:|:------:|:---------:|:------:|
 | JVM           |  Y  |   Y    |           |        |
 | Node.JS       |     |        |     Y     |        |
@@ -88,7 +88,7 @@ The tables below might help you choose an engine depending on your needs.
 
 ## Transports
 
-| Transport/Engine |  CIO  | JeroMQ | ZeroMQ.JS | Libzmq |
+| Transport/Engine |  CIO  | JeroMQ | ZeroMQjs  | Libzmq |
 |------------------|:-----:|:------:|:---------:|:------:|
 | `tcp://`         |   Y   |   Y    |     Y     |   Y    |
 | `ipc://`         | Y (♭) |        |     Y     |   Y    |
@@ -100,7 +100,7 @@ The tables below might help you choose an engine depending on your needs.
 
 ## Protocol Version
 
-| Protocol/Engine |  CIO  | JeroMQ | ZeroMQ.JS | Libzmq |
+| Protocol/Engine |  CIO  | JeroMQ | ZeroMQjs  | Libzmq |
 |-----------------|:-----:|:------:|:---------:|:------:|
 | ZMTP 3.0        |   Y   |   Y    |     Y     |   Y    |
 | ZMTP 3.1        | Y (♭) |        |           | Y (♭)  |
@@ -111,7 +111,7 @@ The tables below might help you choose an engine depending on your needs.
 
 > Note that the library is experimental, and the API is subject to change.
 
-| Engine  |     CIO      |    JeroMQ    |  ZeroMQ.JS   |      Libzmq      |
+| Engine  |     CIO      |    JeroMQ    |   ZeroMQjs   |      Libzmq      |
 |---------|:------------:|:------------:|:------------:|:----------------:|
 | Status  | Experimental | Experimental | Experimental | Work in progress |
 
@@ -198,7 +198,7 @@ kotlin {
     sourceSets {
         val jsMain by getting {
             dependencies {
-                implementation("org.zeromq:kzmq-js:0.1.0")
+                implementation("org.zeromq:kzmq-zeromqjs:0.1.0")
             }
         }
     }
