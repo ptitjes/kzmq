@@ -15,8 +15,7 @@
 > Note that the library is experimental, and the API is subject to change.
 > See [Implementation status](#implementation-status) for more information.
 
-Kzmq is a Kotlin multi-platform ZeroMQ library. It supports multiple backend engines:
-
+Kzmq is a Kotlin multi-platform ZeroMQ library. It supports four backend engines:
 - CIO, a Kotlin coroutine-based implementation (using `ktor-network` and `ktor-io`),
 - JeroMQ, a pure Java implementation of ZeroMQ,
 - ZeroMQ.JS, a Node.JS addon implementation of ZeroMQ,
@@ -34,8 +33,8 @@ import kotlinx.coroutines.*
 import org.zeromq.*
 
 suspend fun main() = coroutineScope {
-  // Create a ZeroMQ context with the CIO engine
-  Context(CIO).use { context ->
+  // Create a ZeroMQ context (with an auto-discoverd engine)
+  Context().use { context ->
     // Socket to talk to clients
     val socket = context.createReply().apply {
       bind("tcp://localhost:5555")
@@ -68,7 +67,16 @@ You can generate the Kdoc documentation by running the `dokkaHtmlMultiModule` gr
 
 # Engines
 
-The following tables might help you choose an engine depending on your needs.
+Kzmq supports four backend engines:
+- CIO, a Kotlin coroutine-based implementation (using `ktor-network` and `ktor-io`),
+- JeroMQ, a pure Java implementation of ZeroMQ,
+- ZeroMQ.JS, a Node.JS addon implementation of ZeroMQ,
+- Libzmq, the main native implementation of ZeroMQ.
+
+The tables below might help you choose an engine depending on your needs.
+
+> We support auto-discovery of engines.
+> See [Using in your projects](#using-in-your-projects) for more information.
 
 ## Targets
 
@@ -156,7 +164,6 @@ kotlin {
     sourceSets {
         val commonMain by getting {
             dependencies {
-                implementation("org.zeromq:kzmq-core:0.1.0")
                 implementation("org.zeromq:kzmq-cio:0.1.0")
             }
         }

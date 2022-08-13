@@ -8,32 +8,36 @@ package org.zeromq
 import kotlinx.coroutines.*
 import kotlin.coroutines.*
 
+public expect fun CoroutineScope.Context(
+    additionalContext: CoroutineContext = EmptyCoroutineContext,
+): Context
+
 /**
  * Builds a ZeroMQ [Context] in the receiver [CoroutineScope].
  *
- * @param engine the backend engine to use for this context.
+ * @param engineFactory the backend engine to use for this context.
  * @param additionalContext additional context to [CoroutineScope.coroutineContext] context of the coroutine.
  */
 public fun CoroutineScope.Context(
-    engine: Engine,
+    engineFactory: EngineFactory,
     additionalContext: CoroutineContext = EmptyCoroutineContext,
 ): Context {
     val newContext = coroutineContext + additionalContext
-    return Context(newContext, engine)
+    return Context(newContext, engineFactory)
 }
 
 /**
  * A ZeroMQ [Context].
  *
  * @param coroutineContext the parent coroutine context.
- * @param engine the backend engine for this context.
+ * @param engineFactory the backend engine for this context.
  */
 public class Context internal constructor(
     coroutineContext: CoroutineContext,
-    engine: Engine,
+    engineFactory: EngineFactory,
 ) : SocketFactory, Closeable {
 
-    private val instance: EngineInstance = engine.createInstance(coroutineContext)
+    private val instance: Engine = engineFactory.create(coroutineContext)
 
     /**
      * Closes this context.

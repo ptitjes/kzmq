@@ -6,14 +6,20 @@
 package org.zeromq
 
 import kotlinx.coroutines.*
+import org.zeromq.util.*
 import platform.linux.*
 import kotlin.coroutines.*
 import kotlin.math.*
 
-public actual object CIO : Engine {
+@OptIn(InternalAPI::class)
+public actual object CIO : EngineFactory {
     override val name: String = "cio"
-    override fun createInstance(coroutineContext: CoroutineContext): EngineInstance {
-        return CIOEngineInstance(coroutineContext + Dispatchers.IO)
+    override fun create(coroutineContext: CoroutineContext): Engine {
+        return CIOEngine(coroutineContext + Dispatchers.IO)
+    }
+
+    init {
+        engines.append(CIO)
     }
 }
 
@@ -22,3 +28,8 @@ private val IO_DISPATCHER = newFixedThreadPoolContext(nThreads, "IO")
 
 @Suppress("UnusedReceiverParameter")
 private val Dispatchers.IO get() = IO_DISPATCHER
+
+@Suppress("DEPRECATION", "unused")
+@OptIn(ExperimentalStdlibApi::class)
+@EagerInitialization
+private val initHook = CIO

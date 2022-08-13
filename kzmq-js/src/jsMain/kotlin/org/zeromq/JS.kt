@@ -5,9 +5,20 @@
 
 package org.zeromq
 
+import org.zeromq.util.*
 import kotlin.coroutines.*
 
-public object JS : Engine {
+@OptIn(InternalAPI::class)
+public object JS : EngineFactory {
     override val name: String = "zeromq.js"
-    override fun createInstance(coroutineContext: CoroutineContext): EngineInstance = JSInstance()
+    override fun create(coroutineContext: CoroutineContext): Engine = JSEngine()
+
+    init {
+        engines.append(JS)
+    }
 }
+
+@Suppress("DEPRECATION", "unused")
+@OptIn(ExperimentalStdlibApi::class)
+@EagerInitialization
+private val initHook = JS

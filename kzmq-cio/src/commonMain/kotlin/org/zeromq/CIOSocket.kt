@@ -9,16 +9,16 @@ import kotlinx.coroutines.*
 import org.zeromq.internal.*
 
 internal abstract class CIOSocket(
-    private val engineInstance: CIOEngineInstance,
+    private val engine: CIOEngine,
     final override val type: Type,
 ) : Socket, SocketInfo {
 
     override val options = SocketOptions()
 
     private val peerManager = PeerManager(
-        engineInstance.mainScope,
-        engineInstance.lingerScope,
-        engineInstance.transportRegistry
+        engine.mainScope,
+        engine.lingerScope,
+        engine.transportRegistry
     )
     protected val peerEvents = peerManager.peerEvents
 
@@ -30,7 +30,7 @@ internal abstract class CIOSocket(
     private lateinit var socketJob: Job
 
     fun setHandler(block: suspend CoroutineScope.() -> Unit) {
-        socketJob = engineInstance.mainScope.launch(exceptionHandler + coroutineName) {
+        socketJob = engine.mainScope.launch(exceptionHandler + coroutineName) {
             block()
         }
     }

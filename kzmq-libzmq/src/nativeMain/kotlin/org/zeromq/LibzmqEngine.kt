@@ -8,8 +8,8 @@ package org.zeromq
 import kotlinx.cinterop.*
 import org.zeromq.internal.libzmq.*
 
-internal class LibzmqInstance private constructor(private val underlying: COpaquePointer?) :
-    EngineInstance {
+internal class LibzmqEngine private constructor(private val underlying: COpaquePointer?) :
+    Engine {
 
     constructor(ioThreads: Int = 1) : this(zmq_ctx_new()) {
         if (zmq_ctx_set(this.underlying, ZMQ_IO_THREADS, ioThreads) != 0) throwNativeError()

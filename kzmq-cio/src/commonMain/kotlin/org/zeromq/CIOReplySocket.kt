@@ -54,8 +54,8 @@ import org.zeromq.internal.utils.*
  * 5. SHALL not block on sending.
  */
 internal class CIOReplySocket(
-    engineInstance: CIOEngineInstance,
-) : CIOSocket(engineInstance, Type.REP), CIOReceiveSocket, CIOSendSocket, ReplySocket {
+    engine: CIOEngine,
+) : CIOSocket(engine, Type.REP), CIOReceiveSocket, CIOSendSocket, ReplySocket {
 
     override val validPeerTypes: Set<Type> get() = validPeerSocketTypes
 
