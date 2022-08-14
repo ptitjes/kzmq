@@ -20,11 +20,10 @@ class RequestReplyTests : FunSpec({
         val requestMessage = Message("Hello 0MQ!".encodeToByteArray())
         val replyMessage = Message("Hello back!".encodeToByteArray())
 
-        val request = ctx1.createRequest()
-        request.bind(address)
+        val request = ctx1.createRequest().apply { bind(address) }
+        val reply = ctx2.createReply().apply { connect(address) }
 
-        val reply = ctx2.createReply()
-        reply.connect(address)
+        waitForConnections()
 
         request.send(requestMessage)
         reply.receive() shouldBe requestMessage
@@ -38,11 +37,10 @@ class RequestReplyTests : FunSpec({
         val requestMessage = Message("Hello 0MQ!".encodeToByteArray())
         val replyMessage = Message("Hello back!".encodeToByteArray())
 
-        val request = ctx1.createRequest()
-        request.bind(address)
+        val request = ctx1.createRequest().apply { bind(address) }
+        val reply = ctx2.createReply().apply { connect(address) }
 
-        val reply = ctx2.createReply()
-        reply.connect(address)
+        waitForConnections()
 
         request.send(requestMessage)
         reply.receive() shouldBe requestMessage
@@ -56,17 +54,11 @@ class RequestReplyTests : FunSpec({
     ) { (ctx1, ctx2) ->
         val address = randomAddress()
 
-        val request = ctx1.createRequest()
-        request.bind(address)
+        val request = ctx1.createRequest().apply { bind(address) }
+        val reply1 = ctx2.createReply().apply { connect(address) }
+        val reply2 = ctx2.createReply().apply { connect(address) }
 
-        val reply1 = ctx2.createReply()
-        reply1.connect(address)
-
-        val reply2 = ctx2.createReply()
-        reply2.connect(address)
-
-        // Wait for all connections to happen
-        delay(100)
+        waitForConnections(2)
 
         var lastReplier: ReplySocket? = null
         repeat(10) { i ->
@@ -101,14 +93,11 @@ class RequestReplyTests : FunSpec({
     ) { (ctx1, ctx2) ->
         val address = randomAddress()
 
-        val request1 = ctx1.createRequest()
-        request1.connect(address)
+        val reply = ctx2.createReply().apply { bind(address) }
+        val request1 = ctx1.createRequest().apply { connect(address) }
+        val request2 = ctx1.createRequest().apply { connect(address) }
 
-        val request2 = ctx1.createRequest()
-        request2.connect(address)
-
-        val reply = ctx2.createReply()
-        reply.bind(address)
+        waitForConnections(2)
 
         coroutineScope {
             launch {

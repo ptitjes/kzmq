@@ -20,11 +20,11 @@ class PublisherXSubscriberTests : FunSpec({
         val sent = listOf("prefixed data", "non-prefixed data", "prefix is good")
         val expected = sent.filter { it.startsWith("prefix") }
 
-        val publisher = ctx1.createPublisher()
-        publisher.bind(address)
+        val publisher = ctx1.createPublisher().apply { bind(address) }
+        val subscriber = ctx2.createXSubscriber().apply { connect(address) }
 
-        val subscriber = ctx2.createXSubscriber()
-        subscriber.connect(address)
+        waitForConnections()
+
         subscriber.send(subscriptionMessageOf(true, "prefix".encodeToByteArray()))
 
         waitForSubscriptions()

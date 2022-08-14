@@ -21,13 +21,10 @@ class XPublisherSubscriberTests : FunSpec({
         val sent = listOf("prefixed data", "non-prefixed data", "prefix is good")
         val expected = sent.filter { it.startsWith("prefix") }
 
-        val publisher = ctx1.createXPublisher()
-        publisher.bind(address)
+        val publisher = ctx1.createXPublisher().apply { bind(address) }
+        val subscriber = ctx2.createSubscriber().apply { connect(address) }
 
-        val subscriber = ctx2.createSubscriber()
-        subscriber.connect(address)
-
-        waitForSubscriptions()
+        waitForConnections()
 
         coroutineScope {
             launch {
