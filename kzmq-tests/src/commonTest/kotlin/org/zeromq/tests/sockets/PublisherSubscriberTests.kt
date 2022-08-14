@@ -21,11 +21,11 @@ class PublisherSubscriberTests : FunSpec({
         val address = randomAddress()
         val message = Message("Hello 0MQ!".encodeToByteArray())
 
-        val publisher = ctx1.createPublisher()
-        publisher.bind(address)
+        val publisher = ctx1.createPublisher().apply { bind(address) }
+        val subscriber = ctx2.createSubscriber().apply { connect(address) }
 
-        val subscriber = ctx2.createSubscriber()
-        subscriber.connect(address)
+        waitForConnections()
+
         subscriber.subscribe("")
 
         waitForSubscriptions()
@@ -41,11 +41,11 @@ class PublisherSubscriberTests : FunSpec({
         val address = randomAddress()
         val message = Message("Hello 0MQ!".encodeToByteArray())
 
-        val publisher = ctx1.createPublisher()
-        publisher.connect(address)
+        val subscriber = ctx2.createSubscriber().apply { bind(address) }
+        val publisher = ctx1.createPublisher().apply { connect(address) }
 
-        val subscriber = ctx2.createSubscriber()
-        subscriber.bind(address)
+        waitForConnections()
+
         subscriber.subscribe("")
 
         waitForSubscriptions()
@@ -61,11 +61,11 @@ class PublisherSubscriberTests : FunSpec({
         val messageCount = 10
         val sent = generateMessages(messageCount).asFlow()
 
-        val publisher = ctx1.createPublisher()
-        publisher.bind(address)
+        val publisher = ctx1.createPublisher().apply { bind(address) }
+        val subscriber = ctx2.createSubscriber().apply { connect(address) }
 
-        val subscriber = ctx2.createSubscriber()
-        subscriber.connect(address)
+        waitForConnections()
+
         subscriber.subscribe("")
 
         waitForSubscriptions()
@@ -89,21 +89,17 @@ class PublisherSubscriberTests : FunSpec({
         val messageCount = 10
         val sent = generateMessages(messageCount)
 
-        val publisher1 = ctx1.createPublisher()
-        publisher1.bind(address1)
+        val publisher1 = ctx1.createPublisher().apply { bind(address1) }
+        val publisher2 = ctx1.createPublisher().apply { bind(address2) }
+        val subscriber1 = ctx2.createSubscriber().apply { connect(address1) }
+        val subscriber2 = ctx2.createSubscriber().apply { connect(address2) }
 
-        val publisher2 = ctx1.createPublisher()
-        publisher2.bind(address2)
+        waitForConnections(2)
 
-        val subscriber1 = ctx2.createSubscriber()
-        subscriber1.connect(address1)
         subscriber1.subscribe("")
-
-        val subscriber2 = ctx2.createSubscriber()
-        subscriber2.connect(address2)
         subscriber2.subscribe("")
 
-        waitForSubscriptions()
+        waitForSubscriptions(2)
 
         coroutineScope {
             launch {
@@ -131,11 +127,11 @@ class PublisherSubscriberTests : FunSpec({
         val sent = listOf("prefixed data", "non-prefixed data", "prefix is good")
         val expected = sent.filter { it.startsWith("prefix") }
 
-        val publisher = ctx1.createPublisher()
-        publisher.bind(address)
+        val publisher = ctx1.createPublisher().apply { bind(address) }
+        val subscriber = ctx2.createSubscriber().apply { connect(address) }
 
-        val subscriber = ctx2.createSubscriber()
-        subscriber.connect(address)
+        waitForConnections()
+
         subscriber.subscribe("prefix")
 
         waitForSubscriptions()

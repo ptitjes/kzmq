@@ -17,11 +17,10 @@ class PairTests : FunSpec({
         val address = randomAddress()
         val message = Message("Hello 0MQ!".encodeToByteArray())
 
-        val pair1 = ctx1.createPair()
-        pair1.bind(address)
+        val pair1 = ctx1.createPair().apply { bind(address) }
+        val pair2 = ctx2.createPair().apply { connect(address) }
 
-        val pair2 = ctx2.createPair()
-        pair2.connect(address)
+        waitForConnections()
 
         pair1.send(message)
         pair2.receive() shouldBe message
@@ -34,11 +33,10 @@ class PairTests : FunSpec({
         val address = randomAddress()
         val message = Message("Hello 0MQ!".encodeToByteArray())
 
-        val pair1 = ctx1.createPair()
-        pair1.connect(address)
+        val pair2 = ctx2.createPair().apply { bind(address) }
+        val pair1 = ctx1.createPair().apply { connect(address) }
 
-        val pair2 = ctx2.createPair()
-        pair2.bind(address)
+        waitForConnections()
 
         pair1.send(message)
         pair2.receive() shouldBe message

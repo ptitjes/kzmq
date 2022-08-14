@@ -6,9 +6,8 @@
 package org.zeromq.tests.transports
 
 import io.kotest.matchers.*
-import kotlinx.coroutines.*
 import org.zeromq.*
-import kotlin.time.Duration.Companion.milliseconds
+import org.zeromq.tests.utils.*
 
 internal suspend fun simpleBindConnect(ctx1: Context, ctx2: Context, address: String) {
     val message = Message("Hello 0MQ!".encodeToByteArray())
@@ -16,8 +15,7 @@ internal suspend fun simpleBindConnect(ctx1: Context, ctx2: Context, address: St
     val push = ctx1.createPush().apply { bind(address) }
     val pull = ctx2.createPull().apply { connect(address) }
 
-    // Wait for connection
-    delay(100.milliseconds)
+    waitForConnections()
 
     push.send(message)
     pull.receive() shouldBe message
@@ -26,11 +24,10 @@ internal suspend fun simpleBindConnect(ctx1: Context, ctx2: Context, address: St
 internal suspend fun simpleConnectBind(ctx1: Context, ctx2: Context, address: String) {
     val message = Message("Hello 0MQ!".encodeToByteArray())
 
-    val push = ctx1.createPush().apply { connect(address) }
     val pull = ctx2.createPull().apply { bind(address) }
+    val push = ctx1.createPush().apply { connect(address) }
 
-    // Wait for connection
-    delay(100.milliseconds)
+    waitForConnections()
 
     push.send(message)
     pull.receive() shouldBe message

@@ -24,19 +24,19 @@ class DealerRouterTests : FunSpec({
         val routerCount = 3
         val addresses = Array(routerCount) { randomAddress() }
 
+        val routers = addresses.map {
+            ctx2.createRouter().apply {
+                bind(it)
+            }
+        }
         val dealers = Array(dealerCount) { index ->
             ctx1.createDealer().apply {
                 routingId = index.encodeRoutingId()
                 addresses.forEach { connect(it) }
             }
         }
-        val routers = addresses.map {
-            ctx2.createRouter().apply {
-                bind(it)
-            }
-        }
 
-        delay(200)
+        waitForConnections(dealerCount * routerCount)
 
         class Trace {
             val receivedReplyIds = atomic(setOf<Int>())
