@@ -8,6 +8,6 @@ package org.zeromq.tests.utils
 import kotlinx.coroutines.*
 import kotlin.time.Duration.Companion.milliseconds
 
-internal suspend fun waitForConnections(count: Int = 1) = delay(200.milliseconds * count)
+internal suspend fun waitForConnections(count: Int = 1) = delay(100.milliseconds * count)
 
 internal suspend fun waitForSubscriptions(count: Int = 1) = delay(200.milliseconds * count)
