@@ -3,9 +3,15 @@
  * Use of this source code is governed by the Apache 2.0 license.
  */
 
-import org.jetbrains.dokka.gradle.DokkaTask
-import java.net.URL
+import org.jetbrains.dokka.gradle.*
+import java.net.*
 
+plugins {
+    kotlin("multiplatform")
+    kotlin("plugin.atomicfu")
+}
+
+val kotlinxAtomicFuVersion: String by project
 val kotlinxCoroutinesVersion: String by project
 
 val mingwPath = File(System.getenv("MINGW64_DIR") ?: "C:/msys64/mingw64")
@@ -43,6 +49,7 @@ kotlin {
 
         val commonMain by getting {
             dependencies {
+                implementation("org.jetbrains.kotlinx:atomicfu:$kotlinxAtomicFuVersion")
                 implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:$kotlinxCoroutinesVersion")
             }
         }

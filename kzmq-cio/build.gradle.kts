@@ -3,6 +3,12 @@
  * Use of this source code is governed by the Apache 2.0 license.
  */
 
+plugins {
+    kotlin("multiplatform")
+    kotlin("plugin.atomicfu")
+}
+
+val kotlinxAtomicFuVersion: String by project
 val kotlinxCoroutinesVersion: String by project
 val ktorVersion: String by project
 val kotlinLoggingVersion: String by project
@@ -33,6 +39,7 @@ kotlin {
     sourceSets {
         val commonMain by getting {
             dependencies {
+                implementation("org.jetbrains.kotlinx:atomicfu:$kotlinxAtomicFuVersion")
                 implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:$kotlinxCoroutinesVersion")
                 implementation("io.ktor:ktor-io:$ktorVersion")
                 implementation("io.ktor:ktor-network:$ktorVersion")

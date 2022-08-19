@@ -3,6 +3,10 @@
  * Use of this source code is governed by the Apache 2.0 license.
  */
 
+plugins {
+    kotlin("multiplatform")
+}
+
 val kotlinxCoroutinesVersion: String by project
 val jeromqVersion: String by project
 
