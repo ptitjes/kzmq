@@ -15,24 +15,10 @@ val kermitVersion: String by project
 
 kotlin {
     explicitApi()
+    optIns()
 
-    jvm {
-        compilations.all {
-            kotlinOptions.jvmTarget = "1.8"
-        }
-        testRuns["test"].executionTask.configure {
-            useJUnitPlatform()
-        }
-    }
-
-    val hostOs = System.getProperty("os.name")
-
-    val hostTarget = when {
-        hostOs == "Mac OS X" -> macosX64()
-        hostOs == "Linux" -> linuxX64()
-        hostOs.startsWith("Windows") -> mingwX64()
-        else -> throw GradleException("Host OS is not supported in Kotlin/Native.")
-    }
+    jvmTargets()
+    nativeTargets()
 
     sourceSets {
         val commonMain by getting {
@@ -50,28 +36,6 @@ kotlin {
                 implementation(kotlin("test"))
                 implementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:$kotlinxCoroutinesVersion")
             }
-        }
-
-        val jvmMain by getting
-        val jvmTest by getting
-
-        val nativeMain by creating {
-            findByName("commonMain")?.let { dependsOn(it) }
-        }
-        val nativeTest by creating {
-            findByName("commonTest")?.let { dependsOn(it) }
-        }
-
-        hostTarget.let {
-            getByName("${it.name}Main").dependsOn(nativeMain)
-            getByName("${it.name}Test").dependsOn(nativeTest)
-        }
-
-        all {
-            languageSettings.optIn("kotlin.RequiresOptIn")
-            languageSettings.optIn("kotlinx.coroutines.ExperimentalCoroutinesApi")
-            languageSettings.optIn("kotlin.time.ExperimentalTime")
-            languageSettings.optIn("kotlin.experimental.ExperimentalTypeInference")
         }
     }
 }

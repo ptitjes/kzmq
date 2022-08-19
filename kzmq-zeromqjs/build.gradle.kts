@@ -12,17 +12,11 @@ val jeromqVersion: String by project
 
 kotlin {
     explicitApi()
+    optIns()
 
-    js(IR) {
-        nodejs {}
-    }
+    jsTargets()
 
     sourceSets {
-        all {
-            languageSettings.optIn("kotlin.RequiresOptIn")
-            languageSettings.optIn("kotlinx.coroutines.ExperimentalCoroutinesApi")
-        }
-
         val jsMain by getting {
             dependencies {
                 implementation(project(":kzmq-core"))
