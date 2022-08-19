@@ -15,7 +15,7 @@ import kotlin.math.*
 public actual object CIO : EngineFactory {
     override val name: String = "cio"
     override fun create(coroutineContext: CoroutineContext): Engine {
-        return CIOEngine(coroutineContext + Dispatchers.IO)
+        return CIOEngine(coroutineContext + IO_DISPATCHER)
     }
 
     init {
@@ -23,11 +23,8 @@ public actual object CIO : EngineFactory {
     }
 }
 
-private val nThreads = max(get_nprocs(), 64)
+private val nThreads = 1
 private val IO_DISPATCHER = newFixedThreadPoolContext(nThreads, "IO")
-
-@Suppress("UnusedReceiverParameter")
-private val Dispatchers.IO get() = IO_DISPATCHER
 
 @Suppress("DEPRECATION", "unused")
 @OptIn(ExperimentalStdlibApi::class)

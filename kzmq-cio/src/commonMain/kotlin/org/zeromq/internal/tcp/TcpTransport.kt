@@ -69,6 +69,7 @@ internal class TcpBindingHolder(
         val rawServerSocket = rawSocketBuilder.tcp().bind(localAddress)
 
         while (isActive) {
+            yield()
             val rawSocket = rawServerSocket.accept()
             launch {
                 val remoteEndpoint = TcpEndpoint(rawSocket.remoteAddress).toString()
@@ -162,6 +163,7 @@ internal class TcpConnectionHolder(
                 if (!shouldReconnect) break
 
                 // TODO Wait before reconnecting ? (have a strategy)
+                yield()
             }
         } finally {
             withContext(NonCancellable) {

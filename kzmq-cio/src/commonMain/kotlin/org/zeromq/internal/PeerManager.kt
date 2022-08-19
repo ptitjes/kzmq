@@ -53,6 +53,7 @@ internal class PeerManager(
     suspend fun notify(event: PeerEvent) {
         if (!_peerEvents.isClosedForSend) {
             logger.d { "Peer event: $event" }
+            yield()
             _peerEvents.send(event)
         }
     }
