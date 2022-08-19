@@ -118,7 +118,7 @@ internal class CIOSubscriberSocket(
                     for (peerMailbox in peerMailboxes) {
                         peerMailbox.receiveChannel.onReceive { commandOrMessage ->
                             val message = commandOrMessage.messageOrThrow()
-                            logger.t { "Receiving $message from $peerMailbox" }
+                            logger.v { "Receiving $message from $peerMailbox" }
                             receiveChannel.send(message)
                         }
                     }

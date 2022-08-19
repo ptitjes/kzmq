@@ -72,7 +72,7 @@ internal class CIOPushSocket(
                     if (peerMailboxes.isNotEmpty()) {
                         sendChannel.onReceive { message ->
                             val peerMailbox = peerMailboxes.removeFirst()
-                            logger.t { "Sending $message to $peerMailbox" }
+                            logger.v { "Sending $message to $peerMailbox" }
                             peerMailbox.sendChannel.send(CommandOrMessage(message))
                             peerMailboxes.add(peerMailbox)
                         }
