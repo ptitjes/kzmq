@@ -71,7 +71,7 @@ internal class CIOPullSocket(
         try {
             while (isActive) {
                 val message = peerMailbox.receiveChannel.receive().messageOrThrow()
-                logger.t { "Receiving $message from $peerMailbox" }
+                logger.v { "Receiving $message from $peerMailbox" }
                 receiveChannel.send(message)
             }
         } catch (e: ClosedReceiveChannelException) {

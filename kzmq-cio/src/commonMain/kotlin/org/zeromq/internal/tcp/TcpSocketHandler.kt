@@ -24,18 +24,18 @@ internal class TcpSocketHandler(
     private var peerMinorVersion: Int = 1
 
     suspend fun handleInitialization() {
-        logger.t { "Writing greeting part 1" }
+        logger.v { "Writing greeting part 1" }
         output.writeGreetingPart1()
 
-        logger.t { "Reading greeting part 1" }
+        logger.v { "Reading greeting part 1" }
         val peerMajorVersion = input.readGreetingPart1()
         if (peerMajorVersion != 3) protocolError("Incompatible peer version $peerMajorVersion.x")
 
-        logger.t { "Writing greeting part 2" }
+        logger.v { "Writing greeting part 2" }
         val mechanism = socketInfo.options.getSelectedSecurityMechanism()
         output.writeGreetingPart2(mechanism, false)
 
-        logger.t { "Reading greeting part 2" }
+        logger.v { "Reading greeting part 2" }
         val (peerMinorVersion, peerSecuritySpec) = input.readGreetingPart2()
 
         if (mechanism != peerSecuritySpec.mechanism)
@@ -60,7 +60,7 @@ internal class TcpSocketHandler(
         mailbox.identity = identity
 
         this.peerMinorVersion = peerMinorVersion
-        logger.t { "Finished initialization (peerMinorVersion: $peerMinorVersion)" }
+        logger.v { "Finished initialization (peerMinorVersion: $peerMinorVersion)" }
     }
 
     suspend fun handleTraffic() {
@@ -108,7 +108,7 @@ internal class TcpSocketHandler(
             transformSubscriptionMessages(raw)
         } else raw
 
-        logger.t { "Read: $incoming" }
+        logger.v { "Read: $incoming" }
         return incoming
     }
 
@@ -120,7 +120,7 @@ internal class TcpSocketHandler(
 
         output.writeCommandOrMessage(transformed)
 
-        logger.t { "Wrote: $outgoing" }
+        logger.v { "Wrote: $outgoing" }
     }
 }
 

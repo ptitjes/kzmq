@@ -14,15 +14,15 @@ internal suspend fun nullMechanismHandshake(
     output: ByteWriteChannel,
 ): Map<PropertyName, ByteArray> {
     return if (isServer) {
-        logger.t { "Expecting READY command" }
+        logger.v { "Expecting READY command" }
         val properties = expectReadyCommand(input)
-        logger.t { "Sending READY command" }
+        logger.v { "Sending READY command" }
         output.sendReadyCommand(localProperties)
         properties
     } else {
-        logger.t { "Sending READY command" }
+        logger.v { "Sending READY command" }
         output.sendReadyCommand(localProperties)
-        logger.t { "Expecting READY command" }
+        logger.v { "Expecting READY command" }
         expectReadyCommand(input)
     }
 }

@@ -127,7 +127,7 @@ internal class CIOXSubscriberSocket(
                             if (subscribe) subscribe(listOf(topic)) else unsubscribe(listOf(topic))
                         } else {
                             peerMailboxes.forEach { peerMailbox ->
-                                logger.t { "Sending message $message to $peerMailbox" }
+                                logger.v { "Sending message $message to $peerMailbox" }
                                 peerMailbox.sendChannel.send(CommandOrMessage(message))
                             }
                         }
@@ -143,7 +143,7 @@ internal class CIOXSubscriberSocket(
                     for (peerMailbox in peerMailboxes) {
                         peerMailbox.receiveChannel.onReceive { commandOrMessage ->
                             val message = commandOrMessage.messageOrThrow()
-                            logger.t { "Receiving $message from $peerMailbox" }
+                            logger.v { "Receiving $message from $peerMailbox" }
                             receiveChannel.send(message)
                         }
                     }

@@ -86,7 +86,7 @@ internal class CIOPairSocket(
         launch {
             while (isActive) {
                 val message = sendChannel.receive()
-                logger.t { "Sending $message to $mailbox" }
+                logger.v { "Sending $message to $mailbox" }
                 mailbox.sendChannel.send(CommandOrMessage(message))
             }
         }
@@ -94,7 +94,7 @@ internal class CIOPairSocket(
             while (isActive) {
                 val commandOrMessage = mailbox.receiveChannel.receive()
                 val message = commandOrMessage.messageOrThrow()
-                logger.t { "Receiving $message from $mailbox" }
+                logger.v { "Receiving $message from $mailbox" }
                 receiveChannel.send(message)
             }
         }

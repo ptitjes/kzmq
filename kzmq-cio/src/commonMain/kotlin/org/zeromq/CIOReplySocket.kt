@@ -82,13 +82,13 @@ internal class CIOReplySocket(
                 while (isActive) {
                     val (peerMailbox, request) = requestsChannel.receive()
 
-                    logger.t { "Received request $request from $peerMailbox" }
+                    logger.v { "Received request $request from $peerMailbox" }
                     val (identities, requestData) = extractPrefixAddress(request)
                     receiveChannel.send(requestData)
 
                     val replyData = sendChannel.receive()
                     val reply = addPrefixAddress(replyData, identities)
-                    logger.t { "Sending reply $reply back to $peerMailbox" }
+                    logger.v { "Sending reply $reply back to $peerMailbox" }
                     peerMailbox.sendChannel.send(CommandOrMessage(reply))
                 }
             }
@@ -99,7 +99,7 @@ internal class CIOReplySocket(
         try {
             while (isActive) {
                 val message = peerMailbox.receiveChannel.receive().messageOrThrow()
-                logger.t { "Forwarding request $message from $peerMailbox" }
+                logger.v { "Forwarding request $message from $peerMailbox" }
                 requestsChannel.send(peerMailbox to message)
             }
         } catch (e: ClosedReceiveChannelException) {
