@@ -5,14 +5,17 @@
 
 description = "Common tests for engines"
 
+plugins {
+    kotlin("multiplatform")
+    kotlin("plugin.atomicfu")
+    id("io.kotest.multiplatform")
+}
+
+val kotlinxAtomicFuVersion: String by project
 val kotlinxCoroutinesVersion: String by project
 val junitVersion: String by project
 val ktorVersion: String by project
 val kotestVersion: String by project
-
-plugins {
-    id("io.kotest.multiplatform")
-}
 
 val mingwPath = File(System.getenv("MINGW64_DIR") ?: "C:/msys64/mingw64")
 
@@ -47,6 +50,7 @@ kotlin {
     sourceSets {
         val commonMain by getting {
             dependencies {
+                implementation("org.jetbrains.kotlinx:atomicfu:$kotlinxAtomicFuVersion")
                 implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:$kotlinxCoroutinesVersion")
                 implementation("io.kotest:kotest-framework-engine:$kotestVersion")
                 implementation("io.kotest:kotest-framework-datatest:$kotestVersion")
