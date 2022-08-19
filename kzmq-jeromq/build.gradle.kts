@@ -13,22 +13,11 @@ val jeromqVersion: String by project
 
 kotlin {
     explicitApi()
+    optIns()
 
-    jvm {
-        compilations.all {
-            kotlinOptions.jvmTarget = "1.8"
-        }
-        testRuns["test"].executionTask.configure {
-            useJUnitPlatform()
-        }
-    }
+    jvmTargets()
 
     sourceSets {
-        all {
-            languageSettings.optIn("kotlin.RequiresOptIn")
-            languageSettings.optIn("kotlinx.coroutines.ExperimentalCoroutinesApi")
-        }
-
         val jvmMain by getting {
             dependencies {
                 implementation(project(":kzmq-core"))

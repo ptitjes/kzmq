@@ -18,35 +18,13 @@ val mingwPath = File(System.getenv("MINGW64_DIR") ?: "C:/msys64/mingw64")
 
 kotlin {
     explicitApi()
+    optIns()
 
-    jvm {
-        compilations.all {
-            kotlinOptions.jvmTarget = "1.8"
-        }
-        testRuns["test"].executionTask.configure {
-            useJUnitPlatform()
-        }
-    }
-
-    js(IR) {
-        nodejs {}
-    }
-
-    val hostOs = System.getProperty("os.name")
-
-    val hostTarget = when {
-        hostOs == "Mac OS X" -> macosX64("native")
-        hostOs == "Linux" -> linuxX64("native")
-        hostOs.startsWith("Windows") -> mingwX64("native")
-        else -> throw GradleException("Host OS is not supported in Kotlin/Native.")
-    }
+    jvmTargets()
+    jsTargets()
+    nativeTargets()
 
     sourceSets {
-        all {
-            languageSettings.optIn("kotlin.RequiresOptIn")
-            languageSettings.optIn("kotlinx.coroutines.ExperimentalCoroutinesApi")
-        }
-
         val commonMain by getting {
             dependencies {
                 implementation("org.jetbrains.kotlinx:atomicfu:$kotlinxAtomicFuVersion")

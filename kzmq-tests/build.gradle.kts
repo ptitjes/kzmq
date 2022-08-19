@@ -20,32 +20,11 @@ val kotestVersion: String by project
 val mingwPath = File(System.getenv("MINGW64_DIR") ?: "C:/msys64/mingw64")
 
 kotlin {
-    jvm {
-        compilations.all {
-            kotlinOptions.jvmTarget = "1.8"
-        }
-        testRuns["test"].executionTask.configure {
-            useJUnitPlatform()
-            testLogging {
-                showExceptions = true
-                showStandardStreams = true
-                exceptionFormat = org.gradle.api.tasks.testing.logging.TestExceptionFormat.FULL
-            }
-        }
-    }
+    optIns()
 
-    js(IR) {
-        nodejs()
-    }
-
-    val hostOs = System.getProperty("os.name")
-
-    val hostTarget = when {
-        hostOs == "Mac OS X" -> macosX64()
-        hostOs == "Linux" -> linuxX64()
-        hostOs.startsWith("Windows") -> mingwX64()
-        else -> throw GradleException("Host OS is not supported in Kotlin/Native.")
-    }
+    jvmTargets()
+    jsTargets()
+    nativeTargets()
 
     sourceSets {
         val commonMain by getting {
@@ -85,12 +64,9 @@ kotlin {
                 implementation(npm("find-open-port", "2.0.3"))
             }
         }
-        val jsTest by getting {
-        }
+        val jsTest by getting
 
-        val nativeMain by creating {
-            findByName("commonMain")?.let { dependsOn(it) }
-
+        val nativeMain by getting {
             dependencies {
                 implementation(project(":kzmq-libzmq"))
                 implementation(project(":kzmq-cio"))
@@ -98,21 +74,7 @@ kotlin {
                 implementation("io.ktor:ktor-network:$ktorVersion")
             }
         }
-        val nativeTest by creating {
-            findByName("commonTest")?.let { dependsOn(it) }
-        }
-
-        hostTarget.let {
-            getByName("${it.name}Main").dependsOn(nativeMain)
-            getByName("${it.name}Test").dependsOn(nativeTest)
-        }
-
-        all {
-            languageSettings.optIn("kotlin.RequiresOptIn")
-            languageSettings.optIn("kotlinx.coroutines.ExperimentalCoroutinesApi")
-            languageSettings.optIn("kotlin.time.ExperimentalTime")
-            languageSettings.optIn("kotlin.experimental.ExperimentalTypeInference")
-        }
+        val nativeTest by getting
     }
 }
 
