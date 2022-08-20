@@ -17,7 +17,10 @@ val junitVersion: String by project
 val ktorVersion: String by project
 val kotestVersion: String by project
 
-val mingwPath = File(System.getenv("MINGW64_DIR") ?: "C:/msys64/mingw64")
+tasks {
+    setupTestTimeout()
+    setupTestLogging()
+}
 
 kotlin {
     optIns()
