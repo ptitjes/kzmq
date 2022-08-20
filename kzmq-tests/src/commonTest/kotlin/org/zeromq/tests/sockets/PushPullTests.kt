@@ -17,7 +17,10 @@ import org.zeromq.tests.utils.*
 @Suppress("unused")
 class PushPullTests : FunSpec({
 
-    withContexts("lingers after disconnect") { (ctx1, ctx2) ->
+    withContexts("lingers after disconnect").config(
+        // TODO investigate why these pairs are flaky
+        skipEnginePairs = listOf("cio" to "jeromq", "jeromq" to "cio"),
+    ) { (ctx1, ctx2) ->
         val address = randomAddress()
         val messageCount = 100
 
@@ -47,8 +50,8 @@ class PushPullTests : FunSpec({
     }
 
     withContexts("lingers after close").config(
-        // TODO investigate why this pair is flaky
-        skipEnginePairs = listOf("jeromq" to "cio"),
+        // TODO investigate why these pairs are flaky
+        skipEnginePairs = listOf("cio" to "jeromq", "jeromq" to "cio"),
     ) { (ctx1, ctx2) ->
         val address = randomAddress()
         val messageCount = 100
