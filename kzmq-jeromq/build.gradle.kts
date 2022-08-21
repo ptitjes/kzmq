@@ -5,6 +5,7 @@
 
 plugins {
     kotlin("multiplatform")
+    id("org.jetbrains.kotlinx.kover")
 }
 
 val kotlinxCoroutinesVersion: String by project

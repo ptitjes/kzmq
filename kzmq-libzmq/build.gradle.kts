@@ -7,6 +7,7 @@ import org.jetbrains.kotlin.gradle.plugin.mpp.*
 
 plugins {
     kotlin("multiplatform")
+    id("org.jetbrains.kotlinx.kover")
 }
 
 val kotlinxCoroutinesVersion: String by project

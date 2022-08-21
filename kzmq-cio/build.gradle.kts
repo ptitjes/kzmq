@@ -6,12 +6,18 @@
 plugins {
     kotlin("multiplatform")
     kotlin("plugin.atomicfu")
+    id("org.jetbrains.kotlinx.kover")
 }
 
 val kotlinxAtomicFuVersion: String by project
 val kotlinxCoroutinesVersion: String by project
 val ktorVersion: String by project
 val kermitVersion: String by project
+
+tasks {
+    setupTestTimeout()
+    setupTestLogging()
+}
 
 kotlin {
     explicitApi()

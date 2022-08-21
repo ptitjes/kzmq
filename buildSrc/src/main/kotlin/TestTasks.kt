@@ -22,5 +22,8 @@ fun TaskContainerScope.setupTestLogging() {
             showStandardStreams = true
             showStackTraces = true
         }
+        reports {
+            junitXml.required.set(true)
+        }
     }
 }
