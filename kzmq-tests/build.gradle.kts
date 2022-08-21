@@ -9,6 +9,7 @@ plugins {
     kotlin("multiplatform")
     kotlin("plugin.atomicfu")
     id("io.kotest.multiplatform")
+    id("org.jetbrains.kotlinx.kover")
 }
 
 val kotlinxAtomicFuVersion: String by project

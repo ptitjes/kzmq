@@ -9,6 +9,7 @@ import java.net.*
 plugins {
     kotlin("multiplatform")
     kotlin("plugin.atomicfu")
+    id("org.jetbrains.kotlinx.kover")
 }
 
 val kotlinxAtomicFuVersion: String by project
