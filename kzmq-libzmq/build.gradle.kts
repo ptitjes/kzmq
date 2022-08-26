@@ -4,56 +4,51 @@
  */
 
 import org.jetbrains.kotlin.gradle.plugin.mpp.*
+import org.jetbrains.kotlin.konan.target.*
+import org.jetbrains.kotlin.konan.target.Architecture
 
 plugins {
-    kotlin("multiplatform")
-    id("org.jetbrains.kotlinx.kover")
+    id("plugin.library")
 }
 
-val kotlinxCoroutinesVersion: String by project
-val jeromqVersion: String by project
-
 kotlin {
-    explicitApi()
-    optIns()
-
-    nativeTargets()
+    nativeTargets { it.isSupportedByLibzmq }
 
     targets.withType<KotlinNativeTarget>().forEach { target ->
         target.apply {
             compilations["main"].cinterops {
-                val libzmq by creating {
-                    when (preset) {
-                        presets["macosX64"] -> includeDirs.headerFilterOnly(
-                            "/opt/local/include",
-                            "/usr/local/include"
-                        )
-
-                        presets["linuxX64"] -> includeDirs.headerFilterOnly(
-                            "/usr/include",
-                            "/usr/include/x86_64-linux-gnu"
-                        )
-
-                        presets["mingwX64"] -> {
-                            val mingwPath = File(System.getenv("MINGW64_DIR") ?: "C:/msys64/mingw64")
-                            includeDirs.headerFilterOnly(mingwPath.resolve("include"))
+                create("libzmq") {
+                    when (konanTarget.family) {
+                        Family.LINUX -> when (konanTarget.architecture) {
+                            Architecture.X64 -> includeDirs.allHeaders("/usr/include", "/usr/include/x86_64-linux-gnu")
+                            else -> error("Unknown Linux architecture")
                         }
+
+                        Family.OSX -> includeDirs.allHeaders("/opt/local/include", "/usr/local/include")
+
+                        Family.MINGW -> {
+                            val mingwPath = File(
+                                when (konanTarget.architecture) {
+                                    Architecture.X86 -> System.getenv("MINGW32_DIR") ?: "C:/msys32/mingw32"
+                                    Architecture.X64 -> System.getenv("MINGW64_DIR") ?: "C:/msys64/mingw64"
+                                    else -> error("Unknown Mingw architecture")
+                                }
+                            )
+                            includeDirs.allHeaders(mingwPath.resolve("include"))
+                        }
+
+                        else -> {}
                     }
+                    compilerOpts += pkgConfig("--cflags", "libzmq")
                 }
             }
         }
     }
 
     sourceSets {
-        val nativeMain by getting {
+        nativeMain {
             dependencies {
                 implementation(project(":kzmq-core"))
-                implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:$kotlinxCoroutinesVersion")
-            }
-        }
-        val nativeTest by getting {
-            dependencies {
-                implementation(kotlin("test"))
             }
         }
     }

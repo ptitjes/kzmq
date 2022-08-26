@@ -4,31 +4,19 @@
  */
 
 plugins {
-    kotlin("multiplatform")
-    id("org.jetbrains.kotlinx.kover")
+    id("plugin.library")
 }
 
-val kotlinxCoroutinesVersion: String by project
-val kotlinxAtomicFuVersion: String by project
-val jeromqVersion: String by project
-
 kotlin {
-    explicitApi()
-    optIns()
-
     jvmTargets()
 
     sourceSets {
-        val jvmMain by getting {
+        val jeromqVersion: String by project
+
+        jvmMain {
             dependencies {
                 implementation(project(":kzmq-core"))
-                implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:$kotlinxCoroutinesVersion")
                 implementation("org.zeromq:jeromq:$jeromqVersion")
-            }
-        }
-        val jvmTest by getting {
-            dependencies {
-                implementation(kotlin("test"))
             }
         }
     }
