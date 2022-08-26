@@ -4,43 +4,24 @@
  */
 
 plugins {
-    kotlin("multiplatform")
-    kotlin("plugin.atomicfu")
-    id("org.jetbrains.kotlinx.kover")
-}
-
-val kotlinxAtomicFuVersion: String by project
-val kotlinxCoroutinesVersion: String by project
-val ktorVersion: String by project
-val kermitVersion: String by project
-
-tasks {
-    setupTestTimeout()
-    setupTestLogging()
+    id("plugin.library")
+    id("plugin.atomicfu")
 }
 
 kotlin {
-    explicitApi()
-    optIns()
-
     jvmTargets()
-    nativeTargets()
+    nativeTargets { it.isSupportedByCIO }
 
     sourceSets {
-        val commonMain by getting {
+        val ktorVersion: String by project
+        val kermitVersion: String by project
+
+        commonMain {
             dependencies {
-                implementation("org.jetbrains.kotlinx:atomicfu:$kotlinxAtomicFuVersion")
-                implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:$kotlinxCoroutinesVersion")
+                implementation(project(":kzmq-core"))
                 implementation("io.ktor:ktor-io:$ktorVersion")
                 implementation("io.ktor:ktor-network:$ktorVersion")
                 implementation("co.touchlab:kermit:$kermitVersion")
-                implementation(project(":kzmq-core"))
-            }
-        }
-        val commonTest by getting {
-            dependencies {
-                implementation(kotlin("test"))
-                implementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:$kotlinxCoroutinesVersion")
             }
         }
     }

@@ -7,35 +7,14 @@ import org.jetbrains.dokka.gradle.*
 import java.net.*
 
 plugins {
-    kotlin("multiplatform")
-    kotlin("plugin.atomicfu")
-    id("org.jetbrains.kotlinx.kover")
+    id("plugin.library")
+    id("plugin.atomicfu")
 }
 
-val kotlinxAtomicFuVersion: String by project
-val kotlinxCoroutinesVersion: String by project
-
 kotlin {
-    explicitApi()
-    optIns()
-
     jvmTargets()
     jsTargets()
-    nativeTargets()
-
-    sourceSets {
-        val commonMain by getting {
-            dependencies {
-                implementation("org.jetbrains.kotlinx:atomicfu:$kotlinxAtomicFuVersion")
-                implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:$kotlinxCoroutinesVersion")
-            }
-        }
-        val commonTest by getting {
-            dependencies {
-                implementation(kotlin("test"))
-            }
-        }
-    }
+    nativeTargets { it.isSupportedByCIO || it.isSupportedByLibzmq }
 }
 
 tasks.withType<DokkaTask> {

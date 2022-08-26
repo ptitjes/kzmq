@@ -3,38 +3,27 @@
  * Use of this source code is governed by the Apache 2.0 license.
  */
 
+import org.jetbrains.kotlin.gradle.plugin.mpp.*
+
 description = "Common tests for engines"
 
 plugins {
-    kotlin("multiplatform")
-    kotlin("plugin.atomicfu")
+    id("plugin.common")
+    id("plugin.atomicfu")
     id("io.kotest.multiplatform")
-    id("org.jetbrains.kotlinx.kover")
-}
-
-val kotlinxAtomicFuVersion: String by project
-val kotlinxCoroutinesVersion: String by project
-val junitVersion: String by project
-val ktorVersion: String by project
-val kotestVersion: String by project
-
-tasks {
-    setupTestTimeout()
-    setupTestLogging()
 }
 
 kotlin {
-    optIns()
-
     jvmTargets()
     jsTargets()
-    nativeTargets()
+    nativeTargets { (it.isSupportedByCIO || it.isSupportedByLibzmq) && it.isSupportedByKtorNetwork }
 
     sourceSets {
-        val commonMain by getting {
+        val ktorVersion: String by project
+        val kotestVersion: String by project
+
+        commonMain {
             dependencies {
-                implementation("org.jetbrains.kotlinx:atomicfu:$kotlinxAtomicFuVersion")
-                implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:$kotlinxCoroutinesVersion")
                 implementation("io.kotest:kotest-framework-engine:$kotestVersion")
                 implementation("io.kotest:kotest-framework-datatest:$kotestVersion")
                 implementation("io.kotest:kotest-assertions-core:$kotestVersion")
@@ -42,49 +31,54 @@ kotlin {
                 implementation(project(":kzmq-core"))
             }
         }
-        val commonTest by getting {
-            dependencies {
-                implementation(kotlin("test"))
-            }
-        }
 
-        val jvmMain by getting {
+        jvmMain {
             dependencies {
-                implementation(project(":kzmq-jeromq"))
-                implementation(project(":kzmq-cio"))
-
                 implementation("io.ktor:ktor-network:$ktorVersion")
             }
         }
-        val jvmTest by getting {
-            dependencies {
-                implementation("io.kotest:kotest-runner-junit5:$kotestVersion")
-            }
-        }
 
-        val jsMain by getting {
+        jsMain {
             dependencies {
-                implementation(project(":kzmq-zeromqjs"))
                 implementation(npm("find-open-port", "2.0.3"))
             }
         }
-        val jsTest by getting
 
-        val nativeMain by getting {
+        nativeMain {
             dependencies {
-                implementation(project(":kzmq-libzmq"))
-                implementation(project(":kzmq-cio"))
-
                 implementation("io.ktor:ktor-network:$ktorVersion")
             }
         }
-        val nativeTest by getting
+
+        jvmTest {
+            dependencies {
+                implementation("io.kotest:kotest-runner-junit5:$kotestVersion")
+
+                implementation(project(":kzmq-jeromq"))
+                implementation(project(":kzmq-cio"))
+            }
+        }
+
+        jsTest {
+            dependencies {
+                implementation(project(":kzmq-zeromqjs"))
+            }
+        }
+
+        targets.withType<KotlinNativeTarget>().forEach { target ->
+            getByName("${target.name}Test").apply {
+                dependencies {
+                    if (target.konanTarget.isSupportedByLibzmq) implementation(project(":kzmq-libzmq"))
+                    if (target.konanTarget.isSupportedByCIO) implementation(project(":kzmq-cio"))
+                }
+            }
+        }
     }
 }
 
 tasks.getByName<Test>("jvmTest") {
     val javaToolchains = project.extensions.getByType<JavaToolchainService>()
     javaLauncher.set(javaToolchains.launcherFor {
-        languageVersion.set(JavaLanguageVersion.of(16))
+        languageVersion.set(JavaLanguageVersion.of(17))
     })
 }

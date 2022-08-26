@@ -7,41 +7,29 @@ import org.gradle.kotlin.dsl.*
 import org.jetbrains.kotlin.gradle.dsl.*
 import org.jetbrains.kotlin.gradle.plugin.mpp.*
 import org.jetbrains.kotlin.konan.target.*
-
-fun KotlinMultiplatformExtension.optIns() {
-    sourceSets {
-        all {
-            languageSettings.optIn("kotlin.RequiresOptIn")
-            languageSettings.optIn("kotlinx.coroutines.ExperimentalCoroutinesApi")
-            languageSettings.optIn("kotlin.time.ExperimentalTime")
-            languageSettings.optIn("kotlin.experimental.ExperimentalTypeInference")
-        }
-    }
-}
+import org.jetbrains.kotlin.konan.target.KonanTarget.*
 
 fun KotlinMultiplatformExtension.jvmTargets() {
     jvm {
         compilations.all {
             kotlinOptions.jvmTarget = "1.8"
         }
-        testRuns["test"].executionTask.configure {
-            useJUnitPlatform()
-        }
     }
 }
 
 fun KotlinMultiplatformExtension.jsTargets() {
     js(IR) {
-        nodejs {}
+        binaries.library()
+        useCommonJs()
+        nodejs()
     }
 }
 
 fun KotlinMultiplatformExtension.nativeTargets(
-    onlyHostTargets: Boolean = false,
+    predicate: (KonanTarget) -> Boolean,
 ) {
-    KonanTarget.predefinedTargets
-
-    val targets = if (onlyHostTargets) loadOnlyHostTargets() else loadAllNativeTargets()
+    val targets =
+        KonanTarget.predefinedTargets.values.filter(predicate).mapNotNull { perKonanTargetApplier[it]?.invoke(this) }
 
     sourceSets {
         val nativeMain by creating {
@@ -58,37 +46,111 @@ fun KotlinMultiplatformExtension.nativeTargets(
     }
 }
 
-fun KotlinMultiplatformExtension.loadOnlyHostTargets(): List<KotlinNativeTarget> {
-    return when {
-        HostManager.hostIsLinux && HostManager.host.architecture == Architecture.X64 -> listOf(linuxX64())
+private val perKonanTargetApplier = mutableMapOf<KonanTarget, KotlinMultiplatformExtension.() -> KotlinNativeTarget>(
+    ANDROID_X64 to { androidNativeX64() },
+    ANDROID_X86 to { androidNativeX86() },
+    ANDROID_ARM32 to { androidNativeArm32() },
+    ANDROID_ARM64 to { androidNativeArm64() },
+    IOS_ARM32 to { iosArm32() },
+    IOS_ARM64 to { iosArm64() },
+    IOS_X64 to { iosX64() },
+    IOS_SIMULATOR_ARM64 to { iosSimulatorArm64() },
+    WATCHOS_ARM32 to { watchosArm32() },
+    WATCHOS_ARM64 to { watchosArm64() },
+    WATCHOS_X86 to { watchosX86() },
+    WATCHOS_X64 to { watchosX64() },
+    WATCHOS_SIMULATOR_ARM64 to { watchosSimulatorArm64() },
+    TVOS_ARM64 to { tvosArm64() },
+    TVOS_X64 to { tvosX64() },
+    TVOS_SIMULATOR_ARM64 to { tvosSimulatorArm64() },
+    MACOS_X64 to { macosX64() },
+    MACOS_ARM64 to { macosArm64() },
+    LINUX_X64 to { linuxX64() },
+    LINUX_ARM64 to { linuxArm64() },
+    LINUX_ARM32_HFP to { linuxArm32Hfp() },
+    LINUX_MIPS32 to { linuxMips32() },
+    LINUX_MIPSEL32 to { linuxMipsel32() },
+    MINGW_X86 to { mingwX86() },
+    MINGW_X64 to { mingwX64() },
+)
 
-        HostManager.hostIsMac -> when (HostManager.host.architecture) {
-            Architecture.ARM64 -> listOf(macosArm64())
-            Architecture.X64 -> listOf(macosX64())
-            else -> listOf()
-        }
+val KonanTarget.buildHost: Family
+    get() = when (this) {
+        ANDROID_X64,
+        ANDROID_X86,
+        ANDROID_ARM32,
+        ANDROID_ARM64,
+        LINUX_ARM64,
+        LINUX_ARM32_HFP,
+        LINUX_MIPS32,
+        LINUX_MIPSEL32,
+        LINUX_X64,
+        -> Family.LINUX
 
-        HostManager.hostIsMingw && HostManager.host.architecture == Architecture.X64 -> listOf(mingwX64())
+        MINGW_X86,
+        MINGW_X64,
+        -> Family.MINGW
 
-        else -> listOf()
+        IOS_ARM32,
+        IOS_ARM64,
+        IOS_X64,
+        IOS_SIMULATOR_ARM64,
+        WATCHOS_ARM32,
+        WATCHOS_ARM64,
+        WATCHOS_X86,
+        WATCHOS_X64,
+        WATCHOS_SIMULATOR_ARM64,
+        TVOS_ARM64,
+        TVOS_X64,
+        TVOS_SIMULATOR_ARM64,
+        MACOS_X64,
+        MACOS_ARM64,
+        -> Family.OSX
+
+        WASM32 -> throw IllegalStateException("Target $this not supported")
+        is ZEPHYR -> throw IllegalStateException("Target $this not supported")
     }
-}
 
-private fun KotlinMultiplatformExtension.loadAllNativeTargets() = listOf(
-    iosArm32(),
-    iosArm64(),
-    iosX64(),
-    iosSimulatorArm64(),
-    watchosArm32(),
-    watchosArm64(),
-    // watchosX86(), // Not supported by Kotest
-    watchosX64(),
-    tvosArm64(),
-    tvosX64(),
-    tvosSimulatorArm64(),
-    macosArm64(),
-    macosX64(),
-    // linuxArm32Hfp(), // Not supported by coroutines
-    // linuxArm64(), // Not supported by coroutines
-    linuxX64(),
+val KonanTarget.isSupportedByLibzmq
+    get() = this in targetsSupportedByLibzmq && this !in targetsMissingCoroutineSupport
+
+val KonanTarget.isSupportedByKtorNetwork
+    get() = this in targetsSupportedByKtorNetwork && this !in targetsMissingCoroutineSupport
+
+val KonanTarget.isSupportedByCIO
+    get() = this in targetsSupportedByKtorNetwork && this !in targetsMissingCoroutineSupport
+
+private val targetsMissingCoroutineSupport = setOf(
+    LINUX_ARM32_HFP,
+    LINUX_ARM64,
+    MINGW_X86,
+)
+
+private val targetsSupportedByLibzmq = setOf(
+    LINUX_ARM32_HFP,
+    LINUX_ARM64,
+    LINUX_X64,
+    MINGW_X86,
+    MINGW_X64,
+    MACOS_ARM64,
+    MACOS_X64,
+)
+
+private val targetsSupportedByKtorNetwork = setOf(
+    LINUX_ARM32_HFP,
+    LINUX_ARM64,
+    LINUX_X64,
+    MACOS_ARM64,
+    MACOS_X64, IOS_ARM32,
+    IOS_ARM64,
+    IOS_X64,
+    IOS_SIMULATOR_ARM64,
+    WATCHOS_ARM32,
+    WATCHOS_ARM64,
+//    WATCHOS_X86,
+    WATCHOS_X64,
+    WATCHOS_SIMULATOR_ARM64,
+    TVOS_ARM64,
+    TVOS_X64,
+    TVOS_SIMULATOR_ARM64,
 )

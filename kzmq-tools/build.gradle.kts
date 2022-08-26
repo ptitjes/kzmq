@@ -1,23 +1,20 @@
-import org.jetbrains.kotlin.gradle.plugin.mpp.*
-
 /*
  * Copyright (c) 2021-2022 Didier Villevalois and Kzmq contributors.
  * Use of this source code is governed by the Apache 2.0 license.
  */
 
+import org.jetbrains.kotlin.gradle.plugin.mpp.*
+import org.jetbrains.kotlin.konan.target.*
+import org.jetbrains.kotlin.konan.target.Architecture
+
 plugins {
-    kotlin("multiplatform")
+    id("plugin.common")
     application
 }
 
-val kotlinxCoroutinesVersion: String by project
-val kotlinxCliVersion: String by project
-
 kotlin {
-    optIns()
-
     jvmTargets()
-    nativeTargets(onlyHostTargets = true)
+    nativeTargets { it.family == Family.LINUX && it.architecture == Architecture.X64 }
 
     jvm {
         withJava()
@@ -33,15 +30,17 @@ kotlin {
     }
 
     sourceSets {
-        val commonMain by getting {
+        val kotlinxCliVersion: String by project
+
+        commonMain {
             dependencies {
                 implementation(project(":kzmq-core"))
                 implementation(project(":kzmq-cio"))
-                implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:$kotlinxCoroutinesVersion")
                 implementation("org.jetbrains.kotlinx:kotlinx-cli:$kotlinxCliVersion")
             }
         }
-        val jvmMain by getting {
+
+        jvmMain {
             dependencies {
                 implementation(project(":kzmq-jeromq"))
             }
