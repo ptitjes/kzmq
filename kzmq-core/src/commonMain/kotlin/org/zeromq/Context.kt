@@ -8,9 +8,14 @@ package org.zeromq
 import kotlinx.coroutines.*
 import kotlin.coroutines.*
 
-public expect fun CoroutineScope.Context(
+public expect val engines: List<EngineFactory>
+
+public fun CoroutineScope.Context(
     additionalContext: CoroutineContext = EmptyCoroutineContext,
-): Context
+): Context = engines.firstOrNull()?.let { Context(it, additionalContext) } ?: error(
+    "Failed to find ZeroMQ engine implementation in the classpath: consider adding engine dependency. " +
+        "See https://github.com/ptitjes/kzmq#gradle"
+)
 
 /**
  * Builds a ZeroMQ [Context] in the receiver [CoroutineScope].

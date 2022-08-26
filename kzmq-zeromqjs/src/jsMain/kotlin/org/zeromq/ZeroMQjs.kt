@@ -14,7 +14,7 @@ public object ZeroMQjs : EngineFactory {
     override fun create(coroutineContext: CoroutineContext): Engine = ZeroMQjsEngine()
 
     init {
-        engines.append(ZeroMQjs)
+        Engines.append(ZeroMQjs)
     }
 }
 

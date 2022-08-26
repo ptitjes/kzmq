@@ -6,10 +6,10 @@
 package org.zeromq.tests.utils
 
 import kotlinx.coroutines.*
-import kotlin.js.*
-
-actual suspend fun findOpenPort(): Int = findPort().await()
+import kotlin.js.Promise
 
 @JsModule("find-open-port")
 @JsNonModule
 internal external fun findPort(): Promise<Int>
+
+actual suspend fun findOpenPort(): Int = findPort().await()
