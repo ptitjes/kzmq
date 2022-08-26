@@ -68,7 +68,7 @@ private fun computeEngines(
     val skipEnginesLowerCase = skipEngines.map { it.lowercase() }.toSet()
     val onlyEnginesLowerCase = onlyEngines?.map { e1 -> e1.lowercase() }
 
-    val engines = enginesUnderTest.filter { engine ->
+    val engines = engines.filter { engine ->
         val engineName = engine.name.lowercase()
         !skipEnginesLowerCase.any { it.contains(engineName) }
     }
@@ -126,7 +126,7 @@ private fun computeEnginePairs(
     val skipEnginePairsLowerCase = skipEnginePairs?.map { (e1, e2) -> e1.lowercase() to e2.lowercase() }
     val onlyEnginePairsLowerCase = onlyEnginePairs?.map { (e1, e2) -> e1.lowercase() to e2.lowercase() }
 
-    val filteredEngines = enginesUnderTest.filter { engine ->
+    val filteredEngines = engines.filter { engine ->
         val engineName = engine.name.lowercase()
         !skipEnginesLowerCase.any { it.contains(engineName) }
     }

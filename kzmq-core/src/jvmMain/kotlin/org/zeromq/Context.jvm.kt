@@ -5,13 +5,7 @@
 
 package org.zeromq
 
-import kotlinx.coroutines.*
 import java.util.*
-import kotlin.coroutines.*
-
-public actual fun CoroutineScope.Context(
-    additionalContext: CoroutineContext,
-): Context = Context(FACTORY, additionalContext)
 
 /**
  * A container is searched across dependencies using [ServiceLoader] to find client implementations.
@@ -27,11 +21,8 @@ public interface EngineContainer {
 /**
  * Workaround for dummy android [ClassLoader].
  */
-private val engines: List<EngineContainer> = EngineContainer::class.java.let {
+private val engineContainers: List<EngineContainer> = EngineContainer::class.java.let {
     ServiceLoader.load(it, it.classLoader).toList()
 }
 
-private val FACTORY = engines.firstOrNull()?.factory ?: error(
-    "Failed to find ZeroMQ engine implementation in the classpath: consider adding engine dependency. " +
-        "See https://github.com/ptitjes/kzmq#gradle"
-)
+public actual val engines: List<EngineFactory> = engineContainers.map { it.factory }

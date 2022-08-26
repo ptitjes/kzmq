@@ -7,9 +7,7 @@ package org.zeromq
 
 import kotlinx.coroutines.*
 import org.zeromq.util.*
-import platform.linux.*
 import kotlin.coroutines.*
-import kotlin.math.*
 
 @OptIn(InternalAPI::class)
 public actual object CIO : EngineFactory {
@@ -19,7 +17,7 @@ public actual object CIO : EngineFactory {
     }
 
     init {
-        engines.append(CIO)
+        Engines.append(CIO)
     }
 }
 

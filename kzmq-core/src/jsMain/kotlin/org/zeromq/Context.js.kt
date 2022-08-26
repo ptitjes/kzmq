@@ -6,25 +6,14 @@
 package org.zeromq
 
 import kotlinx.atomicfu.*
-import kotlinx.coroutines.*
 import org.zeromq.util.*
-import kotlin.coroutines.*
-
-@OptIn(InternalAPI::class)
-public actual fun CoroutineScope.Context(
-    additionalContext: CoroutineContext,
-): Context = engines.firstOrNull()?.let { Context(it, additionalContext) } ?: error(
-    "Failed to find ZeroMQ engine implementation in the classpath: consider adding engine dependency. " +
-        "See https://github.com/ptitjes/kzmq#gradle"
-)
 
 /**
  * Shared engines collection.
- * Use [engines.append] to enable engine auto discover in [Context].
+ * Use [Engines.append] to enable engine auto discover in [Context].
  */
-@Suppress("ClassName")
 @InternalAPI
-public object engines : Iterable<EngineFactory> {
+public object Engines : Iterable<EngineFactory> {
     private val head = atomic<Node?>(null)
 
     /**
@@ -59,3 +48,6 @@ public object engines : Iterable<EngineFactory> {
         val next: Node?,
     )
 }
+
+@OptIn(InternalAPI::class)
+public actual val engines: List<EngineFactory> get() = Engines.toList()
