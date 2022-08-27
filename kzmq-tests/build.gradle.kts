@@ -10,7 +10,7 @@ description = "Common tests for engines"
 plugins {
     id("plugin.common")
     id("plugin.atomicfu")
-    id("io.kotest.multiplatform")
+    id("plugin.kotest")
 }
 
 kotlin {
@@ -20,14 +20,9 @@ kotlin {
 
     sourceSets {
         val ktorVersion: String by project
-        val kotestVersion: String by project
 
         commonMain {
             dependencies {
-                implementation("io.kotest:kotest-framework-engine:$kotestVersion")
-                implementation("io.kotest:kotest-framework-datatest:$kotestVersion")
-                implementation("io.kotest:kotest-assertions-core:$kotestVersion")
-
                 implementation(project(":kzmq-core"))
             }
         }
@@ -52,8 +47,6 @@ kotlin {
 
         jvmTest {
             dependencies {
-                implementation("io.kotest:kotest-runner-junit5:$kotestVersion")
-
                 implementation(project(":kzmq-jeromq"))
                 implementation(project(":kzmq-cio"))
             }

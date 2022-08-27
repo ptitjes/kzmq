@@ -6,6 +6,7 @@
 plugins {
     id("plugin.library")
     id("plugin.atomicfu")
+    id("plugin.kotest")
 }
 
 kotlin {
