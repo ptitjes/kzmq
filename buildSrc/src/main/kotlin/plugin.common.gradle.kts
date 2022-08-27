@@ -3,8 +3,6 @@
  * Use of this source code is governed by the Apache 2.0 license.
  */
 
-@file:Suppress("UNUSED_VARIABLE")
-
 import org.gradle.api.tasks.testing.logging.*
 import org.gradle.kotlin.dsl.*
 import org.jetbrains.kotlin.gradle.plugin.mpp.*

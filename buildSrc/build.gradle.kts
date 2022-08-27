@@ -19,6 +19,7 @@ val props = Properties().apply {
 
 val kotlinVersion: String by props
 val kotlinxKoverVersion: String by props
+val kotestVersion: String by props
 
 dependencies {
     println("Used kotlin version in buildSrc: $kotlinVersion")
@@ -26,4 +27,6 @@ dependencies {
     implementation(kotlin("gradle-plugin", kotlinVersion))
     implementation("org.jetbrains.kotlin:atomicfu:$kotlinVersion")
     implementation("org.jetbrains.kotlinx:kover:$kotlinxKoverVersion")
+
+    implementation("io.kotest:kotest-framework-multiplatform-plugin-gradle:$kotestVersion")
 }
