@@ -26,10 +26,6 @@ internal class ZeroMQJsReceiveSocket(private val underlying: Readable) : Receive
     override val onReceive: SelectClause1<Message>
         get() = throw NotImplementedError("Not supported on ZeroMQ.JS engine")
 
-    override fun iterator(): SocketIterator {
-        TODO("Not yet implemented")
-    }
-
     override var receiveBufferSize: Int by underlying::receiveBufferSize
     override var receiveHighWaterMark: Int by underlying::receiveHighWaterMark
     override var receiveTimeout: Int by underlying::receiveTimeout

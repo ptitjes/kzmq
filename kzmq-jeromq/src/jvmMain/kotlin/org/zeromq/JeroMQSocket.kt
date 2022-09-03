@@ -112,22 +112,6 @@ internal abstract class JeroMQSocket internal constructor(
         return underlying.recv(ZMQ.DONTWAIT)
     }
 
-    operator fun iterator(): SocketIterator = object : SocketIterator {
-        var next: Message? = null
-
-        override suspend fun hasNext(): Boolean {
-            if (next == null) next = receive()
-            // TODO fix the fact that we should return false when the socket is closed
-            return next != null
-        }
-
-        override fun next(): Message {
-            val message = next ?: error("No next message")
-            next = null
-            return message
-        }
-    }
-
     var receiveBufferSize: Int by underlying::receiveBufferSize
     var receiveHighWaterMark: Int by underlying::rcvHWM
     var receiveTimeout: Int by underlying::receiveTimeOut
