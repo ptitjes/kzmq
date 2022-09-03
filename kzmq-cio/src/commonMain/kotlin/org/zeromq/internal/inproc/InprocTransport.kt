@@ -9,6 +9,7 @@ import io.ktor.util.*
 import kotlinx.atomicfu.*
 import kotlinx.coroutines.*
 import org.zeromq.internal.*
+import org.zeromq.internal.Identity
 import org.zeromq.internal.PeerEvent.Kind.*
 import kotlin.coroutines.*
 import kotlin.random.*
@@ -76,10 +77,13 @@ internal class InprocBindingHolder(
         val handler = handlerFactory(address)
         try {
             handler.acquire()
-            handler.notify(InprocEndpointEvent.Binding(peerManager) {
-                val randomId = Random.Default.nextBytes(8).encodeBase64()
-                PeerMailbox("$address/$randomId", socketInfo.options)
-            })
+            handler.notify(
+                InprocEndpointEvent.Binding(
+                    peerManager,
+                    socketInfo.options.routingId?.let { Identity(it) }) {
+                    val randomId = Random.Default.nextBytes(8).encodeBase64()
+                    PeerMailbox("$address/$randomId", socketInfo.options)
+                })
 
             awaitCancellation()
         } finally {
@@ -109,7 +113,9 @@ internal class InprocConnectionHolder(
         try {
             handler.acquire()
             peerManager.notify(PeerEvent(ADDITION, mailbox))
-            handler.notify(InprocEndpointEvent.Connecting(mailbox, peerManager))
+            handler.notify(InprocEndpointEvent.Connecting(mailbox, peerManager,
+                socketInfo.options.routingId?.let { Identity(it) }
+            ))
 
             awaitCancellation()
         } finally {
