@@ -35,7 +35,7 @@ class PublisherSubscriberTests : FunSpec({
     }
 
     // TODO Figure out why this test is hanging with JeroMQ and ZeroMQ.js
-    withContexts("connect-bind").config(skipEngines = listOf("jeromq", "zeromq.js")) { (ctx1, ctx2) ->
+    withContexts("connect-bind").config(skip = setOf("jeromq", "zeromq.js")) { (ctx1, ctx2) ->
         val address = randomAddress()
         val message = Message("Hello 0MQ!".encodeToByteArray())
 

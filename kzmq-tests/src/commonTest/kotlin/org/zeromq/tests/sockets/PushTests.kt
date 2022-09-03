@@ -20,7 +20,7 @@ class PushTests : FunSpec({
 
     withContexts("lingers after disconnect").config(
         // TODO investigate why these pairs are flaky
-        skipEnginePairs = listOf("cio" to "jeromq", "jeromq" to "cio"),
+        skip = setOf("cio-jeromq", "jeromq-cio"),
     ) { (ctx1, ctx2) ->
         val address = randomAddress()
         val messageCount = 100
@@ -52,7 +52,7 @@ class PushTests : FunSpec({
 
     withContexts("lingers after close").config(
         // TODO investigate why these pairs are flaky
-        skipEnginePairs = listOf("cio" to "jeromq", "jeromq" to "cio"),
+        skip = setOf("cio-jeromq", "jeromq-cio"),
     ) { (ctx1, ctx2) ->
         val address = randomAddress()
         val messageCount = 100
@@ -139,7 +139,7 @@ class PushTests : FunSpec({
 
     withContext("SHALL suspend on sending when it has no available peers").config(
         // TODO investigate why this fails with these engines
-        skipEngines = listOf("jeromq", "zeromq.js"),
+        skip = setOf("jeromq", "zeromq.js"),
     ) { ctx ->
         val push = ctx.createPush()
 
@@ -153,7 +153,7 @@ class PushTests : FunSpec({
     // TODO How is it different from previous test?
     withContext("SHALL not accept further messages when it has no available peers").config(
         // TODO investigate why this fails with these engines
-        skipEngines = listOf("jeromq", "zeromq.js"),
+        skip = setOf("jeromq", "zeromq.js"),
     ) { ctx ->
         val push = ctx.createPush()
 

@@ -29,12 +29,12 @@ class SingleContextTestBuilder(
     private val context: RootScope,
 ) {
     fun config(
-        skipEngines: List<String> = listOf(),
-        onlyEngines: List<String>? = null,
+        skip: Set<String>? = null,
+        only: Set<String>? = null,
         timeout: Duration? = null,
         test: SingleContextTest,
     ) {
-        context.runSingleContextTest(name, skipEngines, onlyEngines, timeout, test)
+        context.runSingleContextTest(name, skip, only, timeout, test)
     }
 }
 
@@ -42,12 +42,12 @@ private val DEFAULT_TEST_TIMEOUT = 5.seconds
 
 private fun RootScope.runSingleContextTest(
     name: String,
-    skipEngines: List<String>,
-    onlyEngines: List<String>?,
+    skip: Set<String>?,
+    only: Set<String>?,
     timeout: Duration?,
     test: SingleContextTest,
 ) {
-    val engines = computeEngines(skipEngines, onlyEngines)
+    val engines = computeEngines(skip, only)
 
     withData(
         nameFn = { engine -> "$name (${engine.name})" },
@@ -62,22 +62,10 @@ private fun RootScope.runSingleContextTest(
 }
 
 private fun computeEngines(
-    skipEngines: List<String>,
-    onlyEngines: List<String>?,
+    skip: Set<String>?,
+    only: Set<String>?,
 ): List<EngineFactory> {
-    val skipEnginesLowerCase = skipEngines.map { it.lowercase() }.toSet()
-    val onlyEnginesLowerCase = onlyEngines?.map { e1 -> e1.lowercase() }
-
-    val engines = engines.filter { engine ->
-        val engineName = engine.name.lowercase()
-        !skipEnginesLowerCase.any { it.contains(engineName) }
-    }
-
-    return engines.filter { e ->
-        onlyEnginesLowerCase?.any { oe ->
-            oe.contains(e.name.lowercase())
-        } ?: true
-    }
+    return engines.filterContainingLower(skip, only) { it.name.lowercase() }
 }
 
 class DualContextTestBuilder(
@@ -85,25 +73,23 @@ class DualContextTestBuilder(
     private val context: RootScope,
 ) {
     fun config(
-        skipEngines: List<String> = listOf(),
-        skipEnginePairs: List<Pair<String, String>>? = null,
-        onlyEnginePairs: List<Pair<String, String>>? = null,
+        skip: Set<String>? = null,
+        only: Set<String>? = null,
         timeout: Duration? = null,
         test: DualContextTest,
     ) {
-        context.runDualContextTest(name, skipEngines, skipEnginePairs, onlyEnginePairs, timeout, test)
+        context.runDualContextTest(name, skip, only, timeout, test)
     }
 }
 
 private fun RootScope.runDualContextTest(
     name: String,
-    skipEngines: List<String>,
-    skipEnginePairs: List<Pair<String, String>>?,
-    onlyEnginePairs: List<Pair<String, String>>?,
+    skip: Set<String>? = null,
+    only: Set<String>? = null,
     timeout: Duration?,
     test: DualContextTest,
 ) {
-    val enginePairs = computeEnginePairs(skipEngines, skipEnginePairs, onlyEnginePairs)
+    val enginePairs = computeEnginePairs(skip, only)
 
     withData(
         nameFn = { (engine1, engine2) -> "$name (${engine1.name}, ${engine2.name})" },
@@ -118,28 +104,20 @@ private fun RootScope.runDualContextTest(
 }
 
 private fun computeEnginePairs(
-    skipEngines: List<String>,
-    skipEnginePairs: List<Pair<String, String>>?,
-    onlyEnginePairs: List<Pair<String, String>>?,
+    skip: Set<String>?,
+    only: Set<String>?,
 ): List<Pair<EngineFactory, EngineFactory>> {
-    val skipEnginesLowerCase = skipEngines.map { it.lowercase() }.toSet()
-    val skipEnginePairsLowerCase = skipEnginePairs?.map { (e1, e2) -> e1.lowercase() to e2.lowercase() }
-    val onlyEnginePairsLowerCase = onlyEnginePairs?.map { (e1, e2) -> e1.lowercase() to e2.lowercase() }
+    val enginePairs = engines.flatMap { e1 -> engines.map { e2 -> e1 to e2 } }
+    return enginePairs.filterContainingLower(skip, only) { (e1, e2) -> "${e1.name.lowercase()}-${e2.name.lowercase()}" }
+}
 
-    val filteredEngines = engines.filter { engine ->
-        val engineName = engine.name.lowercase()
-        !skipEnginesLowerCase.any { it.contains(engineName) }
-    }
-
-    val enginePairs = filteredEngines.flatMap { engine1 ->
-        filteredEngines.map { engine2 -> engine1 to engine2 }
-    }
-
-    return enginePairs.filter { (e1, e2) ->
-        (onlyEnginePairsLowerCase?.any { (oe1, oe2) ->
-            oe1.contains(e1.name.lowercase()) && oe2.contains(e2.name.lowercase())
-        } ?: true) && !(skipEnginePairsLowerCase?.any { (oe1, oe2) ->
-            oe1.contains(e1.name.lowercase()) && oe2.contains(e2.name.lowercase())
-        } ?: false)
+fun <T> List<T>.filterContainingLower(
+    skip: Set<String>? = null,
+    only: Set<String>? = null,
+    labeller: (T) -> String,
+): List<T> {
+    return filter { element ->
+        val label = labeller(element)
+        skip?.none { label.contains(it.lowercase()) } ?: true && only?.any { label.contains(it.lowercase()) } ?: true
     }
 }

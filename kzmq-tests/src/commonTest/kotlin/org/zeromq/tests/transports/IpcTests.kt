@@ -11,11 +11,11 @@ import org.zeromq.tests.utils.*
 @Suppress("unused")
 class IpcTests : FunSpec({
 
-    withContexts("bind-connect").config(skipEngines = listOf("jeromq")) { (ctx1, ctx2) ->
+    withContexts("bind-connect").config(skip = setOf("jeromq")) { (ctx1, ctx2) ->
         simpleBindConnect(ctx1, ctx2, randomAddress(Protocol.IPC))
     }
 
-    withContexts("connect-bind").config(skipEngines = listOf("jeromq")) { (ctx1, ctx2) ->
+    withContexts("connect-bind").config(skip = setOf("jeromq")) { (ctx1, ctx2) ->
         simpleConnectBind(ctx1, ctx2, randomAddress(Protocol.IPC))
     }
 })
