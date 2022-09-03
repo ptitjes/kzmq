@@ -38,14 +38,6 @@ public interface ReceiveSocket {
     public val onReceive: SelectClause1<Message>
 
     /**
-     * Returns a new iterator to receive messages from this socket using a for loop. Iteration
-     * completes normally when the socket is closed or throws if an error occurs.
-     *
-     * @return the message received.
-     */
-    public operator fun iterator(): SocketIterator
-
-    /**
      * Underlying kernel receive buffer size in bytes. A value of -1 means leave the OS default
      * unchanged.
      *

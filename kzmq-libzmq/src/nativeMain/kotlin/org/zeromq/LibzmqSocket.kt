@@ -130,10 +130,6 @@ internal abstract class LibzmqSocket internal constructor(
 
     val onReceive: SelectClause1<Message> get() = TODO()
 
-    fun iterator(): SocketIterator {
-        TODO("Not yet implemented")
-    }
-
     private fun doReceiveMessage(blocking: Boolean): Message {
         val parts = mutableListOf<ByteArray>()
         do {

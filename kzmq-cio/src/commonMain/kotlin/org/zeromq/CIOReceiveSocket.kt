@@ -29,21 +29,6 @@ internal interface CIOReceiveSocket : ReceiveSocket {
 
     override val onReceive get() = receiveChannel.onReceive
 
-    override operator fun iterator(): SocketIterator = object : SocketIterator {
-        var nextMessage: Message? = null
-
-        override suspend fun hasNext(): Boolean {
-            if (nextMessage == null) nextMessage = receive()
-            return nextMessage != null
-        }
-
-        override fun next(): Message {
-            val message = nextMessage ?: error("No next message")
-            nextMessage = null
-            return message
-        }
-    }
-
     override var receiveBufferSize: Int
         get() = TODO("Not yet implemented")
         set(value) {}
