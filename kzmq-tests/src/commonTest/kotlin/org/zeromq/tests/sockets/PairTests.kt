@@ -13,8 +13,8 @@ import org.zeromq.tests.utils.*
 @Suppress("unused")
 class PairTests : FunSpec({
 
-    withContexts("bind-connect") { (ctx1, ctx2) ->
-        val address = randomAddress()
+    withContexts("bind-connect") { ctx1, ctx2, protocol ->
+        val address = randomAddress(protocol)
         val message = Message("Hello 0MQ!".encodeToByteArray())
 
         val pair1 = ctx1.createPair().apply { bind(address) }
@@ -29,8 +29,8 @@ class PairTests : FunSpec({
         pair1.receive() shouldBe message
     }
 
-    withContexts("connect-bind") { (ctx1, ctx2) ->
-        val address = randomAddress()
+    withContexts("connect-bind") { ctx1, ctx2, protocol ->
+        val address = randomAddress(protocol)
         val message = Message("Hello 0MQ!".encodeToByteArray())
 
         val pair2 = ctx2.createPair().apply { bind(address) }

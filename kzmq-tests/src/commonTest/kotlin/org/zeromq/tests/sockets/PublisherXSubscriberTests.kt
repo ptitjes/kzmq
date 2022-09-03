@@ -14,8 +14,8 @@ import org.zeromq.tests.utils.*
 @Suppress("unused")
 class PublisherXSubscriberTests : FunSpec({
 
-    withContexts("subscription filter") { (ctx1, ctx2) ->
-        val address = randomAddress()
+    withContexts("subscription filter") { ctx1, ctx2, protocol ->
+        val address = randomAddress(protocol)
 
         val sent = listOf("prefixed data", "non-prefixed data", "prefix is good")
         val expected = sent.filter { it.startsWith("prefix") }

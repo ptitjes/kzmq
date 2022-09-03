@@ -15,8 +15,8 @@ import org.zeromq.tests.utils.*
 @Suppress("unused")
 class RequestReplyTests : FunSpec({
 
-    withContexts("bind-connect") { (ctx1, ctx2) ->
-        val address = randomAddress()
+    withContexts("bind-connect") { ctx1, ctx2, protocol ->
+        val address = randomAddress(protocol)
         val requestMessage = Message("Hello 0MQ!".encodeToByteArray())
         val replyMessage = Message("Hello back!".encodeToByteArray())
 
@@ -32,8 +32,8 @@ class RequestReplyTests : FunSpec({
         request.receive() shouldBe replyMessage
     }
 
-    withContexts("connect-bind") { (ctx1, ctx2) ->
-        val address = randomAddress()
+    withContexts("connect-bind") { ctx1, ctx2, protocol ->
+        val address = randomAddress(protocol)
         val requestMessage = Message("Hello 0MQ!".encodeToByteArray())
         val replyMessage = Message("Hello back!".encodeToByteArray())
 
@@ -50,9 +50,9 @@ class RequestReplyTests : FunSpec({
     }
 
     withContexts("round-robin connected reply sockets").config(
-        skip = setOf("jeromq", "zeromq.js")
-    ) { (ctx1, ctx2) ->
-        val address = randomAddress()
+        skip = setOf("jeromq", "zeromq.js"),
+    ) { ctx1, ctx2, protocol ->
+        val address = randomAddress(protocol)
 
         val request = ctx1.createRequest().apply { bind(address) }
         val reply1 = ctx2.createReply().apply { connect(address) }
@@ -89,9 +89,9 @@ class RequestReplyTests : FunSpec({
     }
 
     withContexts("fair-queuing request sockets").config(
-        skip = setOf("cio", "jeromq", "zeromq.js")
-    ) { (ctx1, ctx2) ->
-        val address = randomAddress()
+        skip = setOf("cio", "jeromq", "zeromq.js"),
+    ) { ctx1, ctx2, protocol ->
+        val address = randomAddress(protocol)
 
         val reply = ctx2.createReply().apply { bind(address) }
         val request1 = ctx1.createRequest().apply { connect(address) }

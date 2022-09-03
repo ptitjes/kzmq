@@ -18,11 +18,11 @@ private const val REPLY_MARKER = "REP"
 @Suppress("unused")
 class DealerRouterTests : FunSpec({
 
-    withContexts("base") { (ctx1, ctx2) ->
-
+    withContexts("base").config(
+    ) { ctx1, ctx2, protocol ->
         val dealerCount = 2
         val routerCount = 3
-        val addresses = Array(routerCount) { randomAddress() }
+        val addresses = Array(routerCount) { randomAddress(protocol) }
 
         val routers = addresses.map {
             ctx2.createRouter().apply {
@@ -64,16 +64,16 @@ class DealerRouterTests : FunSpec({
                         val request = router.receive()
 
                         request.frames.size shouldBe 3
-                        val dealerId = request.frames[0]
+                        val dealerIdFrame = request.frames[0]
                         request.frames[1].decodeToString() shouldBe REQUEST_MARKER
-                        val requestId = request.frames[2]
+                        val requestIdFrame = request.frames[2]
 
                         router.send(
                             Message(
-                                dealerId,
+                                dealerIdFrame,
                                 REPLY_MARKER.encodeToByteArray(),
-                                requestId,
-                                dealerId
+                                requestIdFrame,
+                                dealerIdFrame
                             )
                         )
                     }
@@ -110,7 +110,7 @@ class DealerRouterTests : FunSpec({
  */
 private fun Int.encodeRoutingId(): ByteArray = byteArrayOf(1, (this + 1).toByte())
 private fun ByteArray.decodeRoutingId(): Int {
-    require(size == 2)
+    require(size == 2) //{ "Size should be 2, but is $size" }
     require(this[0] == 1.toByte())
     return this[1].toInt() - 1
 }
