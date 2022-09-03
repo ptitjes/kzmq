@@ -147,20 +147,17 @@ internal class TcpConnectionHolder(
                 } catch (e: IllegalStateException) {
                     if (e is CancellationException) throw e
 
-                    // SelectorManager has been closed while suspending to connect
-                    shouldReconnect = false
-                    socketHandler?.close()
-                    socketHandler = null
+                    shouldReconnect = true
+                } catch (e: IOException) {
+                    shouldReconnect = true
                 } catch (e: ProtocolError) {
                     shouldReconnect = !e.isFatal
-                    socketHandler?.close()
-                    socketHandler = null
-                } catch (e: IOException) {
-                    socketHandler?.close()
-                    socketHandler = null
                 }
 
                 if (!shouldReconnect) break
+
+                socketHandler?.close()
+                socketHandler = null
 
                 // TODO Wait before reconnecting ? (have a strategy)
                 yield()
