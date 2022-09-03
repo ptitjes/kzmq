@@ -24,7 +24,11 @@ internal class TcpTransport(
     override val isMulticast get() = false
 
     override fun close() {
-        selectorManager.close()
+        try {
+            selectorManager.close()
+        } catch (e: Exception) {
+            // Ignore
+        }
     }
 
     override fun bind(
