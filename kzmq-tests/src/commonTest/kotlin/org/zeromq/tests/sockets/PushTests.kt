@@ -18,11 +18,43 @@ import kotlin.time.Duration.Companion.seconds
 @Suppress("unused")
 class PushTests : FunSpec({
 
+    withContexts("simple connect-bind") { ctx1, ctx2, protocol ->
+        val address = randomAddress(protocol)
+
+        val pushSocket = ctx1.createPush().apply { connect(address) }
+        val pullSocket = ctx2.createPull().apply { bind(address) }
+
+        waitForConnections()
+
+        val message = Message("Hello, 0MQ!".encodeToByteArray())
+        pushSocket.send(message)
+        pullSocket shouldReceiveExactly listOf(message)
+
+        pushSocket.close()
+        pullSocket.close()
+    }
+
+    withContexts("simple bind-connect") { ctx1, ctx2, protocol ->
+        val address = randomAddress(protocol)
+
+        val pushSocket = ctx1.createPush().apply { bind(address) }
+        val pullSocket = ctx2.createPull().apply { connect(address) }
+
+        waitForConnections()
+
+        val message = Message("Hello, 0MQ!".encodeToByteArray())
+        pushSocket.send(message)
+        pullSocket shouldReceiveExactly listOf(message)
+
+        pushSocket.close()
+        pullSocket.close()
+    }
+
     withContexts("lingers after disconnect").config(
         // TODO investigate why these pairs are flaky
         skip = setOf("cio-jeromq", "jeromq-cio"),
-    ) { (ctx1, ctx2) ->
-        val address = randomAddress()
+    ) { ctx1, ctx2, protocol ->
+        val address = randomAddress(protocol)
         val messageCount = 100
 
         val pullSocket = ctx2.createPull().apply { bind(address) }
@@ -53,8 +85,8 @@ class PushTests : FunSpec({
     withContexts("lingers after close").config(
         // TODO investigate why these pairs are flaky
         skip = setOf("cio-jeromq", "jeromq-cio"),
-    ) { (ctx1, ctx2) ->
-        val address = randomAddress()
+    ) { ctx1, ctx2, protocol ->
+        val address = randomAddress(protocol)
         val messageCount = 100
 
         val pullSocket = ctx2.createPull().apply { bind(address) }
@@ -81,9 +113,9 @@ class PushTests : FunSpec({
         pullSocket.close()
     }
 
-    withContexts("SHALL consider a peer as available only when it has an outgoing queue that is not full") { (ctx1, ctx2) ->
-        val address1 = randomAddress(Protocol.TCP)
-        val address2 = randomAddress(Protocol.TCP)
+    withContexts("SHALL consider a peer as available only when it has an outgoing queue that is not full") { ctx1, ctx2, protocol ->
+        val address1 = randomAddress(protocol)
+        val address2 = randomAddress(protocol)
 
         val firstBatch = List(5) { index -> Message(ByteArray(1) { index.toByte() }) }
         val secondBatch = List(10) { index -> Message(ByteArray(1) { (index + 10).toByte() }) }
@@ -117,9 +149,9 @@ class PushTests : FunSpec({
         }
     }
 
-    withContexts("SHALL route outgoing messages to available peers using a round-robin strategy") { (ctx1, ctx2) ->
+    withContexts("SHALL route outgoing messages to available peers using a round-robin strategy") { ctx1, ctx2, protocol ->
         val pullCount = 5
-        val address = randomAddress(Protocol.TCP)
+        val address = randomAddress(protocol)
 
         val push = ctx1.createPush().apply { bind(address) }
         val pulls = List(pullCount) { ctx2.createPull().apply { connect(address) } }
@@ -140,7 +172,7 @@ class PushTests : FunSpec({
     withContext("SHALL suspend on sending when it has no available peers").config(
         // TODO investigate why this fails with these engines
         skip = setOf("jeromq", "zeromq.js"),
-    ) { ctx ->
+    ) { ctx, _ ->
         val push = ctx.createPush()
 
         val message = Message("Won't be sent".encodeToByteArray())
@@ -154,7 +186,7 @@ class PushTests : FunSpec({
     withContext("SHALL not accept further messages when it has no available peers").config(
         // TODO investigate why this fails with these engines
         skip = setOf("jeromq", "zeromq.js"),
-    ) { ctx ->
+    ) { ctx, _ ->
         val push = ctx.createPush()
 
         val message = Message("Won't be sent".encodeToByteArray())
@@ -164,10 +196,8 @@ class PushTests : FunSpec({
         } shouldBe null
     }
 
-    withContexts("SHALL NOT discard messages that it cannot queue").config(
-        timeout = 60.seconds,
-    ) { (ctx1, ctx2) ->
-        val address = randomAddress(Protocol.TCP)
+    withContexts("SHALL NOT discard messages that it cannot queue") { ctx1, ctx2, protocol ->
+        val address = randomAddress(protocol)
 
         val push = ctx1.createPush().apply { connect(address) }
 

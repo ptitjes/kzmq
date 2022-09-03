@@ -15,8 +15,8 @@ import org.zeromq.tests.utils.*
 @Suppress("unused")
 class PublisherSubscriberTests : FunSpec({
 
-    withContexts("bind-connect") { (ctx1, ctx2) ->
-        val address = randomAddress()
+    withContexts("bind-connect") { ctx1, ctx2, protocol ->
+        val address = randomAddress(protocol)
         val message = Message("Hello 0MQ!".encodeToByteArray())
 
         val publisher = ctx1.createPublisher().apply { bind(address) }
@@ -35,8 +35,12 @@ class PublisherSubscriberTests : FunSpec({
     }
 
     // TODO Figure out why this test is hanging with JeroMQ and ZeroMQ.js
-    withContexts("connect-bind").config(skip = setOf("jeromq", "zeromq.js")) { (ctx1, ctx2) ->
-        val address = randomAddress()
+    // TODO Figure out why this test makes all jvmTest hang
+    withContexts("connect-bind").config(
+        skip = setOf("jeromq", "zeromq.js"),
+        only = setOf("tcp")
+    ) { ctx1, ctx2, protocol ->
+        val address = randomAddress(protocol)
         val message = Message("Hello 0MQ!".encodeToByteArray())
 
         val subscriber = ctx2.createSubscriber().apply { bind(address) }
@@ -54,8 +58,8 @@ class PublisherSubscriberTests : FunSpec({
         }
     }
 
-    withContexts("subscription filter") { (ctx1, ctx2) ->
-        val address = randomAddress()
+    withContexts("subscription filter") { ctx1, ctx2, protocol ->
+        val address = randomAddress(protocol)
 
         val sent = listOf("prefixed data", "non-prefixed data", "prefix is good")
         val expected = sent.filter { it.startsWith("prefix") }

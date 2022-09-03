@@ -5,16 +5,17 @@
 
 package org.zeromq.tests.utils
 
+import io.kotest.core.names.*
 import io.kotest.core.spec.style.scopes.*
-import io.kotest.datatest.*
+import io.kotest.core.test.*
+import io.kotest.core.test.config.*
 import kotlinx.coroutines.*
 import org.zeromq.*
 import kotlin.time.*
 import kotlin.time.Duration.Companion.seconds
 
-typealias ContainedTest<T> = suspend ContainerScope.(T) -> Unit
-typealias SingleContextTest = ContainedTest<Context>
-typealias DualContextTest = ContainedTest<Pair<Context, Context>>
+typealias SingleContextTest = suspend ContainerScope.(Context, Protocol) -> Unit
+typealias DualContextTest = suspend ContainerScope.(Context, Context, Protocol) -> Unit
 
 fun <T : RootScope> T.withContext(name: String, test: SingleContextTest) = withContext(name).config(test = test)
 
@@ -47,26 +48,27 @@ private fun RootScope.runSingleContextTest(
     timeout: Duration?,
     test: SingleContextTest,
 ) {
-    val engines = computeEngines(skip, only)
+    val testData = engines.flatMap { engine -> engine.supportedTransports.map { engine to it.asProtocol() } }
+        .filterContainingLower(skip, only) { (engine, protocol) ->
+            "${engine.name.lowercase()}, ${protocol.name.lowercase()}"
+        }
 
-    withData(
-        nameFn = { engine -> "$name (${engine.name})" },
-        engines,
-    ) { engine ->
-        Context(engine).use {
-            withTimeout(timeout ?: DEFAULT_TEST_TIMEOUT) {
-                test(it)
+    val testTimeout = timeout ?: DEFAULT_TEST_TIMEOUT
+    val testConfig = UnresolvedTestConfig(timeout = testTimeout * 2)
+    testData.forEach { (engine, protocol) ->
+        val testName = TestName("$name (${engine.name}, $protocol)")
+        addTest(testName, false, testConfig, TestType.Dynamic) {
+            val context = Context(engine)
+            context.use {
+                withTimeout(testTimeout) {
+                    test(context, protocol)
+                }
             }
         }
     }
 }
 
-private fun computeEngines(
-    skip: Set<String>?,
-    only: Set<String>?,
-): List<EngineFactory> {
-    return engines.filterContainingLower(skip, only) { it.name.lowercase() }
-}
+private fun String.asProtocol(): Protocol = Protocol.valueOf(uppercase())
 
 class DualContextTestBuilder(
     private val name: String,
@@ -89,26 +91,29 @@ private fun RootScope.runDualContextTest(
     timeout: Duration?,
     test: DualContextTest,
 ) {
-    val enginePairs = computeEnginePairs(skip, only)
+    val enginePairs = engines.flatMap { e1 -> engines.map { e2 -> e1 to e2 } }
+    val enginesWithProtocol = enginePairs.flatMap { (e1, e2) ->
+        (e1.supportedTransports intersect e2.supportedTransports).map { Triple(e1, e2, it.asProtocol()) }
+            .filter { (e1, e2, p) -> p != Protocol.INPROC || e1 == e2 }
+    }
+    val testData = enginesWithProtocol.filterContainingLower(skip, only) { (e1, e2, protocol) ->
+        "${e1.name.lowercase()}-${e2.name.lowercase()}, ${protocol.name.lowercase()}"
+    }
 
-    withData(
-        nameFn = { (engine1, engine2) -> "$name (${engine1.name}, ${engine2.name})" },
-        enginePairs,
-    ) { (engine1, engine2) ->
-        withTimeout(timeout ?: DEFAULT_TEST_TIMEOUT) {
-            (Context(engine1) to Context(engine2)).use {
-                test(it)
+    val testTimeout = timeout ?: DEFAULT_TEST_TIMEOUT
+    val testConfig = UnresolvedTestConfig(timeout = testTimeout * 2)
+    testData.forEach { (engine1, engine2, protocol) ->
+        val testName = TestName("$name (${engine1.name}-${engine2.name}, $protocol)")
+        addTest(testName, false, testConfig, TestType.Dynamic) {
+            withTimeout(testTimeout) {
+                val context1 = Context(engine1)
+                val context2 = if (protocol == Protocol.INPROC) context1 else Context(engine2)
+                (context1 to context2).use {
+                    test(context1, context2, protocol)
+                }
             }
         }
     }
-}
-
-private fun computeEnginePairs(
-    skip: Set<String>?,
-    only: Set<String>?,
-): List<Pair<EngineFactory, EngineFactory>> {
-    val enginePairs = engines.flatMap { e1 -> engines.map { e2 -> e1 to e2 } }
-    return enginePairs.filterContainingLower(skip, only) { (e1, e2) -> "${e1.name.lowercase()}-${e2.name.lowercase()}" }
 }
 
 fun <T> List<T>.filterContainingLower(
