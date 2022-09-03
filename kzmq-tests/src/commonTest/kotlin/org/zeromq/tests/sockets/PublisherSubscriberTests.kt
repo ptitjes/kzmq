@@ -9,8 +9,6 @@ import io.kotest.core.spec.style.*
 import io.kotest.matchers.*
 import io.kotest.matchers.collections.*
 import kotlinx.coroutines.*
-import kotlinx.coroutines.flow.*
-import kotlinx.coroutines.selects.*
 import org.zeromq.*
 import org.zeromq.tests.utils.*
 
@@ -53,71 +51,6 @@ class PublisherSubscriberTests : FunSpec({
         coroutineScope {
             launch { publisher.send(message) }
             launch { subscriber.receive() shouldBe message }
-        }
-    }
-
-    withContexts("flow") { (ctx1, ctx2) ->
-        val address = randomAddress()
-        val messageCount = 10
-        val sent = generateMessages(messageCount).asFlow()
-
-        val publisher = ctx1.createPublisher().apply { bind(address) }
-        val subscriber = ctx2.createSubscriber().apply { connect(address) }
-
-        waitForConnections()
-
-        subscriber.subscribe("")
-
-        waitForSubscriptions()
-
-        coroutineScope {
-            launch {
-                sent.collectToSocket(publisher)
-            }
-
-            launch {
-                val received = subscriber.consumeAsFlow().take(messageCount)
-                received.toList() shouldContainExactly sent.toList()
-            }
-        }
-    }
-
-    withContexts("select").config(skipEngines = listOf("jeromq", "zeromq.js")) { (ctx1, ctx2) ->
-        val address1 = randomAddress()
-        val address2 = randomAddress()
-
-        val messageCount = 10
-        val sent = generateMessages(messageCount)
-
-        val publisher1 = ctx1.createPublisher().apply { bind(address1) }
-        val publisher2 = ctx1.createPublisher().apply { bind(address2) }
-        val subscriber1 = ctx2.createSubscriber().apply { connect(address1) }
-        val subscriber2 = ctx2.createSubscriber().apply { connect(address2) }
-
-        waitForConnections(2)
-
-        subscriber1.subscribe("")
-        subscriber2.subscribe("")
-
-        waitForSubscriptions(2)
-
-        coroutineScope {
-            launch {
-                for ((index, message) in sent.withIndex()) {
-                    (if (index % 2 == 0) publisher1 else publisher2).send(message)
-                }
-            }
-
-            launch {
-                val received = mutableListOf<Message>()
-                repeat(messageCount) {
-                    received += select<Message> {
-                        subscriber1.onReceive { it }
-                        subscriber2.onReceive { it }
-                    }
-                }
-                received.sortedWith(MessageComparator) shouldContainExactly sent
-            }
         }
     }
 
