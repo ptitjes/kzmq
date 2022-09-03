@@ -9,6 +9,7 @@ import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.*
 import kotlinx.coroutines.selects.*
 import org.zeromq.internal.*
+import org.zeromq.internal.utils.*
 
 /**
  * An implementation of the [PUSH socket](https://rfc.zeromq.org/spec/30/).
@@ -56,30 +57,7 @@ internal class CIOPushSocket(
     override val sendChannel = Channel<Message>()
 
     init {
-        setHandler {
-            val peerMailboxes = mutableListOf<PeerMailbox>()
-
-            while (isActive) {
-                select<Unit> {
-                    peerEvents.onReceive { (kind, peerMailbox) ->
-                        when (kind) {
-                            PeerEvent.Kind.ADDITION -> peerMailboxes.add(peerMailbox)
-                            PeerEvent.Kind.REMOVAL -> peerMailboxes.remove(peerMailbox)
-                            else -> {}
-                        }
-                    }
-
-                    if (peerMailboxes.isNotEmpty()) {
-                        sendChannel.onReceive { message ->
-                            val peerMailbox = peerMailboxes.removeFirst()
-                            logger.v { "Sending $message to $peerMailbox" }
-                            peerMailbox.sendChannel.send(CommandOrMessage(message))
-                            peerMailboxes.add(peerMailbox)
-                        }
-                    }
-                }
-            }
-        }
+        setHandler { handlePushSocket(peerEvents, sendChannel) }
     }
 
     override var conflate: Boolean
@@ -90,3 +68,78 @@ internal class CIOPushSocket(
         private val validPeerSocketTypes = setOf(Type.PULL)
     }
 }
+
+internal suspend fun handlePushSocket(
+    peerEvents: ReceiveChannel<PeerEvent>,
+    sendChannel: ReceiveChannel<Message>,
+) = coroutineScope {
+    val mailboxes = CircularQueue<PeerMailbox>()
+
+    while (isActive) {
+        select {
+            peerEvents.onReceive(mailboxes::update)
+
+            if (mailboxes.isNotEmpty()) {
+                sendChannel.onReceive { message ->
+                    // Fast path: Find first mailbox we can send immediately
+                    logger.v { "Try send message to first available" }
+                    val sent = mailboxes.trySendToFirstAvailable(message)
+
+                    if (!sent) {
+                        // Slow path: Biased select on each mailbox's onSend
+                        logger.v { "Send message to first available" }
+                        select {
+                            peerEvents.onReceive(mailboxes::update)
+
+                            mailboxes.onSendToFirstAvailable(message) {}
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+internal fun CircularQueue<PeerMailbox>.update(event: PeerEvent) {
+    val mailbox = event.peerMailbox
+    when (event.kind) {
+        PeerEvent.Kind.ADDITION -> add(mailbox)
+        PeerEvent.Kind.REMOVAL -> remove(mailbox)
+        else -> {}
+    }
+}
+
+internal fun CircularQueue<PeerMailbox>.trySendToFirstAvailable(message: Message): Boolean {
+    val commandOrMessage = CommandOrMessage(message)
+    val index = indexOfFirst { mailbox ->
+        val result = mailbox.sendChannel.trySend(commandOrMessage)
+        logger.v {
+            if (result.isSuccess) "Sent message to $mailbox"
+            else "Failed to send message to $mailbox"
+        }
+        result.isSuccess
+    }
+
+    val sent = index != -1
+    if (sent) rotateAfter(index)
+    return sent
+}
+
+internal val CircularQueue<PeerMailbox>.onSendToFirstAvailable: SelectClause2<Message, Unit>
+    get() = object : SelectClause2<Message, Unit> {
+        @InternalCoroutinesApi
+        override fun <R> registerSelectClause2(
+            select: SelectInstance<R>,
+            param: Message,
+            block: suspend (Unit) -> R,
+        ) {
+            val commandOrMessage = CommandOrMessage(param)
+            forEachIndexed { index, mailbox ->
+                mailbox.sendChannel.onSend.registerSelectClause2(select, commandOrMessage) {
+                    logger.v { "Sent message to $mailbox" }
+                    rotateAfter(index)
+                    block(Unit)
+                }
+            }
+        }
+    }
