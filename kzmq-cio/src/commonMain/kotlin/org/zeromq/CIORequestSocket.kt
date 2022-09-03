@@ -58,49 +58,38 @@ internal class CIORequestSocket(
     override val sendChannel = Channel<Message>()
     override val receiveChannel = Channel<Message>()
 
-    private val requestsChannel = Channel<Pair<PeerMailbox, Message>>()
-    private val repliesChannel = Channel<Pair<PeerMailbox, Message>>()
-
     init {
         setHandler {
-            launch {
-                val forwardJobs = JobMap<PeerMailbox>()
-
-                while (isActive) {
-                    val (kind, peerMailbox) = peerEvents.receive()
-                    when (kind) {
-                        PeerEvent.Kind.ADDITION -> forwardJobs.add(peerMailbox) { dispatchRequestsReplies(peerMailbox) }
-                        PeerEvent.Kind.REMOVAL -> forwardJobs.remove(peerMailbox)
-                        else -> {}
-                    }
-                }
-            }
-            launch {
-                while (isActive) {
-                    val (peerMailbox, requestData) = requestsChannel.receive()
-
-                    val request = addPrefixAddress(requestData)
-                    logger.v { "Sending request $request to $peerMailbox" }
-                    peerMailbox.sendChannel.send(CommandOrMessage(request))
-
-                    while (isActive) {
-                        val (otherPeerMailbox, reply) = repliesChannel.receive()
-                        if (otherPeerMailbox != peerMailbox) {
-                            logger.w { "Ignoring reply $reply from $otherPeerMailbox" }
-                            continue
-                        }
-
-                        logger.v { "Sending back reply $reply from $peerMailbox" }
-                        val (_, replyData) = extractPrefixAddress(reply)
-                        receiveChannel.send(replyData)
-                        break
-                    }
-                }
-            }
+            handleRequestSocket(peerEvents, sendChannel, receiveChannel)
         }
     }
 
-    private fun CoroutineScope.dispatchRequestsReplies(peerMailbox: PeerMailbox) = launch {
+    override var routingId: ByteArray? by options::routingId
+    override var probeRouter: Boolean
+        get() = TODO("Not yet implemented")
+        set(value) {}
+    override var correlate: Boolean
+        get() = TODO("Not yet implemented")
+        set(value) {}
+    override var relaxed: Boolean
+        get() = TODO("Not yet implemented")
+        set(value) {}
+
+    companion object {
+        private val validPeerSocketTypes = setOf(Type.REP, Type.ROUTER)
+    }
+}
+
+internal suspend fun handleRequestSocket(
+    peerEvents: ReceiveChannel<PeerEvent>,
+    sendChannel: ReceiveChannel<Message>,
+    receiveChannel: SendChannel<Message>,
+) = coroutineScope {
+
+    val requestsChannel = Channel<Pair<PeerMailbox, Message>>()
+    val repliesChannel = Channel<Pair<PeerMailbox, Message>>()
+
+    fun CoroutineScope.dispatchRequestsReplies(peerMailbox: PeerMailbox) = launch {
         launch {
             while (isActive) {
                 val request = sendChannel.receive()
@@ -122,18 +111,38 @@ internal class CIORequestSocket(
         }
     }
 
-    override var routingId: ByteArray? by options::routingId
-    override var probeRouter: Boolean
-        get() = TODO("Not yet implemented")
-        set(value) {}
-    override var correlate: Boolean
-        get() = TODO("Not yet implemented")
-        set(value) {}
-    override var relaxed: Boolean
-        get() = TODO("Not yet implemented")
-        set(value) {}
+    launch {
+        val forwardJobs = JobMap<PeerMailbox>()
 
-    companion object {
-        private val validPeerSocketTypes = setOf(Type.REP, Type.ROUTER)
+        while (isActive) {
+            val (kind, peerMailbox) = peerEvents.receive()
+            when (kind) {
+                PeerEvent.Kind.ADDITION -> forwardJobs.add(peerMailbox) { dispatchRequestsReplies(peerMailbox) }
+                PeerEvent.Kind.REMOVAL -> forwardJobs.remove(peerMailbox)
+                else -> {}
+            }
+        }
+    }
+    launch {
+        while (isActive) {
+            val (peerMailbox, requestData) = requestsChannel.receive()
+
+            val request = addPrefixAddress(requestData)
+            logger.v { "Sending request $request to $peerMailbox" }
+            peerMailbox.sendChannel.send(CommandOrMessage(request))
+
+            while (isActive) {
+                val (otherPeerMailbox, reply) = repliesChannel.receive()
+                if (otherPeerMailbox != peerMailbox) {
+                    logger.w { "Ignoring reply $reply from $otherPeerMailbox" }
+                    continue
+                }
+
+                logger.v { "Sending back reply $reply from $peerMailbox" }
+                val (_, replyData) = extractPrefixAddress(reply)
+                receiveChannel.send(replyData)
+                break
+            }
+        }
     }
 }

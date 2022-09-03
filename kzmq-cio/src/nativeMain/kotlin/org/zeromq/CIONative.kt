@@ -12,6 +12,7 @@ import kotlin.coroutines.*
 @OptIn(InternalAPI::class)
 public actual object CIO : EngineFactory {
     override val name: String = "cio"
+    override val supportedTransports: Set<String> = setOf("inproc", "tcp", "ipc")
     override fun create(coroutineContext: CoroutineContext): Engine {
         return CIOEngine(coroutineContext + Dispatchers.Default)
     }

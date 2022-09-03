@@ -45,6 +45,11 @@ public class Context internal constructor(
     private val instance: Engine = engineFactory.create(coroutineContext)
 
     /**
+     * Returns the set of transport schemes that this engine supports.
+     */
+    public val supportedTransports: Set<String> = engineFactory.supportedTransports
+
+    /**
      * Closes this context.
      */
     override fun close(): Unit = instance.close()

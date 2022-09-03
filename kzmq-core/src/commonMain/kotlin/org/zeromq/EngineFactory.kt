@@ -18,6 +18,11 @@ public interface EngineFactory {
     public val name: String
 
     /**
+     * Returns the set of transport schemes that this engine supports.
+     */
+    public val supportedTransports: Set<String>
+
+    /**
      * Creates a new [Engine]. Should not be used directly. Use [Context] instead.
      */
     public fun create(coroutineContext: CoroutineContext): Engine

@@ -9,6 +9,7 @@ import kotlin.coroutines.*
 
 public object JeroMQ : EngineFactory {
     override val name: String = "JeroMQ"
+    override val supportedTransports: Set<String> = setOf("inproc", "tcp")
     override fun create(coroutineContext: CoroutineContext): Engine = JeroMQEngine()
 }
 

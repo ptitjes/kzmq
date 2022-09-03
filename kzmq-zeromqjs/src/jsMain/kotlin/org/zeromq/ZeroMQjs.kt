@@ -11,6 +11,7 @@ import kotlin.coroutines.*
 @OptIn(InternalAPI::class)
 public object ZeroMQjs : EngineFactory {
     override val name: String = "ZeroMQ.js"
+    override val supportedTransports: Set<String> = setOf("inproc", "tcp", "ipc")
     override fun create(coroutineContext: CoroutineContext): Engine = ZeroMQjsEngine()
 
     init {

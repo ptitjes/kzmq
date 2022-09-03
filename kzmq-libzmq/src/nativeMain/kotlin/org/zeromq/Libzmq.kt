@@ -9,5 +9,6 @@ import kotlin.coroutines.*
 
 public object Libzmq : EngineFactory {
     override val name: String = "libzmq"
+    override val supportedTransports: Set<String> = setOf("inproc", "tcp", "ipc")
     override fun create(coroutineContext: CoroutineContext): Engine = LibzmqEngine()
 }
