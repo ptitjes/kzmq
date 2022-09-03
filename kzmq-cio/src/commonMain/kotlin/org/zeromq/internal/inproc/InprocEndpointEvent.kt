@@ -10,6 +10,7 @@ import org.zeromq.internal.*
 internal interface InprocEndpointEvent {
     data class Binding(
         val peerManager: PeerManager,
+        val routingId: Identity?,
         val mailboxFactory: () -> PeerMailbox,
     ) : InprocEndpointEvent
 
@@ -18,6 +19,7 @@ internal interface InprocEndpointEvent {
     data class Connecting(
         val mailbox: PeerMailbox,
         val peerManager: PeerManager,
+        val routingId: Identity?,
     ) : InprocEndpointEvent
 
     data class Disconnecting(

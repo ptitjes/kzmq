@@ -10,7 +10,7 @@ import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.*
 import org.zeromq.internal.*
 import org.zeromq.internal.PeerEvent.Kind.*
-import org.zeromq.internal.utils.JobMap
+import org.zeromq.internal.utils.*
 import kotlin.coroutines.*
 
 internal class InprocEndpointHandler(
@@ -39,8 +39,13 @@ internal class InprocEndpointHandler(
 
     suspend fun notify(event: InprocEndpointEvent) = endpointEvents.send(event)
 
-    private var boundMailbox: Pair<PeerManager, () -> PeerMailbox>? = null
-    private val connectedMailboxes = linkedMapOf<PeerMailbox, PeerManager>()
+    data class MailboxInfo(
+        val peerManager: PeerManager,
+        val routingId: Identity?,
+    )
+
+    private var boundMailbox: Pair<MailboxInfo, () -> PeerMailbox>? = null
+    private val connectedMailboxes = linkedMapOf<PeerMailbox, MailboxInfo>()
     private val forwardJobs = JobMap<PeerMailbox>()
 
     private suspend fun handleEndpointEvents() = coroutineScope {
@@ -51,9 +56,12 @@ internal class InprocEndpointHandler(
                 logger.d { "Processing event: $event" }
                 when (event) {
                     is InprocEndpointEvent.Binding -> {
-                        boundMailbox = event.peerManager to event.mailboxFactory
-                        connectedMailboxes.forEach { (peerMailbox, peerManager) ->
-                            addForwarding(event.peerManager, event.mailboxFactory(), peerManager, peerMailbox)
+                        boundMailbox = MailboxInfo(event.peerManager, event.routingId) to event.mailboxFactory
+                        connectedMailboxes.forEach { (peerMailbox, info) ->
+                            val (peerManager, routingId) = info
+                            val mailbox = event.mailboxFactory().apply { identity = routingId }
+                            peerMailbox.identity = event.routingId
+                            addForwarding(event.peerManager, mailbox, peerManager, peerMailbox)
                         }
                     }
 
@@ -64,9 +72,12 @@ internal class InprocEndpointHandler(
                     }
 
                     is InprocEndpointEvent.Connecting -> {
-                        connectedMailboxes += event.mailbox to event.peerManager
-                        boundMailbox?.let { (peerManager, mailboxFactory) ->
-                            addForwarding(peerManager, mailboxFactory(), event.peerManager, event.mailbox)
+                        connectedMailboxes += event.mailbox to MailboxInfo(event.peerManager, event.routingId)
+                        boundMailbox?.let { (info, mailboxFactory) ->
+                            val (peerManager, routingId) = info
+                            val mailbox = mailboxFactory().apply { identity = event.routingId }
+                            event.mailbox.identity = routingId
+                            addForwarding(peerManager, mailbox, event.peerManager, event.mailbox)
                         }
                     }
 

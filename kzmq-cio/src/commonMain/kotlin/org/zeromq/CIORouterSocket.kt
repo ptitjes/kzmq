@@ -78,7 +78,7 @@ internal class CIORouterSocket(
             fun generateNewIdentity(): Identity {
                 while (true) {
                     val identity = Identity(Random.nextBytes(ByteArray(16)))
-                    if (!perIdentityMailboxes.containsKey(identity)) return identity
+                    if (identity !in perIdentityMailboxes) return identity
                 }
             }
 
