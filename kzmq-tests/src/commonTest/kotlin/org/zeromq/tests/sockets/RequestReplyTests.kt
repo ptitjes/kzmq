@@ -50,7 +50,7 @@ class RequestReplyTests : FunSpec({
     }
 
     withContexts("round-robin connected reply sockets").config(
-        skipEngines = listOf("jeromq", "zeromq.js")
+        skip = setOf("jeromq", "zeromq.js")
     ) { (ctx1, ctx2) ->
         val address = randomAddress()
 
@@ -89,7 +89,7 @@ class RequestReplyTests : FunSpec({
     }
 
     withContexts("fair-queuing request sockets").config(
-        skipEngines = listOf("cio", "jeromq", "zeromq.js")
+        skip = setOf("cio", "jeromq", "zeromq.js")
     ) { (ctx1, ctx2) ->
         val address = randomAddress()
 
