@@ -148,7 +148,7 @@ private val targetsSupportedByKtorNetwork = setOf(
     WATCHOS_ARM32,
     WATCHOS_ARM64,
 //    WATCHOS_X86,
-    WATCHOS_X64,
+//    WATCHOS_X64,
     WATCHOS_SIMULATOR_ARM64,
     TVOS_ARM64,
     TVOS_X64,
