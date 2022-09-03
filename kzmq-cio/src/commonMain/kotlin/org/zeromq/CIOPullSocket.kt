@@ -7,6 +7,7 @@ package org.zeromq
 
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.*
+import kotlinx.coroutines.selects.*
 import org.zeromq.internal.*
 import org.zeromq.internal.utils.*
 
@@ -53,31 +54,7 @@ internal class CIOPullSocket(
     override val receiveChannel = Channel<Message>()
 
     init {
-        setHandler {
-            val forwardJobs = JobMap<PeerMailbox>()
-
-            while (isActive) {
-                val (kind, peerMailbox) = peerEvents.receive()
-                when (kind) {
-                    PeerEvent.Kind.ADDITION -> forwardJobs.add(peerMailbox) { forwardFrom(peerMailbox) }
-                    PeerEvent.Kind.REMOVAL -> forwardJobs.remove(peerMailbox)
-                    else -> {}
-                }
-            }
-        }
-    }
-
-    private fun CoroutineScope.forwardFrom(peerMailbox: PeerMailbox) = launch {
-        try {
-            while (isActive) {
-                val message = peerMailbox.receiveChannel.receive().messageOrThrow()
-                logger.v { "Receiving $message from $peerMailbox" }
-                receiveChannel.send(message)
-            }
-        } catch (e: ClosedReceiveChannelException) {
-            // Coroutine's cancellation happened while suspending on receive
-            // and the receiveChannel of the peerMailbox has already been closed
-        }
+        setHandler { handlePullSocket(peerEvents, receiveChannel) }
     }
 
     override var conflate: Boolean
@@ -88,3 +65,39 @@ internal class CIOPullSocket(
         private val validPeerSocketTypes = setOf(Type.PUSH)
     }
 }
+
+internal suspend fun handlePullSocket(
+    peerEvents: ReceiveChannel<PeerEvent>,
+    receiveChannel: SendChannel<Message>,
+) = coroutineScope {
+    val mailboxes = CircularQueue<PeerMailbox>()
+
+    while (isActive) {
+        select {
+            peerEvents.onReceive(mailboxes::update)
+
+            if (mailboxes.isNotEmpty()) {
+                mailboxes.onReceiveFromFirst { commandOrMessage ->
+                    receiveChannel.send(commandOrMessage.messageOrThrow())
+                }
+            }
+        }
+    }
+}
+
+internal val CircularQueue<PeerMailbox>.onReceiveFromFirst: SelectClause1<CommandOrMessage>
+    get() = object : SelectClause1<CommandOrMessage> {
+        @InternalCoroutinesApi
+        override fun <R> registerSelectClause1(
+            select: SelectInstance<R>,
+            block: suspend (CommandOrMessage) -> R,
+        ) {
+            toList().forEachIndexed { index, mailbox ->
+                mailbox.receiveChannel.onReceive.registerSelectClause1(select) { commandOrMessage ->
+                    logger.v { "Received command or message from $mailbox" }
+                    rotateAfter(index)
+                    block(commandOrMessage)
+                }
+            }
+        }
+    }
