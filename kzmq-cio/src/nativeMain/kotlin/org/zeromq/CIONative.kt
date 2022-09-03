@@ -13,16 +13,13 @@ import kotlin.coroutines.*
 public actual object CIO : EngineFactory {
     override val name: String = "cio"
     override fun create(coroutineContext: CoroutineContext): Engine {
-        return CIOEngine(coroutineContext + IO_DISPATCHER)
+        return CIOEngine(coroutineContext + Dispatchers.Default)
     }
 
     init {
         Engines.append(CIO)
     }
 }
-
-private val nThreads = 1
-private val IO_DISPATCHER = newFixedThreadPoolContext(nThreads, "IO")
 
 @Suppress("DEPRECATION", "unused")
 @OptIn(ExperimentalStdlibApi::class)
