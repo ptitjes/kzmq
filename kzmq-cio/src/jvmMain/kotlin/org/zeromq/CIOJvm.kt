@@ -10,6 +10,7 @@ import kotlin.coroutines.*
 
 public actual object CIO : EngineFactory {
     override val name: String = "CIO"
+    override val supportedTransports: Set<String> = setOf("inproc", "tcp", "ipc")
     override fun create(coroutineContext: CoroutineContext): Engine =
         CIOEngine(coroutineContext + Dispatchers.IO)
 }
