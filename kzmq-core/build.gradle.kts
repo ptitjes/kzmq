@@ -9,6 +9,8 @@ import java.net.*
 plugins {
     id("plugin.library")
     id("plugin.atomicfu")
+    id("plugin.kotest")
+    id("plugin.mocks")
 }
 
 kotlin {
