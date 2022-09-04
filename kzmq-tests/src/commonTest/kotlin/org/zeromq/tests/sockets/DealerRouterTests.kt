@@ -19,6 +19,8 @@ private const val REPLY_MARKER = "REP"
 class DealerRouterTests : FunSpec({
 
     withContexts("base").config(
+        // TODO fix when testing more Dealer and Router logic
+        skip = setOf("cio-cio, inproc"),
     ) { ctx1, ctx2, protocol ->
         val dealerCount = 2
         val routerCount = 3
