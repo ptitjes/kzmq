@@ -83,8 +83,8 @@ class PushTests : FunSpec({
     }
 
     withContexts("lingers after close").config(
-        // TODO investigate why these pairs are flaky
-        skip = setOf("cio-jeromq", "jeromq-cio"),
+        // TODO investigate why these tests are flaky
+        skip = setOf("cio"),
     ) { ctx1, ctx2, protocol ->
         val address = randomAddress(protocol)
         val messageCount = 100
