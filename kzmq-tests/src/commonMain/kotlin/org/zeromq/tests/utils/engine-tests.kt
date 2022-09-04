@@ -49,14 +49,19 @@ private fun RootScope.runSingleContextTest(
     test: SingleContextTest,
 ) {
     val testData = engines.flatMap { engine -> engine.supportedTransports.map { engine to it.asProtocol() } }
-        .filterContainingLower(skip, only) { (engine, protocol) ->
-            "${engine.name.lowercase()}, ${protocol.name.lowercase()}"
-        }
+
+    val enableTest = enableTest<Pair<EngineFactory, Protocol>>(skip, only) { (engine, protocol) ->
+        "${engine.name.lowercase()}, ${protocol.name.lowercase()}"
+    }
 
     val testTimeout = timeout ?: DEFAULT_TEST_TIMEOUT
-    val testConfig = UnresolvedTestConfig(timeout = testTimeout * 2)
-    testData.forEach { (engine, protocol) ->
+    val globalConfig = UnresolvedTestConfig(timeout = testTimeout * 2)
+
+    testData.forEach { data ->
+        val (engine, protocol) = data
         val testName = TestName("$name (${engine.name}, $protocol)")
+        val testConfig = globalConfig.copy(enabled = enableTest(data))
+
         addTest(testName, false, testConfig, TestType.Dynamic) {
             val context = Context(engine)
             context.use {
@@ -92,18 +97,23 @@ private fun RootScope.runDualContextTest(
     test: DualContextTest,
 ) {
     val enginePairs = engines.flatMap { e1 -> engines.map { e2 -> e1 to e2 } }
-    val enginesWithProtocol = enginePairs.flatMap { (e1, e2) ->
+    val testData = enginePairs.flatMap { (e1, e2) ->
         (e1.supportedTransports intersect e2.supportedTransports).map { Triple(e1, e2, it.asProtocol()) }
             .filter { (e1, e2, p) -> p != Protocol.INPROC || e1 == e2 }
     }
-    val testData = enginesWithProtocol.filterContainingLower(skip, only) { (e1, e2, protocol) ->
+
+    val enableTest = enableTest<Triple<EngineFactory, EngineFactory, Protocol>>(skip, only) { (e1, e2, protocol) ->
         "${e1.name.lowercase()}-${e2.name.lowercase()}, ${protocol.name.lowercase()}"
     }
 
     val testTimeout = timeout ?: DEFAULT_TEST_TIMEOUT
-    val testConfig = UnresolvedTestConfig(timeout = testTimeout * 2)
-    testData.forEach { (engine1, engine2, protocol) ->
+    val globalConfig = UnresolvedTestConfig(timeout = testTimeout * 2)
+
+    testData.forEach { data ->
+        val (engine1, engine2, protocol) = data
         val testName = TestName("$name (${engine1.name}-${engine2.name}, $protocol)")
+        val testConfig = globalConfig.copy(enabled = enableTest(data))
+
         addTest(testName, false, testConfig, TestType.Dynamic) {
             withTimeout(testTimeout) {
                 val context1 = Context(engine1)
@@ -116,13 +126,11 @@ private fun RootScope.runDualContextTest(
     }
 }
 
-fun <T> List<T>.filterContainingLower(
-    skip: Set<String>? = null,
-    only: Set<String>? = null,
+private fun <T> enableTest(
+    skip: Set<String>?,
+    only: Set<String>?,
     labeller: (T) -> String,
-): List<T> {
-    return filter { element ->
-        val label = labeller(element)
-        skip?.none { label.contains(it.lowercase()) } ?: true && only?.any { label.contains(it.lowercase()) } ?: true
-    }
+): (element: T) -> Boolean = { element ->
+    val label = labeller(element)
+    skip?.none { label.contains(it.lowercase()) } ?: true && only?.any { label.contains(it.lowercase()) } ?: true
 }
