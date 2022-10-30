@@ -6,6 +6,7 @@
 import org.gradle.api.*
 import org.gradle.api.specs.*
 import org.gradle.kotlin.dsl.*
+import org.gradle.process.internal.ExecException
 import org.jetbrains.kotlin.gradle.plugin.*
 import org.jetbrains.kotlin.konan.target.*
 import java.io.*
@@ -44,9 +45,14 @@ val org.gradle.api.NamedDomainObjectContainer<org.jetbrains.kotlin.gradle.plugin
 
 fun Project.pkgConfig(vararg args: String): List<String> {
     val output = ByteArrayOutputStream()
-    project.exec {
-        setCommandLine("pkg-config", *args)
-        standardOutput = output
+    try {
+        project.exec {
+            setCommandLine("pkg-config", *args)
+            standardOutput = output
+        }
+        return output.toByteArray().decodeToString().trim().split("\\s*")
+    } catch (e: Exception) {
+        val standardOutput = output.toByteArray().decodeToString()
+        throw IllegalStateException("Failed to get pkg-config for '$args: $standardOutput")
     }
-    return output.toByteArray().decodeToString().trim().split("\\s*")
 }
