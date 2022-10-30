@@ -1,6 +1,3 @@
-import gradle.kotlin.dsl.accessors._f4ef9df0bca735033ed714e2fdace891.sourceSets
-import org.gradle.kotlin.dsl.invoke
-
 /*
  * Copyright (c) 2022 Didier Villevalois and Kzmq contributors.
  * Use of this source code is governed by the Apache 2.0 license.
