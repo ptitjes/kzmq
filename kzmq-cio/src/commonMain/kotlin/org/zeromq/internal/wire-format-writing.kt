@@ -3,20 +3,20 @@
  * Use of this source code is governed by the Apache 2.0 license.
  */
 
-@file:OptIn(ExperimentalUnsignedTypes::class)
-
 package org.zeromq.internal
 
 import io.ktor.utils.io.*
 import io.ktor.utils.io.core.*
 import org.zeromq.*
 
+@OptIn(ExperimentalUnsignedTypes::class)
 internal suspend fun ByteWriteChannel.writeGreetingPart1() =
     writePacket {
         writeFully(SIGNATURE)
         writeUByte(MAJOR_VERSION.toUByte())
     }
 
+@OptIn(ExperimentalUnsignedTypes::class)
 internal suspend fun ByteWriteChannel.writeGreetingPart2(mechanism: Mechanism, asServer: Boolean) =
     writePacket {
         writeUByte(MINOR_VERSION.toUByte())
@@ -25,6 +25,7 @@ internal suspend fun ByteWriteChannel.writeGreetingPart2(mechanism: Mechanism, a
         writeFully(FILLER)
     }
 
+@OptIn(ExperimentalUnsignedTypes::class)
 private fun BytePacketBuilder.writeMechanism(mechanism: Mechanism) {
     val bytes = mechanism.bytes
     writeFully(bytes)
@@ -75,6 +76,7 @@ internal suspend fun ByteWriteChannel.writeCommand(command: CancelCommand) = wri
     }
 }
 
+@OptIn(ExperimentalUnsignedTypes::class)
 internal suspend fun ByteWriteChannel.writeCommand(command: PingCommand) = writePacket {
     writeCommand(CommandName.PING) {
         writeUShort(command.ttl)
@@ -110,6 +112,7 @@ private fun BytePacketBuilder.writeProperty(
     writeFully(valueBytes)
 }
 
+@OptIn(ExperimentalUnsignedTypes::class)
 private fun BytePacketBuilder.writeShortString(bytes: ByteArray) {
     writeUByte(bytes.size.toUByte())
     writeFully(bytes)
@@ -130,6 +133,7 @@ private fun BytePacketBuilder.writeMessagePart(hasMore: Boolean, part: ByteArray
     writeFully(part)
 }
 
+@OptIn(ExperimentalUnsignedTypes::class)
 private fun BytePacketBuilder.writeFrameHeader(flags: ZmqFlags, size: Long) {
     if (size <= 255) {
         writeZmqFlags(flags)
@@ -140,6 +144,7 @@ private fun BytePacketBuilder.writeFrameHeader(flags: ZmqFlags, size: Long) {
     }
 }
 
+@OptIn(ExperimentalUnsignedTypes::class)
 private fun BytePacketBuilder.writeZmqFlags(flags: ZmqFlags) {
     writeUByte(flags.data)
 }

@@ -81,7 +81,7 @@ internal suspend fun handlePushSocket(
 
             if (mailboxes.isNotEmpty()) {
                 sendChannel.onReceive { message ->
-                    // Fast path: Find first mailbox we can send immediately
+                    // Fast path: Find the first mailbox we can send immediately
                     logger.v { "Try send message to first available" }
                     val sent = mailboxes.trySendToFirstAvailable(message)
 
@@ -91,7 +91,13 @@ internal suspend fun handlePushSocket(
                         select {
                             peerEvents.onReceive(mailboxes::update)
 
-                            mailboxes.onSendToFirstAvailable(message) {}
+                            val commandOrMessage = CommandOrMessage(message)
+                            mailboxes.forEachIndexed { index, mailbox ->
+                                mailbox.sendChannel.onSend(commandOrMessage) {
+                                    logger.v { "Sent message to $mailbox" }
+                                    mailboxes.rotateAfter(index)
+                                }
+                            }
                         }
                     }
                 }
@@ -124,22 +130,3 @@ internal fun CircularQueue<PeerMailbox>.trySendToFirstAvailable(message: Message
     if (sent) rotateAfter(index)
     return sent
 }
-
-internal val CircularQueue<PeerMailbox>.onSendToFirstAvailable: SelectClause2<Message, Unit>
-    get() = object : SelectClause2<Message, Unit> {
-        @InternalCoroutinesApi
-        override fun <R> registerSelectClause2(
-            select: SelectInstance<R>,
-            param: Message,
-            block: suspend (Unit) -> R,
-        ) {
-            val commandOrMessage = CommandOrMessage(param)
-            forEachIndexed { index, mailbox ->
-                mailbox.sendChannel.onSend.registerSelectClause2(select, commandOrMessage) {
-                    logger.v { "Sent message to $mailbox" }
-                    rotateAfter(index)
-                    block(Unit)
-                }
-            }
-        }
-    }
