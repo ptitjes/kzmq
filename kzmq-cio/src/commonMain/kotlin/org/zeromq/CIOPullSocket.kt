@@ -77,27 +77,14 @@ internal suspend fun handlePullSocket(
             peerEvents.onReceive(mailboxes::update)
 
             if (mailboxes.isNotEmpty()) {
-                mailboxes.onReceiveFromFirst { commandOrMessage ->
-                    receiveChannel.send(commandOrMessage.messageOrThrow())
+                mailboxes.forEachIndexed { index, mailbox ->
+                    mailbox.receiveChannel.onReceive { commandOrMessage ->
+                        logger.v { "Received command or message from $mailbox" }
+                        mailboxes.rotateAfter(index)
+                        receiveChannel.send(commandOrMessage.messageOrThrow())
+                    }
                 }
             }
         }
     }
 }
-
-internal val CircularQueue<PeerMailbox>.onReceiveFromFirst: SelectClause1<CommandOrMessage>
-    get() = object : SelectClause1<CommandOrMessage> {
-        @InternalCoroutinesApi
-        override fun <R> registerSelectClause1(
-            select: SelectInstance<R>,
-            block: suspend (CommandOrMessage) -> R,
-        ) {
-            toList().forEachIndexed { index, mailbox ->
-                mailbox.receiveChannel.onReceive.registerSelectClause1(select) { commandOrMessage ->
-                    logger.v { "Received command or message from $mailbox" }
-                    rotateAfter(index)
-                    block(commandOrMessage)
-                }
-            }
-        }
-    }

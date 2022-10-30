@@ -3,8 +3,6 @@
  * Use of this source code is governed by the Apache 2.0 license.
  */
 
-@file:OptIn(ExperimentalUnsignedTypes::class)
-
 package org.zeromq.internal
 
 import io.ktor.utils.io.*
@@ -13,9 +11,12 @@ import io.ktor.utils.io.errors.*
 import kotlinx.coroutines.channels.*
 import org.zeromq.*
 
+@OptIn(ExperimentalUnsignedTypes::class)
 internal val GREETING_PART1_SIZE = SIGNATURE.size + 1
+@OptIn(ExperimentalUnsignedTypes::class)
 internal val GREETING_PART2_SIZE = 1 + MECHANISM_SIZE + 1 + FILLER.size
 
+@OptIn(ExperimentalUnsignedTypes::class)
 internal suspend fun ByteReadChannel.readGreetingPart1(): Int = wrapExceptions {
     return readPacket(GREETING_PART1_SIZE).run {
         if (readUByte() != signatureHeadByte) invalidFrame("Invalid signature header byte")
@@ -25,6 +26,7 @@ internal suspend fun ByteReadChannel.readGreetingPart1(): Int = wrapExceptions {
     }
 }
 
+@OptIn(ExperimentalUnsignedTypes::class)
 internal suspend fun ByteReadChannel.readGreetingPart2(): Pair<Int, SecuritySpec> = wrapExceptions {
     return readPacket(GREETING_PART2_SIZE).run {
         val minorVersion = readByte().toInt()
@@ -88,6 +90,7 @@ private fun ByteReadPacket.readProperty(): Pair<PropertyName, ByteArray> {
     return propertyName to valueBytes
 }
 
+@OptIn(ExperimentalUnsignedTypes::class)
 private fun ByteReadPacket.readShortString(): String {
     val size = readUByte().toInt()
     return readBytes(size).decodeToString()

@@ -51,7 +51,6 @@ private val perKonanTargetApplier = mutableMapOf<KonanTarget, KotlinMultiplatfor
     ANDROID_X86 to { androidNativeX86() },
     ANDROID_ARM32 to { androidNativeArm32() },
     ANDROID_ARM64 to { androidNativeArm64() },
-    IOS_ARM32 to { iosArm32() },
     IOS_ARM64 to { iosArm64() },
     IOS_X64 to { iosX64() },
     IOS_SIMULATOR_ARM64 to { iosSimulatorArm64() },
@@ -92,7 +91,6 @@ val KonanTarget.buildHost: Family
         MINGW_X64,
         -> Family.MINGW
 
-        IOS_ARM32,
         IOS_ARM64,
         IOS_X64,
         IOS_SIMULATOR_ARM64,
@@ -109,8 +107,10 @@ val KonanTarget.buildHost: Family
         MACOS_ARM64,
         -> Family.OSX
 
-        WASM32 -> throw IllegalStateException("Target $this not supported")
-        is ZEPHYR -> throw IllegalStateException("Target $this not supported")
+        IOS_ARM32,
+        WASM32,
+        is ZEPHYR,
+        -> throw IllegalStateException("Target $this not supported")
     }
 
 val KonanTarget.isSupportedByLibzmq
@@ -143,14 +143,12 @@ private val targetsSupportedByKtorNetwork = setOf(
     LINUX_ARM64,
     LINUX_X64,
     MACOS_ARM64,
-    MACOS_X64, IOS_ARM32,
+    MACOS_X64,
     IOS_ARM64,
     IOS_X64,
     IOS_SIMULATOR_ARM64,
     WATCHOS_ARM32,
     WATCHOS_ARM64,
-//    WATCHOS_X86,
-//    WATCHOS_X64,
     WATCHOS_SIMULATOR_ARM64,
     TVOS_ARM64,
     TVOS_X64,
