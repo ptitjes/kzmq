@@ -13,6 +13,8 @@ plugins {
 }
 
 kotlin {
+    jvmToolchain(17)
+
     jvmTargets()
     nativeTargets { it.family == Family.LINUX && it.architecture == Architecture.X64 }
 
