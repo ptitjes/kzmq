@@ -12,7 +12,7 @@ import org.jetbrains.kotlin.konan.target.KonanTarget.*
 fun KotlinMultiplatformExtension.jvmTargets() {
     jvm {
         compilations.all {
-            kotlinOptions.jvmTarget = "1.8"
+            kotlinOptions.jvmTarget = "17"
         }
     }
 }
@@ -59,6 +59,7 @@ private val perKonanTargetApplier = mutableMapOf<KonanTarget, KotlinMultiplatfor
     WATCHOS_ARM64 to { watchosArm64() },
     WATCHOS_X86 to { watchosX86() },
     WATCHOS_X64 to { watchosX64() },
+    WATCHOS_DEVICE_ARM64 to { watchosDeviceArm64() },
     WATCHOS_SIMULATOR_ARM64 to { watchosSimulatorArm64() },
     TVOS_ARM64 to { tvosArm64() },
     TVOS_X64 to { tvosX64() },
@@ -100,6 +101,7 @@ val KonanTarget.buildHost: Family
         WATCHOS_X86,
         WATCHOS_X64,
         WATCHOS_SIMULATOR_ARM64,
+        WATCHOS_DEVICE_ARM64,
         TVOS_ARM64,
         TVOS_X64,
         TVOS_SIMULATOR_ARM64,
