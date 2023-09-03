@@ -10,6 +10,7 @@ import kotlinx.coroutines.*
 import kotlinx.coroutines.selects.*
 import org.zeromq.internal.libzmq.*
 
+@OptIn(ExperimentalForeignApi::class)
 internal abstract class LibzmqSocket internal constructor(
     private val underlying: COpaquePointer?,
     override val type: Type,
