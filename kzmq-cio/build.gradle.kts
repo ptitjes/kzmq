@@ -14,15 +14,12 @@ kotlin {
     nativeTargets { it.isSupportedByCIO }
 
     sourceSets {
-        val ktorVersion: String by project
-        val kermitVersion: String by project
-
         commonMain {
             dependencies {
                 implementation(project(":kzmq-core"))
-                implementation("io.ktor:ktor-io:$ktorVersion")
-                implementation("io.ktor:ktor-network:$ktorVersion")
-                implementation("co.touchlab:kermit:$kermitVersion")
+                implementation(libs.ktor.io)
+                implementation(libs.ktor.network)
+                implementation(libs.kermit)
             }
         }
     }

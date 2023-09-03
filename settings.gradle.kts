@@ -8,22 +8,10 @@ pluginManagement {
         mavenCentral()
         gradlePluginPortal()
     }
-
-    val kotlinVersion: String by settings
-    val dokkaVersion: String by settings
-    val kotlinxKoverVersion: String by settings
-    val kotestPluginVersion: String by settings
-
-    plugins {
-        kotlin("multiplatform") version kotlinVersion
-        kotlin("plugin.atomicfu") version kotlinVersion
-        id("org.jetbrains.dokka") version dokkaVersion
-        id("org.jetbrains.kotlinx.kover") version kotlinxKoverVersion
-        id("io.kotest.multiplatform") version kotestPluginVersion
-    }
 }
 
 dependencyResolutionManagement {
+    @Suppress("UnstableApiUsage")
     repositories {
         mavenCentral()
     }

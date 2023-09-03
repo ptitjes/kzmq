@@ -27,18 +27,15 @@ kotlin {
             binaries {
                 executable("throughput") { entryPoint = "org.zeromq.tools.main" }
             }
-            compilations["main"].enableEndorsedLibs = false
         }
     }
 
     sourceSets {
-        val kotlinxCliVersion: String by project
-
         commonMain {
             dependencies {
                 implementation(project(":kzmq-core"))
                 implementation(project(":kzmq-cio"))
-                implementation("org.jetbrains.kotlinx:kotlinx-cli:$kotlinxCliVersion")
+                implementation(libs.kotlinx.cli)
             }
         }
 

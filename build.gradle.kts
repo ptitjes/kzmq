@@ -3,7 +3,6 @@
  * Use of this source code is governed by the Apache 2.0 license.
  */
 
-import kotlinx.kover.api.*
 import org.jetbrains.dokka.gradle.*
 
 buildscript {
@@ -14,21 +13,16 @@ buildscript {
 }
 
 plugins {
-    kotlin("multiplatform") apply false
-    kotlin("plugin.atomicfu") apply false
-    id("org.jetbrains.dokka")
+    alias(libs.plugins.dokka)
     id("org.jetbrains.kotlinx.kover")
-    id("io.kotest.multiplatform") apply false
 }
 
-val projectVersion: String by project
+val projectVersion: String = libs.versions.project.get()
 
 subprojects {
     group = "org.zeromq"
     version = projectVersion
 }
-
-println("Using Kotlin compiler version: ${org.jetbrains.kotlin.config.KotlinCompilerVersion.VERSION}")
 
 tasks.withType<DokkaMultiModuleTask> {
     removeChildTasks(
@@ -39,15 +33,12 @@ tasks.withType<DokkaMultiModuleTask> {
     )
 }
 
-extensions.configure<KoverMergedConfig> {
-    enable()
-
-    filters {
-        classes {
-            excludes += "org.zeromq.tests.utils.*"
-        }
-        projects {
-            excludes += ":kzmq-tools"
+koverReport {
+    defaults {
+        filters {
+            excludes {
+                packages("org.zeromq.tests.utils")
+            }
         }
     }
 }

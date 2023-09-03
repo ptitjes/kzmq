@@ -11,12 +11,10 @@ kotlin {
     jvmTargets()
 
     sourceSets {
-        val jeromqVersion: String by project
-
         jvmMain {
             dependencies {
                 implementation(project(":kzmq-core"))
-                implementation("org.zeromq:jeromq:$jeromqVersion")
+                implementation(libs.jeromq)
             }
         }
     }

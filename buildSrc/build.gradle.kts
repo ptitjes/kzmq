@@ -3,32 +3,22 @@
  * Use of this source code is governed by the Apache 2.0 license.
  */
 
-import java.util.*
-
 plugins {
     `kotlin-dsl`
+    alias(libs.plugins.kotlin.jvm)
 }
 
 repositories {
     gradlePluginPortal()
 }
 
-val props = Properties().apply {
-    file("../gradle.properties").inputStream().use { load(it) }
-}
-
-val kotlinVersion: String by props
-val kotlinxKoverVersion: String by props
-val kotestVersion: String by props
-val mockmpVersion: String by props
-
 dependencies {
-    println("Used kotlin version in buildSrc: $kotlinVersion")
+    // Workaround for https://github.com/gradle/gradle/issues/15383
+    implementation(files(libs.javaClass.superclass.protectionDomain.codeSource.location))
 
-    implementation(kotlin("gradle-plugin", kotlinVersion))
-    implementation("org.jetbrains.kotlin:atomicfu:$kotlinVersion")
-    implementation("org.jetbrains.kotlinx:kover:$kotlinxKoverVersion")
-
-    implementation("io.kotest:kotest-framework-multiplatform-plugin-gradle:$kotestVersion")
-    implementation("org.kodein.mock.mockmp:org.kodein.mock.mockmp.gradle.plugin:$mockmpVersion")
+    implementation(libs.kotlin.gradle.plugin)
+    implementation(libs.kotlin.atomicfu.plugin)
+    implementation(libs.kotlinx.kover.plugin)
+    implementation(libs.kotest.plugin)
+    implementation(libs.mockmp.plugin)
 }

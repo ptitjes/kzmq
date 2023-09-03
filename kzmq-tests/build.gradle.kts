@@ -19,8 +19,6 @@ kotlin {
     nativeTargets { (it.isSupportedByCIO || it.isSupportedByLibzmq) && it.isSupportedByKtorNetwork }
 
     sourceSets {
-        val ktorVersion: String by project
-
         commonMain {
             dependencies {
                 implementation(project(":kzmq-core"))
@@ -29,19 +27,19 @@ kotlin {
 
         jvmMain {
             dependencies {
-                implementation("io.ktor:ktor-network:$ktorVersion")
+                implementation(libs.ktor.network)
             }
         }
 
         jsMain {
             dependencies {
-                implementation(npm("find-open-port", "2.0.3"))
+                implementation(npm("find-open-port", libs.versions.findopenport.get()))
             }
         }
 
         nativeMain {
             dependencies {
-                implementation("io.ktor:ktor-network:$ktorVersion")
+                implementation(libs.ktor.network)
             }
         }
 

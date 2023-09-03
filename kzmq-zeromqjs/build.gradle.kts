@@ -11,12 +11,10 @@ kotlin {
     jsTargets()
 
     sourceSets {
-        val zeromqjsVersion: String by project
-
         jsMain {
             dependencies {
                 implementation(project(":kzmq-core"))
-                implementation(npm("zeromq", zeromqjsVersion))
+                implementation(npm("zeromq", libs.versions.zeromqjs.get()))
             }
         }
     }
