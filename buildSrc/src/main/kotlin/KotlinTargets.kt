@@ -56,7 +56,6 @@ private val perKonanTargetApplier = mutableMapOf<KonanTarget, KotlinMultiplatfor
     IOS_SIMULATOR_ARM64 to { iosSimulatorArm64() },
     WATCHOS_ARM32 to { watchosArm32() },
     WATCHOS_ARM64 to { watchosArm64() },
-    WATCHOS_X86 to { watchosX86() },
     WATCHOS_X64 to { watchosX64() },
     WATCHOS_DEVICE_ARM64 to { watchosDeviceArm64() },
     WATCHOS_SIMULATOR_ARM64 to { watchosSimulatorArm64() },
@@ -67,10 +66,6 @@ private val perKonanTargetApplier = mutableMapOf<KonanTarget, KotlinMultiplatfor
     MACOS_ARM64 to { macosArm64() },
     LINUX_X64 to { linuxX64() },
     LINUX_ARM64 to { linuxArm64() },
-    LINUX_ARM32_HFP to { linuxArm32Hfp() },
-    LINUX_MIPS32 to { linuxMips32() },
-    LINUX_MIPSEL32 to { linuxMipsel32() },
-    MINGW_X86 to { mingwX86() },
     MINGW_X64 to { mingwX64() },
 )
 
@@ -81,13 +76,9 @@ val KonanTarget.buildHost: Family
         ANDROID_ARM32,
         ANDROID_ARM64,
         LINUX_ARM64,
-        LINUX_ARM32_HFP,
-        LINUX_MIPS32,
-        LINUX_MIPSEL32,
         LINUX_X64,
         -> Family.LINUX
 
-        MINGW_X86,
         MINGW_X64,
         -> Family.MINGW
 
@@ -96,7 +87,6 @@ val KonanTarget.buildHost: Family
         IOS_SIMULATOR_ARM64,
         WATCHOS_ARM32,
         WATCHOS_ARM64,
-        WATCHOS_X86,
         WATCHOS_X64,
         WATCHOS_SIMULATOR_ARM64,
         WATCHOS_DEVICE_ARM64,
@@ -107,29 +97,18 @@ val KonanTarget.buildHost: Family
         MACOS_ARM64,
         -> Family.OSX
 
-        IOS_ARM32,
-        WASM32,
-        is ZEPHYR,
-        -> throw IllegalStateException("Target $this not supported")
+        else -> throw IllegalStateException("Target $this not supported")
     }
 
-val KonanTarget.isSupportedByLibzmq
-    get() = this in targetsSupportedByLibzmq && this !in targetsMissingCoroutineSupport
+val KonanTarget.isSupportedByCIO get() = this.isSupportedByKtorNetwork && this !in cioIgnoredTargets
+val KonanTarget.isSupportedByLibzmq get() = this in targetsSupportedByLibzmq
+val KonanTarget.isSupportedByKtorNetwork get() = this in targetsSupportedByKtorNetwork
 
-val KonanTarget.isSupportedByKtorNetwork
-    get() = this in targetsSupportedByKtorNetwork && this !in targetsMissingCoroutineSupport
-
-val KonanTarget.isSupportedByCIO
-    get() = this in targetsSupportedByKtorNetwork && this !in targetsMissingCoroutineSupport
-
-private val targetsMissingCoroutineSupport = setOf(
-    LINUX_ARM32_HFP,
-    LINUX_ARM64,
-    MINGW_X86,
+private val cioIgnoredTargets = setOf(
+    LINUX_ARM64, // Not supported by Kermit
 )
 
 private val targetsSupportedByLibzmq = setOf(
-    LINUX_ARM32_HFP,
     LINUX_ARM64,
     LINUX_X64,
     MINGW_X86,
@@ -139,7 +118,6 @@ private val targetsSupportedByLibzmq = setOf(
 )
 
 private val targetsSupportedByKtorNetwork = setOf(
-    LINUX_ARM32_HFP,
     LINUX_ARM64,
     LINUX_X64,
     MACOS_ARM64,
