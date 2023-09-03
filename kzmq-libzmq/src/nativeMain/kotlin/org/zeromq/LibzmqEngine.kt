@@ -8,6 +8,7 @@ package org.zeromq
 import kotlinx.cinterop.*
 import org.zeromq.internal.libzmq.*
 
+@OptIn(ExperimentalForeignApi::class)
 internal class LibzmqEngine private constructor(private val underlying: COpaquePointer?) :
     Engine {
 

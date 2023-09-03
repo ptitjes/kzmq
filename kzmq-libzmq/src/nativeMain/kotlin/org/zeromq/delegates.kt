@@ -3,24 +3,25 @@
  * Use of this source code is governed by the Apache 2.0 license.
  */
 
+@file:OptIn(ExperimentalForeignApi::class)
+
 package org.zeromq
 
 import kotlinx.cinterop.*
-import org.zeromq.internal.libzmq.zmq_getsockopt
-import org.zeromq.internal.libzmq.zmq_setsockopt
+import org.zeromq.internal.libzmq.*
 import platform.posix.*
 import kotlin.reflect.*
 
 internal fun <V : CPrimitiveVar, T> socketOption(
     socket: COpaquePointer?,
     option: Int,
-    converter: PrimitiveConverter<V, T>
+    converter: PrimitiveConverter<V, T>,
 ) = PrimitiveSocketOptionDelegate<V, T>(socket, option, converter)
 
 internal class PrimitiveSocketOptionDelegate<V : CPrimitiveVar, T>(
     private val socket: COpaquePointer?,
     private val option: Int,
-    private val converter: PrimitiveConverter<V, T>
+    private val converter: PrimitiveConverter<V, T>,
 ) {
     operator fun getValue(thisRef: Any?, property: KProperty<*>): T = memScoped {
         val primitiveVar = converter.instantiate(this)

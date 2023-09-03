@@ -6,9 +6,9 @@
 package org.zeromq
 
 import kotlinx.cinterop.*
-import org.zeromq.internal.libzmq.ZMQ_CONFLATE
-import org.zeromq.internal.libzmq.ZMQ_INVERT_MATCHING
+import org.zeromq.internal.libzmq.*
 
+@OptIn(ExperimentalForeignApi::class)
 internal class LibzmqSubscriberSocket internal constructor(underlying: COpaquePointer?) :
     LibzmqSocket(underlying, Type.SUB), SubscriberSocket {
 
