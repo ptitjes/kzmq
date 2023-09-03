@@ -80,4 +80,10 @@ tasks {
                 && konanTarget.architecture == HostManager.host.architecture
         }
     }
+
+    withType<KotlinNativeCompile> {
+        onlyIf {
+            this.target !in listOf("linux_arm64", "mingw_x64")
+        }
+    }
 }
