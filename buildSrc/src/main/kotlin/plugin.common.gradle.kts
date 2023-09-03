@@ -74,9 +74,10 @@ tasks {
         }
     }
 
-    withType<CInteropProcess> { onlyIf { konanTarget.buildHost == HostManager.host.family } }
-
-//    withType<KotlinNativeCompile> {
-//        onlyIf { compilation.konanTarget.buildHost == HostManager.host.family }
-//    }
+    withType<CInteropProcess> {
+        onlyIf {
+            konanTarget.buildHost == HostManager.host.family
+                && konanTarget.architecture == HostManager.host.architecture
+        }
+    }
 }

@@ -21,7 +21,8 @@ kotlin {
                     when (konanTarget.family) {
                         Family.LINUX -> when (konanTarget.architecture) {
                             Architecture.X64 -> includeDirs.allHeaders("/usr/include", "/usr/include/x86_64-linux-gnu")
-                            else -> error("Unknown Linux architecture")
+                            Architecture.ARM64 -> includeDirs.allHeaders("/usr/include", "/usr/include/arm64-linux-gnu")
+                            else -> error("Unknown Linux architecture '${konanTarget.architecture}'")
                         }
 
                         Family.OSX -> includeDirs.allHeaders("/opt/local/include", "/usr/local/include")
