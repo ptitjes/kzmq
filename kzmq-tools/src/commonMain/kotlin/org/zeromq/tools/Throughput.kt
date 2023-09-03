@@ -10,10 +10,6 @@ import kotlinx.coroutines.*
 import org.zeromq.*
 import kotlin.time.*
 
-private const val DEFAULT_ADDRESS = "tcp://127.0.0.1:9990"
-private const val DEFAULT_MESSAGE_COUNT = 10_000_000
-private const val DEFAULT_MESSAGE_SIZE = 100
-
 fun main(args: Array<String>) = runBlocking {
     val parser = ArgParser("throughput")
 
@@ -21,12 +17,15 @@ fun main(args: Array<String>) = runBlocking {
         .required()
 
     val address by parser.option(ArgType.String, fullName = "address", description = "Address")
-        .default(DEFAULT_ADDRESS)
+        .default("tcp://127.0.0.1:9990")
 
     val messageCount by parser.option(ArgType.Int, fullName = "message-count", description = "Message count")
-        .default(DEFAULT_MESSAGE_COUNT)
+        .default(10_000_000)
     val messageSize by parser.option(ArgType.Int, fullName = "message-size", description = "Message size")
-        .default(DEFAULT_MESSAGE_SIZE)
+        .default(100)
+
+    val verbose by parser.option(ArgType.Boolean, fullName = "verbose", description = "Set verbose output")
+        .default(false)
 
     val side by parser.option(
         ArgType.Choice<Side>(),
@@ -46,18 +45,18 @@ fun main(args: Array<String>) = runBlocking {
     withContext(dispatcher) {
         when (side) {
             Side.PUSH -> {
-                val pushJob = launch { context.push(message, messageCount) { connect(address) } }
+                val pushJob = launch { context.push(message, messageCount, verbose) { connect(address) } }
                 pushJob.join()
             }
 
             Side.PULL -> {
-                val pullJob = launch { context.pull(messageCount) { bind(address) } }
+                val pullJob = launch { context.pull(messageCount, verbose) { bind(address) } }
                 pullJob.join()
             }
 
             Side.BOTH -> {
-                val pushJob = launch { context.push(message, messageCount) { connect(address) } }
-                val pullJob = launch { context.pull(messageCount) { bind(address) } }
+                val pushJob = launch { context.push(message, messageCount, verbose) { connect(address) } }
+                val pullJob = launch { context.pull(messageCount, verbose) { bind(address) } }
 
                 pullJob.join()
                 pushJob.cancelAndJoin()
@@ -75,6 +74,7 @@ private enum class Side {
 private suspend fun Context.push(
     message: Message,
     messageCount: Int,
+    verbose: Boolean,
     configure: suspend PushSocket.() -> Unit,
 ) {
     createPush().apply { configure() }.use { socket ->
@@ -82,7 +82,7 @@ private suspend fun Context.push(
         while (sent < messageCount) {
             socket.send(message)
             sent++
-            if (sent % 1000 == 0) println("Sent $sent")
+            if (verbose && sent % 1000 == 0) println("Sent $sent")
         }
     }
 }
@@ -90,6 +90,7 @@ private suspend fun Context.push(
 @OptIn(ExperimentalTime::class)
 private suspend fun Context.pull(
     messageCount: Int,
+    verbose: Boolean,
     configure: suspend PullSocket.() -> Unit,
 ) {
     createPull().apply { configure() }.use { socket ->
@@ -98,7 +99,7 @@ private suspend fun Context.pull(
             while (received < messageCount) {
                 socket.receive()
                 received++
-                if (received % 1000 == 0) println("Received $received")
+                if (verbose && received % 1000 == 0) println("Received $received")
             }
         }.toDouble(DurationUnit.SECONDS)
 
