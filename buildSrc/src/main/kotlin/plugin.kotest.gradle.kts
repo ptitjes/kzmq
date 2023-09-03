@@ -10,14 +10,12 @@ plugins {
 
 kotlin {
     sourceSets {
-        val kotestVersion: String by project
-
         if (project.name.endsWith("-tests")) {
             commonMain {
                 dependencies {
-                    implementation("io.kotest:kotest-framework-engine:$kotestVersion")
-                    implementation("io.kotest:kotest-framework-datatest:$kotestVersion")
-                    implementation("io.kotest:kotest-assertions-core:$kotestVersion")
+                    implementation(libs.kotest.framework.engine)
+                    implementation(libs.kotest.framework.datatest)
+                    implementation(libs.kotest.assertions.core)
                 }
             }
 
@@ -27,9 +25,9 @@ kotlin {
         } else {
             commonTest {
                 dependencies {
-                    implementation("io.kotest:kotest-framework-engine:$kotestVersion")
-                    implementation("io.kotest:kotest-framework-datatest:$kotestVersion")
-                    implementation("io.kotest:kotest-assertions-core:$kotestVersion")
+                    implementation(libs.kotest.framework.engine)
+                    implementation(libs.kotest.framework.datatest)
+                    implementation(libs.kotest.assertions.core)
                 }
             }
 
@@ -44,7 +42,7 @@ kotlin {
         if (hasJvmSupport) {
             create("jvmTest").apply {
                 dependencies {
-                    implementation("io.kotest:kotest-runner-junit5:$kotestVersion")
+                    implementation(libs.kotest.runner.junit5)
                 }
             }
         }

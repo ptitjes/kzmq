@@ -10,11 +10,9 @@ plugins {
 
 kotlin {
     sourceSets {
-        val kotlinxAtomicFuVersion: String by project
-
         commonMain {
             dependencies {
-                implementation("org.jetbrains.kotlinx:atomicfu:$kotlinxAtomicFuVersion")
+                implementation(libs.kotlinx.atomicfu)
             }
         }
     }

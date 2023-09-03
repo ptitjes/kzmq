@@ -24,17 +24,15 @@ kotlin {
             languageSettings.optIn("kotlin.experimental.ExperimentalTypeInference")
         }
 
-        val kotlinxCoroutinesVersion: String by project
-
         commonMain {
             dependencies {
-                implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:$kotlinxCoroutinesVersion")
+                implementation(libs.kotlinx.coroutines.core)
             }
         }
         commonTest {
             dependencies {
                 implementation(kotlin("test"))
-                implementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:$kotlinxCoroutinesVersion")
+                implementation(libs.kotlinx.coroutines.test)
             }
         }
     }
@@ -78,7 +76,7 @@ tasks {
 
     withType<CInteropProcess> { onlyIf { konanTarget.buildHost == HostManager.host.family } }
 
-    withType<AbstractKotlinNativeCompile<*, *, *>> {
-        onlyIf { compilation.konanTarget.buildHost == HostManager.host.family }
-    }
+//    withType<KotlinNativeCompile> {
+//        onlyIf { compilation.konanTarget.buildHost == HostManager.host.family }
+//    }
 }
