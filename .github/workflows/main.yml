@@ -24,7 +24,7 @@ jobs:
       - name: Gradle build
         uses: gradle/gradle-build-action@v2
         with:
-          arguments: build koverMergedXmlReport
+          arguments: build koverXmlReport
       - name: Publish Test Report
         uses: mikepenz/action-junit-report@v3
         if: always() # always run even if the previous step fails
@@ -38,7 +38,13 @@ jobs:
         id: kover
         uses: mi-kas/kover-report@v1
         with:
-          path: ${{ github.workspace }}/build/reports/kover/merged/xml/report.xml
+          path: |
+            ${{ github.workspace }}/kzmq-cio/build/reports/kover/report.xml
+            ${{ github.workspace }}/kzmq-core/build/reports/kover/report.xml
+            ${{ github.workspace }}/kzmq-jeromq/build/reports/kover/report.xml
+            ${{ github.workspace }}/kzmq-libzmq/build/reports/kover/report.xml
+            ${{ github.workspace }}/kzmq-tests/build/reports/kover/report.xml
+            ${{ github.workspace }}/kzmq-zeromqjs/build/reports/kover/report.xml
           token: ${{ secrets.GITHUB_TOKEN }}
           title: Code Coverage
           update-comment: true
