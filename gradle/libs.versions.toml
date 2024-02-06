@@ -15,7 +15,7 @@ ktor = "2.3.3"
 kermit = "1.1.3"
 findopenport = "2.0.3"
 
-jeromq = "0.5.2"
+jeromq = "0.6.0"
 zeromqjs = "6.0.0-beta.17"
 
 kotest = "5.6.2"
