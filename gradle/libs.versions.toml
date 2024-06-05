@@ -18,7 +18,7 @@ findopenport = "2.0.3"
 jeromq = "0.5.2"
 zeromqjs = "6.0.0-beta.17"
 
-kotest = "5.6.2"
+kotest = "5.9.1"
 mockmp = "1.15.0"
 
 build-config = "3.1.0"
