@@ -21,7 +21,7 @@ zeromqjs = "6.0.0-beta.17"
 kotest = "5.6.2"
 mockmp = "1.15.0"
 
-build-config = "3.1.0"
+build-config = "5.4.0"
 
 [plugins]
 
