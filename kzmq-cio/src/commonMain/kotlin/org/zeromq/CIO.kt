@@ -5,4 +5,18 @@
 
 package org.zeromq
 
-public expect object CIO : EngineFactory
+import kotlin.coroutines.*
+
+public object CIO : EngineFactory {
+    init {
+        addToLoader()
+    }
+
+    override val name: String = "CIO"
+    override val supportedTransports: Set<String> = setOf("inproc", "tcp", "ipc")
+    override fun create(coroutineContext: CoroutineContext): Engine = createEngine(coroutineContext)
+}
+
+internal expect fun addToLoader()
+
+internal expect fun createEngine(coroutineContext: CoroutineContext): CIOEngine
