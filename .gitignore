@@ -38,3 +38,5 @@ out/
 .idea/kotlinc.xml
 .idea/artifacts
 .idea/modules
+
+.kotlin
