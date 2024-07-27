@@ -7,9 +7,9 @@ package org.zeromq.internal.tcp
 
 import io.ktor.network.selector.*
 import io.ktor.network.sockets.*
-import io.ktor.utils.io.errors.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.*
+import kotlinx.io.*
 import org.zeromq.internal.*
 import org.zeromq.internal.PeerEvent.Kind.*
 import kotlin.coroutines.*

@@ -7,28 +7,36 @@ package org.zeromq.internal
 
 import io.ktor.utils.io.*
 import io.ktor.utils.io.core.*
+import io.ktor.utils.io.core.writeUByte
+import kotlinx.io.*
+import kotlinx.io.Buffer
 import org.zeromq.*
+
+private suspend inline fun ByteWriteChannel.write(writer: Sink.() -> Unit) {
+    val buffer = Buffer().apply(writer)
+    writeBuffer(buffer)
+    flush()
+}
 
 @OptIn(ExperimentalUnsignedTypes::class)
 internal suspend fun ByteWriteChannel.writeGreetingPart1() =
-    writePacket {
-        writeFully(SIGNATURE)
+    write {
+        write(SIGNATURE.asByteArray())
         writeUByte(MAJOR_VERSION.toUByte())
     }
 
 @OptIn(ExperimentalUnsignedTypes::class)
 internal suspend fun ByteWriteChannel.writeGreetingPart2(mechanism: Mechanism, asServer: Boolean) =
-    writePacket {
+    write {
         writeUByte(MINOR_VERSION.toUByte())
         writeMechanism(mechanism)
         writeUByte(if (asServer) AS_SERVER else AS_CLIENT)
-        writeFully(FILLER)
+        write(FILLER.asByteArray())
     }
 
-@OptIn(ExperimentalUnsignedTypes::class)
-private fun BytePacketBuilder.writeMechanism(mechanism: Mechanism) {
+private fun Sink.writeMechanism(mechanism: Mechanism) {
     val bytes = mechanism.bytes
-    writeFully(bytes)
+    write(bytes)
     repeat(MECHANISM_SIZE - bytes.size) { writeUByte(NULL) }
 }
 
@@ -50,7 +58,7 @@ private suspend fun ByteWriteChannel.writeCommand(command: Command) {
     }
 }
 
-internal suspend fun ByteWriteChannel.writeCommand(command: ReadyCommand) = writePacket {
+internal suspend fun ByteWriteChannel.writeCommand(command: ReadyCommand) = write {
     writeCommand(CommandName.READY) {
         for ((propertyName, bytes) in command.properties) {
             writeProperty(propertyName, bytes)
@@ -58,43 +66,43 @@ internal suspend fun ByteWriteChannel.writeCommand(command: ReadyCommand) = writ
     }
 }
 
-internal suspend fun ByteWriteChannel.writeCommand(command: ErrorCommand) = writePacket {
+internal suspend fun ByteWriteChannel.writeCommand(command: ErrorCommand) = write {
     writeCommand(CommandName.READY) {
         writeShortString(command.reason.encodeToByteArray())
     }
 }
 
-internal suspend fun ByteWriteChannel.writeCommand(command: SubscribeCommand) = writePacket {
+internal suspend fun ByteWriteChannel.writeCommand(command: SubscribeCommand) = write {
     writeCommand(CommandName.SUBSCRIBE) {
         writeFully(command.topic)
     }
 }
 
-internal suspend fun ByteWriteChannel.writeCommand(command: CancelCommand) = writePacket {
+internal suspend fun ByteWriteChannel.writeCommand(command: CancelCommand) = write {
     writeCommand(CommandName.CANCEL) {
         writeFully(command.topic)
     }
 }
 
 @OptIn(ExperimentalUnsignedTypes::class)
-internal suspend fun ByteWriteChannel.writeCommand(command: PingCommand) = writePacket {
+internal suspend fun ByteWriteChannel.writeCommand(command: PingCommand) = write {
     writeCommand(CommandName.PING) {
         writeUShort(command.ttl)
         writeFully(command.context)
     }
 }
 
-internal suspend fun ByteWriteChannel.writeCommand(command: PongCommand) = writePacket {
+internal suspend fun ByteWriteChannel.writeCommand(command: PongCommand) = write {
     writeCommand(CommandName.PONG) {
         writeFully(command.context)
     }
 }
 
-private fun BytePacketBuilder.writeCommand(
+private fun Sink.writeCommand(
     commandName: CommandName,
-    dataBuilder: BytePacketBuilder.() -> Unit,
+    dataBuilder: Sink.() -> Unit,
 ) {
-    val commandBody = buildPacket {
+    val commandBody = Buffer().apply {
         writeShortString(commandName.bytes)
         dataBuilder()
     }
@@ -103,7 +111,7 @@ private fun BytePacketBuilder.writeCommand(
     writePacket(commandBody)
 }
 
-private fun BytePacketBuilder.writeProperty(
+private fun Sink.writeProperty(
     propertyName: PropertyName,
     valueBytes: ByteArray,
 ) {
@@ -112,13 +120,12 @@ private fun BytePacketBuilder.writeProperty(
     writeFully(valueBytes)
 }
 
-@OptIn(ExperimentalUnsignedTypes::class)
-private fun BytePacketBuilder.writeShortString(bytes: ByteArray) {
+private fun Sink.writeShortString(bytes: ByteArray) {
     writeUByte(bytes.size.toUByte())
     writeFully(bytes)
 }
 
-private suspend fun ByteWriteChannel.writeMessage(message: Message) = writePacket {
+private suspend fun ByteWriteChannel.writeMessage(message: Message) = write {
     val parts = message.frames
     val lastIndex = parts.lastIndex
     for ((index, part) in parts.withIndex()) {
@@ -127,14 +134,13 @@ private suspend fun ByteWriteChannel.writeMessage(message: Message) = writePacke
     }
 }
 
-private fun BytePacketBuilder.writeMessagePart(hasMore: Boolean, part: ByteArray) {
+private fun Sink.writeMessagePart(hasMore: Boolean, part: ByteArray) {
     val flags = if (hasMore) ZmqFlags.more else ZmqFlags.none
     writeFrameHeader(flags, part.size.toLong())
     writeFully(part)
 }
 
-@OptIn(ExperimentalUnsignedTypes::class)
-private fun BytePacketBuilder.writeFrameHeader(flags: ZmqFlags, size: Long) {
+private fun Sink.writeFrameHeader(flags: ZmqFlags, size: Long) {
     if (size <= 255) {
         writeZmqFlags(flags)
         writeUByte(size.toUByte())
@@ -144,8 +150,7 @@ private fun BytePacketBuilder.writeFrameHeader(flags: ZmqFlags, size: Long) {
     }
 }
 
-@OptIn(ExperimentalUnsignedTypes::class)
-private fun BytePacketBuilder.writeZmqFlags(flags: ZmqFlags) {
+private fun Sink.writeZmqFlags(flags: ZmqFlags) {
     writeUByte(flags.data)
 }
 
