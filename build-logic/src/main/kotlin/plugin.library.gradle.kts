@@ -5,6 +5,7 @@
 
 plugins {
     id("plugin.common")
+    id("org.jetbrains.dokka")
 }
 
 kotlin {

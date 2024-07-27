@@ -13,9 +13,9 @@ kotlin {
         if (project.name.endsWith("-tests")) {
             commonMain {
                 dependencies {
-                    implementation(libs.kotest.framework.engine)
-                    implementation(libs.kotest.framework.datatest)
-                    implementation(libs.kotest.assertions.core)
+                    implementation(libs.getLibrary("kotest.framework.engine"))
+                    implementation(libs.getLibrary("kotest.framework.datatest"))
+                    implementation(libs.getLibrary("kotest.assertions.core"))
                 }
             }
 
@@ -25,9 +25,9 @@ kotlin {
         } else {
             commonTest {
                 dependencies {
-                    implementation(libs.kotest.framework.engine)
-                    implementation(libs.kotest.framework.datatest)
-                    implementation(libs.kotest.assertions.core)
+                    implementation(libs.getLibrary("kotest.framework.engine"))
+                    implementation(libs.getLibrary("kotest.framework.datatest"))
+                    implementation(libs.getLibrary("kotest.assertions.core"))
                 }
             }
 
@@ -42,7 +42,7 @@ kotlin {
         if (hasJvmSupport) {
             create("jvmTest").apply {
                 dependencies {
-                    implementation(libs.kotest.runner.junit5)
+                    implementation(libs.getLibrary("kotest.runner.junit5"))
                 }
             }
         }
