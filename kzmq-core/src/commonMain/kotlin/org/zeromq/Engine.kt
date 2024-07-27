@@ -8,4 +8,4 @@ package org.zeromq
 /**
  * A ZeroMQ backend engine. Should not be used directly. Use [Context] instead.
  */
-public interface Engine : SocketFactory, Closeable
+public interface Engine : SocketFactory, AutoCloseable

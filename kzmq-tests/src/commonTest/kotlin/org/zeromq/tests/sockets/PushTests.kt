@@ -124,7 +124,7 @@ class PushTests : FunSpec({
         val pull1 = ctx2.createPull()
         val pull2 = ctx2.createPull()
 
-        listOf(push, pull1, pull2).use {
+        use(push, pull1, pull2) {
             push.apply {
                 connect(address1)
                 sendHighWaterMark = 5

@@ -115,10 +115,10 @@ private fun RootScope.runDualContextTest(
         val testConfig = globalConfig.copy(enabled = enableTest(data))
 
         addTest(testName, false, testConfig, TestType.Dynamic) {
-            withTimeout(testTimeout) {
-                val context1 = Context(engine1)
-                val context2 = if (protocol == Protocol.INPROC) context1 else Context(engine2)
-                (context1 to context2).use {
+            val context1 = Context(engine1)
+            val context2 = if (protocol == Protocol.INPROC) context1 else Context(engine2)
+            use(context1, context2) {
+                withTimeout(testTimeout) {
                     test(context1, context2, protocol)
                 }
             }

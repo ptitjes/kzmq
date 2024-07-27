@@ -40,7 +40,7 @@ public fun CoroutineScope.Context(
 public class Context internal constructor(
     coroutineContext: CoroutineContext,
     engineFactory: EngineFactory,
-) : SocketFactory, Closeable {
+) : SocketFactory, AutoCloseable {
 
     private val instance: Engine = engineFactory.create(coroutineContext)
 
