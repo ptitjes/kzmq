@@ -55,7 +55,7 @@ private fun RootScope.runSingleContextTest(
     }
 
     val testTimeout = timeout ?: DEFAULT_TEST_TIMEOUT
-    val globalConfig = UnresolvedTestConfig(timeout = testTimeout * 2)
+    val globalConfig = TestConfig(timeout = testTimeout * 2)
 
     testData.forEach { data ->
         val (engine, protocol) = data
@@ -107,7 +107,7 @@ private fun RootScope.runDualContextTest(
     }
 
     val testTimeout = timeout ?: DEFAULT_TEST_TIMEOUT
-    val globalConfig = UnresolvedTestConfig(timeout = testTimeout * 2)
+    val globalConfig = TestConfig(timeout = testTimeout * 2)
 
     testData.forEach { data ->
         val (engine1, engine2, protocol) = data
