@@ -20,5 +20,5 @@ dependencies {
     implementation(plugin(libs.plugins.kotlinx.kover))
     implementation(plugin(libs.plugins.kotlin.dokka))
     implementation(plugin(libs.plugins.kotest))
-    implementation(plugin(libs.plugins.mockmp))
+    implementation(plugin(libs.plugins.mokkery))
 }

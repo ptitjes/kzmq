@@ -5,5 +5,5 @@
 
 plugins {
     id("plugin.common")
-    id("org.kodein.mock.mockmp")
+    id("dev.mokkery")
 }

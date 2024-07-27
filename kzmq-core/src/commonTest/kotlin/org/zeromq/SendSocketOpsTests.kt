@@ -5,26 +5,24 @@
 
 package org.zeromq
 
+import dev.mokkery.*
+import dev.mokkery.answering.*
+import dev.mokkery.matcher.*
 import io.kotest.core.spec.style.*
 import kotlinx.coroutines.flow.*
-import org.kodein.mock.*
 
-@UsesMocks(SendSocket::class)
 class SendSocketOpsTests : FunSpec({
     test("collectToSocket") {
-        with(Mocker()) {
-            val socket = MockSendSocket(this)
+        val socket = mock<SendSocket> {
+            everySuspend { send(any()) } returns Unit
+        }
+        val messages = List(10) { Message("message-$it".encodeToByteArray()) }
 
-            everySuspending { socket.send(isAny()) } returns Unit
+        messages.asFlow().collectToSocket(socket)
 
-            val messages = List(10) { Message("message-$it".encodeToByteArray()) }
-
-            messages.asFlow().collectToSocket(socket)
-
-            verifyWithSuspend {
-                messages.forEach { message ->
-                    socket.send(message)
-                }
+        verifySuspend {
+            messages.forEach { message ->
+                socket.send(message)
             }
         }
     }

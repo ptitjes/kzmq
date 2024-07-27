@@ -20,7 +20,7 @@ jeromq = "0.6.0"
 zeromqjs = "6.0.0-beta.20"
 
 kotest = "5.9.1"
-mockmp = "1.17.0"
+mokkery = "2.1.1"
 
 build-config = "5.4.0"
 
@@ -33,7 +33,7 @@ kotlinx-benchmark = { id = "org.jetbrains.kotlinx.benchmark", version.ref = "kot
 kotlinx-kover = { id = "org.jetbrains.kotlinx.kover", version.ref = "kover" }
 kotlin-dokka = { id = "org.jetbrains.dokka", version.ref = "dokka" }
 kotest = { id = "io.kotest.multiplatform", version.ref = "kotest" }
-mockmp = { id = "org.kodein.mock.mockmp", version.ref = "mockmp" }
+mokkery = { id = "dev.mokkery", version.ref = "mokkery" }
 
 build-config = { id = "com.github.gmazzo.buildconfig", version.ref = "build-config" }
 
