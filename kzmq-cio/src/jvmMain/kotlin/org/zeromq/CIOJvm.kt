@@ -8,12 +8,11 @@ package org.zeromq
 import kotlinx.coroutines.*
 import kotlin.coroutines.*
 
-public actual object CIO : EngineFactory {
-    override val name: String = "CIO"
-    override val supportedTransports: Set<String> = setOf("inproc", "tcp", "ipc")
-    override fun create(coroutineContext: CoroutineContext): Engine =
-        CIOEngine(coroutineContext + Dispatchers.IO)
+internal actual fun addToLoader() {
 }
+
+internal actual fun createEngine(coroutineContext: CoroutineContext) =
+    CIOEngine(coroutineContext + Dispatchers.IO)
 
 public class CIOEngineContainer : EngineContainer {
     override val factory: EngineFactory = CIO

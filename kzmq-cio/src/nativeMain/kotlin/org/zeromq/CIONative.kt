@@ -10,17 +10,12 @@ import org.zeromq.util.*
 import kotlin.coroutines.*
 
 @OptIn(InternalAPI::class)
-public actual object CIO : EngineFactory {
-    override val name: String = "cio"
-    override val supportedTransports: Set<String> = setOf("inproc", "tcp", "ipc")
-    override fun create(coroutineContext: CoroutineContext): Engine {
-        return CIOEngine(coroutineContext + Dispatchers.Default)
-    }
-
-    init {
-        Engines.append(CIO)
-    }
+internal actual fun addToLoader() {
+    Engines.append(CIO)
 }
+
+internal actual fun createEngine(coroutineContext: CoroutineContext) =
+    CIOEngine(coroutineContext + Dispatchers.IO)
 
 @Suppress("DEPRECATION", "unused")
 @OptIn(ExperimentalStdlibApi::class)
