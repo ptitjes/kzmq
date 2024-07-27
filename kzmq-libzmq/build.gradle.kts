@@ -30,7 +30,6 @@ kotlin {
                         Family.MINGW -> {
                             val mingwPath = File(
                                 when (konanTarget.architecture) {
-                                    Architecture.X86 -> System.getenv("MINGW32_DIR") ?: "C:/msys32/mingw32"
                                     Architecture.X64 -> System.getenv("MINGW64_DIR") ?: "C:/msys64/mingw64"
                                     else -> error("Unknown Mingw architecture")
                                 }
