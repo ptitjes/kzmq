@@ -8,7 +8,7 @@ package org.zeromq
 /**
  * A ZeroMQ socket.
  */
-public interface Socket : Closeable {
+public interface Socket : AutoCloseable {
     /**
      * The socket type of this socket.
      */
