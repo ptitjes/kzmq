@@ -17,9 +17,9 @@ internal class TcpSocketHandler(
     private val mailbox: PeerMailbox,
     private val rawSocket: Socket,
 ) {
-    private var input = rawSocket.openReadChannel()
-    private var output = rawSocket.openWriteChannel(autoFlush = true)
-    // TODO do manual flushes
+    private val connection = rawSocket.connection()
+    private var input = connection.input
+    private var output = connection.output
 
     private var peerMinorVersion: Int = 1
 
