@@ -5,23 +5,21 @@
 
 package org.zeromq
 
+import dev.mokkery.*
+import dev.mokkery.answering.*
 import io.kotest.core.spec.style.*
 import io.kotest.matchers.collections.*
 import kotlinx.coroutines.flow.*
-import org.kodein.mock.*
 
-@UsesMocks(ReceiveSocket::class)
 class ReceiveSocketOpsTests : FunSpec({
     test("consumeAsFlow") {
-        with(Mocker()) {
-            val socket = MockReceiveSocket(this)
+        val messages = List(10) { Message("message-$it".encodeToByteArray()) }
 
-            val messages = List(10) { Message("message-$it".encodeToByteArray()) }
-
+        val socket = mock<ReceiveSocket> {
             val messageIterator = messages.iterator()
-            everySuspending { socket.receive() } runs { messageIterator.next() }
-
-            socket.consumeAsFlow().take(10).toList() shouldContainExactly messages
+            everySuspend { receive() } calls { messageIterator.next() }
         }
+
+        socket.consumeAsFlow().take(10).toList() shouldContainExactly messages
     }
 })
