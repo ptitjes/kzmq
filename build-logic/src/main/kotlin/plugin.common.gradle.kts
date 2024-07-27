@@ -16,6 +16,10 @@ plugins {
 }
 
 kotlin {
+    jvmToolchain(17)
+
+    applyDefaultHierarchyTemplate()
+
     sourceSets {
         all {
             languageSettings.optIn("kotlin.RequiresOptIn")
@@ -26,13 +30,13 @@ kotlin {
 
         commonMain {
             dependencies {
-                implementation(libs.kotlinx.coroutines.core)
+                implementation(libs.getLibrary("kotlinx.coroutines.core"))
             }
         }
         commonTest {
             dependencies {
                 implementation(kotlin("test"))
-                implementation(libs.kotlinx.coroutines.test)
+                implementation(libs.getLibrary("kotlinx.coroutines.test"))
             }
         }
     }
@@ -43,12 +47,6 @@ kotlin {
     val osxHostTargets = nativeTargets.filter { it.konanTarget.buildHost == Family.OSX }
     val androidTargets = targets.withType<KotlinAndroidTarget>()
     val crossPlatformTargets = targets.filter { it !in nativeTargets }
-
-    logger.info("Linux host targets: $linuxHostTargets")
-    logger.info("OSX host targets: $osxHostTargets")
-    logger.info("Windows host targets: $windowsHostTargets")
-    logger.info("Android targets: $androidTargets")
-    logger.info("Main host targets: $crossPlatformTargets")
 
     linuxHostTargets.onlyBuildIf { !CI || HostManager.hostIsLinux }
     osxHostTargets.onlyBuildIf { !CI || HostManager.hostIsMac }

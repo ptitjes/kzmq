@@ -3,22 +3,17 @@
  * Use of this source code is governed by the Apache 2.0 license.
  */
 
-import org.gradle.kotlin.dsl.*
 import org.jetbrains.kotlin.gradle.dsl.*
 import org.jetbrains.kotlin.gradle.plugin.mpp.*
 import org.jetbrains.kotlin.konan.target.*
 import org.jetbrains.kotlin.konan.target.KonanTarget.*
 
 fun KotlinMultiplatformExtension.jvmTargets() {
-    jvm {
-        compilations.all {
-            kotlinOptions.jvmTarget = "17"
-        }
-    }
+    jvm()
 }
 
 fun KotlinMultiplatformExtension.jsTargets() {
-    js(IR) {
+    js {
         binaries.library()
         useCommonJs()
         nodejs()
@@ -28,22 +23,7 @@ fun KotlinMultiplatformExtension.jsTargets() {
 fun KotlinMultiplatformExtension.nativeTargets(
     predicate: (KonanTarget) -> Boolean,
 ) {
-    val targets =
-        KonanTarget.predefinedTargets.values.filter(predicate).mapNotNull { perKonanTargetApplier[it]?.invoke(this) }
-
-    sourceSets {
-        val nativeMain by creating {
-            findByName("commonMain")?.let { dependsOn(it) }
-        }
-        val nativeTest by creating {
-            findByName("commonTest")?.let { dependsOn(it) }
-        }
-
-        targets.forEach { target ->
-            getByName("${target.name}Main").dependsOn(nativeMain)
-            getByName("${target.name}Test").dependsOn(nativeTest)
-        }
-    }
+    KonanTarget.predefinedTargets.values.filter(predicate).forEach { perKonanTargetApplier[it]?.invoke(this) }
 }
 
 private val perKonanTargetApplier = mutableMapOf<KonanTarget, KotlinMultiplatformExtension.() -> KotlinNativeTarget>(
@@ -97,7 +77,7 @@ val KonanTarget.buildHost: Family
         MACOS_ARM64,
         -> Family.OSX
 
-        else -> throw IllegalStateException("Target $this not supported")
+        else -> error("Target $this not supported")
     }
 
 val KonanTarget.isSupportedByCIO get() = this.isSupportedByKtorNetwork && this !in cioIgnoredTargets
@@ -111,7 +91,6 @@ private val cioIgnoredTargets = setOf(
 private val targetsSupportedByLibzmq = setOf(
     LINUX_ARM64,
     LINUX_X64,
-    MINGW_X86,
     MINGW_X64,
     MACOS_ARM64,
     MACOS_X64,

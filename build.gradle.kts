@@ -3,18 +3,10 @@
  * Use of this source code is governed by the Apache 2.0 license.
  */
 
-import org.jetbrains.dokka.gradle.*
-
-buildscript {
-    repositories {
-        mavenCentral()
-        gradlePluginPortal()
-    }
-}
-
 plugins {
-    alias(libs.plugins.dokka)
-    id("org.jetbrains.kotlinx.kover")
+    alias(libs.plugins.kotlin.multiplatform) apply false
+    alias(libs.plugins.kotlin.dokka)
+    alias(libs.plugins.kotlinx.kover)
 }
 
 val projectVersion: String = libs.versions.project.get()
@@ -24,21 +16,9 @@ subprojects {
     version = projectVersion
 }
 
-tasks.withType<DokkaMultiModuleTask> {
-    removeChildTasks(
-        listOf(
-            project(":kzmq-tests"),
-            project(":kzmq-tools"),
-        )
-    )
-}
-
-koverReport {
-    defaults {
-        filters {
-            excludes {
-                packages("org.zeromq.tests.utils")
-            }
-        }
-    }
+dependencies {
+    kover(project(":kzmq-core"))
+    kover(project(":kzmq-cio"))
+    kover(project(":kzmq-libzmq"))
+    kover(project(":kzmq-tests"))
 }
