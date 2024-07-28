@@ -20,10 +20,17 @@ fun KotlinMultiplatformExtension.jsTargets() {
     }
 }
 
+private val ignoredTargets = setOf(
+    LINUX_ARM64,
+    MINGW_X64,
+    WATCHOS_ARM32, // not supported by Mokkery
+)
+
 fun KotlinMultiplatformExtension.nativeTargets(
     predicate: (KonanTarget) -> Boolean,
 ) {
-    KonanTarget.predefinedTargets.values.filter(predicate).forEach { perKonanTargetApplier[it]?.invoke(this) }
+    KonanTarget.predefinedTargets.values.filter { it !in ignoredTargets }.filter(predicate)
+        .forEach { perKonanTargetApplier[it]?.invoke(this) }
 }
 
 private val perKonanTargetApplier = mutableMapOf<KonanTarget, KotlinMultiplatformExtension.() -> KotlinNativeTarget>(
