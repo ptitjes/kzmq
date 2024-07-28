@@ -20,7 +20,7 @@ class DealerRouterTests : FunSpec({
 
     withContexts("base").config(
         // TODO fix when testing more Dealer and Router logic
-        skip = setOf("cio-cio, inproc"),
+        skip = setOf("inproc"),
     ) { ctx1, ctx2, protocol ->
         val dealerCount = 2
         val routerCount = 3
