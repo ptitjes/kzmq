@@ -7,6 +7,7 @@ package org.zeromq.tools
 
 import kotlinx.cli.*
 import kotlinx.coroutines.*
+import kotlinx.io.bytestring.*
 import org.zeromq.*
 import kotlin.time.*
 
@@ -37,7 +38,7 @@ fun main(args: Array<String>) = runBlocking {
 
     val engine = engines.find { it.name == engineName } ?: error("No such engine: $engineName")
 
-    val message = Message(ByteArray(messageSize))
+    val message = Message(buildByteString(messageSize) {})
 
     val handler = CoroutineExceptionHandler { _, throwable -> throwable.printStackTrace() }
     val context = Context(engine, coroutineContext + handler + dispatcher)
@@ -87,7 +88,6 @@ private suspend fun Context.push(
     }
 }
 
-@OptIn(ExperimentalTime::class)
 private suspend fun Context.pull(
     messageCount: Int,
     verbose: Boolean,
