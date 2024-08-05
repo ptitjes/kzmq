@@ -85,3 +85,14 @@ tasks {
         }
     }
 }
+
+kotlin.targets.withType<KotlinNativeTarget> {
+    // Do not activate backtrace for Mingw
+    // https://kotlinlang.org/docs/whatsnew1620.html?_ga=2.5870007.58710271.1649248900-2086887657.1620731764#better-stack-traces-with-libbacktrace
+    // https://youtrack.jetbrains.com/issue/KT-51866/Compile-error-to-mingwX64-with-libbacktrace
+    if (this.konanTarget.family != Family.MINGW) {
+        binaries.all {
+            binaryOptions["sourceInfoType"] = "libbacktrace"
+        }
+    }
+}
