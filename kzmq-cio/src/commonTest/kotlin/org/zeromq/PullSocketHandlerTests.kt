@@ -8,51 +8,53 @@ package org.zeromq
 import io.kotest.assertions.*
 import io.kotest.core.spec.style.*
 import io.kotest.core.test.*
-import kotlinx.coroutines.*
-import kotlinx.coroutines.channels.*
 import org.zeromq.internal.*
+import org.zeromq.test.*
 import org.zeromq.utils.*
 
 class PullSocketHandlerTests : FunSpec({
+    suspend fun TestScope.withHandler(test: SocketHandlerTest) =
+        withSocketHandler(PullSocketHandler(), test)
 
     test("SHALL receive incoming messages from its peers using a fair-queuing strategy") {
-        withHandler { peerEvents, receiveChannel ->
-            val peers = List(5) { index -> PeerMailbox(index.toString(), SocketOptions()) }
-
-            peers.forEach { peer ->
-                peerEvents.send(PeerEvent(PeerEvent.Kind.ADDITION, peer))
-                peerEvents.send(PeerEvent(PeerEvent.Kind.CONNECTION, peer))
+        withHandler { peerEvents, _, receive ->
+            val peers = List(5) { index ->
+                PeerMailbox(index.toString(), SocketOptions()).also { peer ->
+                    peerEvents.send(PeerEvent(PeerEvent.Kind.ADDITION, peer))
+                    peerEvents.send(PeerEvent(PeerEvent.Kind.CONNECTION, peer))
+                }
             }
 
-            val messages = List(10) { index -> Message(ByteArray(1) { index.toByte() }) }
+            val messages = messages(10) { index ->
+                writeFrame { writeByte(index.toByte()) }
+            }
 
             peers.forEach { peer ->
-                messages.forEach { message ->
-                    peer.receiveChannel.send(CommandOrMessage(message))
-                }
+                messages.forEach { peer.receiveChannel.send(it) }
             }
 
             all {
                 messages.forEach { message ->
-                    receiveChannel shouldReceiveExactly List(peers.size) { message }
+                    receive shouldReceiveExactly List(peers.size) { message }
                 }
             }
         }
     }
+
+    test("SHALL deliver these to its calling application") {
+        withHandler { peerEvents, _, receive ->
+            val peer = PeerMailbox("peer", SocketOptions()).also { peer ->
+                peerEvents.send(PeerEvent(PeerEvent.Kind.ADDITION, peer))
+                peerEvents.send(PeerEvent(PeerEvent.Kind.CONNECTION, peer))
+            }
+
+            val messages = messages(10) { index ->
+                writeFrame { writeByte(index.toByte()) }
+            }
+
+            messages.forEach { peer.receiveChannel.send(it) }
+
+            receive shouldReceiveExactly messages
+        }
+    }
 })
-
-private suspend fun TestScope.withHandler(
-    block: suspend TestScope.(
-        peerEvents: SendChannel<PeerEvent>,
-        receiveChannel: ReceiveChannel<Message>,
-    ) -> Unit,
-) = coroutineScope {
-    val peerEvents = Channel<PeerEvent>()
-    val receiveChannel = Channel<Message>()
-
-    val handlerJob = launch { handlePullSocket(peerEvents, receiveChannel) }
-
-    block(peerEvents, receiveChannel)
-
-    handlerJob.cancelAndJoin()
-}

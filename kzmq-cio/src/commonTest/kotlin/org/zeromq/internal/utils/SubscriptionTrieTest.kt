@@ -6,6 +6,7 @@
 package org.zeromq.internal.utils
 
 import kotlinx.coroutines.test.*
+import kotlinx.io.bytestring.*
 import kotlin.test.*
 
 internal class SubscriptionTrieTest {
@@ -63,8 +64,8 @@ internal class SubscriptionTrieTest {
     }
 
     private fun <T> SubscriptionTrie<T>.add(prefix: String, element: T) =
-        add(prefix.encodeToByteArray(), element)
+        add(prefix.encodeToByteString(), element)
 
     private fun <T> SubscriptionTrie<T>.remove(prefix: String, element: T) =
-        remove(prefix.encodeToByteArray(), element)
+        remove(prefix.encodeToByteString(), element)
 }

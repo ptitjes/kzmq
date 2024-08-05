@@ -10,15 +10,18 @@ import io.kotest.core.spec.style.*
 import io.kotest.core.test.*
 import io.kotest.matchers.*
 import kotlinx.coroutines.*
-import kotlinx.coroutines.channels.*
+import kotlinx.io.bytestring.*
 import org.zeromq.internal.*
+import org.zeromq.test.*
 import org.zeromq.utils.*
 import kotlin.time.Duration.Companion.seconds
 
 class PushSocketHandlerTests : FunSpec({
+    suspend fun TestScope.withHandler(test: SocketHandlerTest) =
+        withSocketHandler(PushSocketHandler(), test)
 
     test("SHALL consider a peer as available only when it has an outgoing queue that is not full") {
-        withHandler { peerEvents, sendChannel ->
+        withHandler { peerEvents, send, _ ->
             val peer1 = PeerMailbox("1", SocketOptions())
             val peer2 = PeerMailbox("2", SocketOptions().apply { sendQueueSize = 5 })
 
@@ -27,13 +30,13 @@ class PushSocketHandlerTests : FunSpec({
 
             peerEvents.send(PeerEvent(PeerEvent.Kind.CONNECTION, peer1))
 
-            val firstBatch = List(5) { index -> Message(ByteArray(1) { index.toByte() }) }
-            val secondBatch = List(10) { index -> Message(ByteArray(1) { (index + 10).toByte() }) }
+            val firstBatch = messages(5) { index -> writeFrame { writeByte(index.toByte()) } }
+            val secondBatch = messages(10) { index -> writeFrame { writeByte((index + 10).toByte()) } }
 
-            // Send each message of the first batch once per receiver
-            firstBatch.forEach { message -> repeat(2) { sendChannel.send(message) } }
+            // Send each message of the first batch once per peer
+            firstBatch.forEach { message -> repeat(2) { send(message.buildMessage()) } }
             // Send each message of the second batch once
-            secondBatch.forEach { message -> sendChannel.send(message) }
+            secondBatch.forEach { message -> send(message.buildMessage()) }
 
             peerEvents.send(PeerEvent(PeerEvent.Kind.CONNECTION, peer2))
 
@@ -45,7 +48,7 @@ class PushSocketHandlerTests : FunSpec({
     }
 
     test("SHALL route outgoing messages to available peers using a round-robin strategy") {
-        withHandler { peerEvents, sendChannel ->
+        withHandler { peerEvents, send, _ ->
             val peers = List(5) { index -> PeerMailbox(index.toString(), SocketOptions()) }
 
             peers.forEach { peer ->
@@ -53,47 +56,57 @@ class PushSocketHandlerTests : FunSpec({
                 peerEvents.send(PeerEvent(PeerEvent.Kind.CONNECTION, peer))
             }
 
-            val messages = List(10) { index -> Message(ByteArray(1) { index.toByte() }) }
-
-            // Send each message once per receiver
-            messages.forEach { message -> repeat(peers.size) { sendChannel.send(message) } }
+            // Send each message once per peer
+            repeat(10) { messageIndex ->
+                repeat(peers.size) { peerIndex ->
+                    send(message {
+                        writeFrame { writeByte(messageIndex.toByte()) }
+                        writeFrame { writeByte(peerIndex.toByte()) }
+                    }.buildMessage())
+                }
+            }
 
             all {
-                // Check each receiver got every messages
-                peers.forEach { peer -> peer.sendChannel shouldReceiveExactly messages }
+                peers.forEachIndexed { peerIndex, peer ->
+                    peer.sendChannel shouldReceiveExactly
+                        messages(10) { messageIndex ->
+                            writeFrame { writeByte(messageIndex.toByte()) }
+                            writeFrame { writeByte(peerIndex.toByte()) }
+                        }
+                }
             }
         }
     }
 
     test("SHALL suspend on sending when it has no available peers") {
-        withHandler { _, sendChannel ->
-            val message = Message("Won't be sent".encodeToByteArray())
+        withHandler { _, send, _ ->
+            val message = buildMessage { writeFrame("Won't be sent".encodeToByteString()) }
 
             withTimeoutOrNull(1.seconds) {
-                sendChannel.send(message)
+                send(message)
             } shouldBe null
         }
     }
 
     test("SHALL not accept further messages when it has no available peers") {
-        withHandler { _, sendChannel ->
-            val message = Message("Won't be sent".encodeToByteArray())
+        withHandler { _, send, _ ->
+            val message = buildMessage { writeFrame("Won't be sent".encodeToByteString()) }
 
             withTimeoutOrNull(1.seconds) {
-                sendChannel.send(message)
+                send(message)
             } shouldBe null
         }
     }
 
     test("SHALL NOT discard messages that it cannot queue") {
-        withHandler { peerEvents, sendChannel ->
+        withHandler { peerEvents, send, _ ->
             val peer = PeerMailbox("1", SocketOptions())
             peerEvents.send(PeerEvent(PeerEvent.Kind.ADDITION, peer))
 
-            val messages = List(10) { index -> Message(ByteArray(1) { index.toByte() }) }
+            val messages = messages(10) { index -> writeFrame { writeByte(index.toByte()) } }
 
             // Send each message once
-            messages.forEach { message -> sendChannel.send(message) }
+            messages.forEach { send(it.buildMessage()) }
 
             peerEvents.send(PeerEvent(PeerEvent.Kind.CONNECTION, peer))
 
@@ -102,19 +115,3 @@ class PushSocketHandlerTests : FunSpec({
         }
     }
 })
-
-private suspend fun TestScope.withHandler(
-    block: suspend TestScope.(
-        peerEvents: SendChannel<PeerEvent>,
-        sendChannel: SendChannel<Message>,
-    ) -> Unit,
-) = coroutineScope {
-    val peerEvents = Channel<PeerEvent>()
-    val sendChannel = Channel<Message>()
-
-    val handlerJob = launch { handlePushSocket(peerEvents, sendChannel) }
-
-    block(peerEvents, sendChannel)
-
-    handlerJob.cancelAndJoin()
-}
