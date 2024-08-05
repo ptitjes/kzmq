@@ -5,6 +5,8 @@
 
 package org.zeromq
 
+import kotlinx.io.bytestring.*
+
 /**
  * A ZeroMQ socket of type [SUB][Type.SUB].
  * Peers must be [PublisherSocket]s or [XPublisherSocket]s.
@@ -46,7 +48,7 @@ public interface SubscriberSocket : Socket, ReceiveSocket {
      *
      * @param topics the topics to subscribe to
      */
-    public suspend fun subscribe(vararg topics: ByteArray)
+    public suspend fun subscribe(vararg topics: ByteString)
 
     /**
      * Establishes a new message filter. Newly created [SubscriberSocket] sockets will filter out
@@ -78,7 +80,7 @@ public interface SubscriberSocket : Socket, ReceiveSocket {
      *
      * @param topics the topics to unsubscribe from
      */
-    public suspend fun unsubscribe(vararg topics: ByteArray)
+    public suspend fun unsubscribe(vararg topics: ByteString)
 
     /**
      * Removes the specified existing message filter previously established with [subscribe].

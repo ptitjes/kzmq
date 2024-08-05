@@ -5,6 +5,8 @@
 
 package org.zeromq
 
+import kotlinx.io.bytestring.*
+
 /**
  * A ZeroMQ socket of type [REP][Type.REP].
  * Peers must be [RequestSocket]s or [DealerSocket]s.
@@ -35,5 +37,5 @@ public interface ReplySocket : Socket, SendSocket, ReceiveSocket {
      *
      * See [ZMQ_ROUTING_ID](http://api.zeromq.org/master:zmq-getsockopt)
      */
-    public var routingId: ByteArray?
+    public var routingId: ByteString?
 }

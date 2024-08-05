@@ -5,6 +5,8 @@
 
 package org.zeromq
 
+import kotlinx.io.bytestring.*
+
 /**
  * A ZeroMQ socket of type [REP][Type.ROUTER].
  * Peers must be [RequestSocket]s or [DealerSocket]s.
@@ -55,7 +57,7 @@ public interface RouterSocket : Socket, SendSocket, ReceiveSocket {
      *
      * See [ZMQ_ROUTING_ID](http://api.zeromq.org/master:zmq-getsockopt)
      */
-    public var routingId: ByteArray?
+    public var routingId: ByteString?
 
     /**
      * When set to `true`, the socket will automatically send an empty message when a new

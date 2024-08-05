@@ -68,3 +68,18 @@ public interface ReceiveSocket {
      */
     public var receiveTimeout: Int
 }
+
+public suspend inline fun <T> ReceiveSocket.receive(crossinline block: ReadScope.() -> T): T =
+    receive().let { it.checkingNoRemainingFrames { block() } }
+
+public suspend inline fun <T> ReceiveSocket.receiveCatching(crossinline block: ReadScope.() -> T): SocketResult<T> =
+    receiveCatching().map { it.checkingNoRemainingFrames { block() } }
+
+public inline fun <T> ReceiveSocket.tryReceive(crossinline block: ReadScope.() -> T): SocketResult<T> =
+    tryReceive().map { it.checkingNoRemainingFrames { block() } }
+
+public inline fun <T> Message.checkingNoRemainingFrames(crossinline block: ReadScope.() -> T): T {
+    val result = block()
+    ensureNoRemainingFrames()
+    return result
+}
