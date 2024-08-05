@@ -5,6 +5,7 @@
 
 package org.zeromq
 
+import kotlinx.io.bytestring.*
 import org.zeromq.internal.zeromqjs.Router as ZRouter
 
 internal class ZeroMQJsRouterSocket internal constructor(
@@ -15,7 +16,7 @@ internal class ZeroMQJsRouterSocket internal constructor(
     ReceiveSocket by ZeroMQJsReceiveSocket(underlying),
     RouterSocket {
 
-    override var routingId: ByteArray? by underlying::routingId.asNullableByteArrayProperty()
+    override var routingId: ByteString? by underlying::routingId.asNullableByteStringProperty()
     override var probeRouter: Boolean by underlying::probeRouter
     override var mandatory: Boolean by underlying::mandatory
     override var handover: Boolean by underlying::handover

@@ -7,12 +7,13 @@ package org.zeromq
 
 import kotlinx.coroutines.*
 import kotlinx.coroutines.selects.*
+import kotlinx.io.bytestring.*
 import org.zeromq.internal.zeromqjs.*
 
 internal class ZeroMQJsReceiveSocket(private val underlying: Readable) : ReceiveSocket {
 
     override suspend fun receive(): Message =
-        Message(underlying.receive().await().map { it.toByteArray() })
+        Message(underlying.receive().await().map { ByteString(it.toByteArray()) })
 
     override suspend fun receiveCatching(): SocketResult<Message> = try {
         SocketResult.success(receive())

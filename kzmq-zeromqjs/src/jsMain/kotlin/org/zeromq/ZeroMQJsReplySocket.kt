@@ -5,6 +5,7 @@
 
 package org.zeromq
 
+import kotlinx.io.bytestring.*
 import org.zeromq.internal.zeromqjs.Reply as ZReply
 
 internal class ZeroMQJsReplySocket internal constructor(
@@ -15,5 +16,5 @@ internal class ZeroMQJsReplySocket internal constructor(
     SendSocket by ZeroMQJsSendSocket(underlying),
     ReplySocket {
 
-    override var routingId: ByteArray? by underlying::routingId.asNullableByteArrayProperty()
+    override var routingId: ByteString? by underlying::routingId.asNullableByteStringProperty()
 }

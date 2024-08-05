@@ -6,6 +6,7 @@
 package org.zeromq
 
 import Buffer
+import kotlinx.io.bytestring.*
 import org.khronos.webgl.*
 import kotlin.properties.*
 import kotlin.reflect.*
@@ -28,12 +29,12 @@ internal fun Buffer.toByteArray(): ByteArray {
     ).unsafeCast<ByteArray>()
 }
 
-internal fun <R> KMutableProperty0<String?>.asNullableByteArrayProperty(): ReadWriteProperty<R, ByteArray?> {
-    return object : ReadWriteProperty<R, ByteArray?> {
-        override fun getValue(thisRef: R, property: KProperty<*>): ByteArray? =
-            this@asNullableByteArrayProperty.get()?.encodeToByteArray()
+internal fun <R> KMutableProperty0<String?>.asNullableByteStringProperty(): ReadWriteProperty<R, ByteString?> {
+    return object : ReadWriteProperty<R, ByteString?> {
+        override fun getValue(thisRef: R, property: KProperty<*>): ByteString? =
+            this@asNullableByteStringProperty.get()?.encodeToByteString()
 
-        override fun setValue(thisRef: R, property: KProperty<*>, value: ByteArray?) =
-            this@asNullableByteArrayProperty.set(value?.decodeToString())
+        override fun setValue(thisRef: R, property: KProperty<*>, value: ByteString?) =
+            this@asNullableByteStringProperty.set(value?.decodeToString())
     }
 }
