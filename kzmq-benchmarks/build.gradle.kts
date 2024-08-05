@@ -18,6 +18,7 @@ kotlin {
             dependencies {
                 implementation(libs.kotlinx.benchmark.runtime)
                 implementation(project(":kzmq-core"))
+                implementation(libs.kotlinx.io.core)
             }
         }
 
