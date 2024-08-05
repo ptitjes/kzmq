@@ -5,9 +5,11 @@
 
 package org.zeromq
 
+import kotlinx.io.bytestring.*
+
 internal class JeroMQReplySocket internal constructor(
     factory: (type: SocketType) -> ZMQ.Socket,
 ) : JeroMQSocket(factory, SocketType.REP, Type.REP), ReplySocket {
 
-    override var routingId: ByteArray? by underlying::identity
+    override var routingId: ByteString? by underlying::identity.converted()
 }

@@ -12,8 +12,12 @@ kotlin {
 
     sourceSets {
         jvmMain {
+            languageSettings {
+                languageVersion = "2.1"
+            }
             dependencies {
                 implementation(project(":kzmq-core"))
+                implementation(libs.kotlinx.io.core)
                 implementation(libs.jeromq)
             }
         }

@@ -6,6 +6,9 @@
 package org.zeromq
 
 import kotlinx.coroutines.selects.*
+import kotlinx.io.*
+import kotlinx.io.bytestring.*
+import zmq.*
 
 @Suppress("RedundantSuspendModifier")
 internal abstract class JeroMQSocket internal constructor(
@@ -25,9 +28,9 @@ internal abstract class JeroMQSocket internal constructor(
 
     suspend fun subscribe(): Unit = wrapping { underlying.subscribe(byteArrayOf()) }
 
-    suspend fun subscribe(vararg topics: ByteArray): Unit = wrapping {
+    suspend fun subscribe(vararg topics: ByteString): Unit = wrapping {
         if (topics.isEmpty()) underlying.subscribe(byteArrayOf())
-        else topics.forEach { underlying.subscribe(it) }
+        else topics.forEach { underlying.subscribe(it.toByteArray()) }
     }
 
     suspend fun subscribe(vararg topics: String): Unit = wrapping {
@@ -37,9 +40,9 @@ internal abstract class JeroMQSocket internal constructor(
 
     suspend fun unsubscribe(): Unit = wrapping { underlying.unsubscribe(byteArrayOf()) }
 
-    suspend fun unsubscribe(vararg topics: ByteArray): Unit = wrapping {
+    suspend fun unsubscribe(vararg topics: ByteString): Unit = wrapping {
         if (topics.isEmpty()) underlying.unsubscribe(byteArrayOf())
-        else topics.forEach { underlying.unsubscribe(it) }
+        else topics.forEach { underlying.unsubscribe(it.toByteArray()) }
     }
 
     suspend fun unsubscribe(vararg topics: String): Unit = wrapping {
@@ -52,28 +55,31 @@ internal abstract class JeroMQSocket internal constructor(
     fun trySend(message: Message): SocketResult<Unit> = catching { sendImmediate(message) }
 
     private suspend fun sendSuspend(message: Message) = trace("sendSuspend") {
-        val parts = message.frames
+        val parts = message.readFrames()
         val lastIndex = parts.size - 1
         for ((index, part) in parts.withIndex()) {
             sendPartSuspend(part, index < lastIndex)
         }
     }
 
-    private suspend fun sendPartSuspend(part: ByteArray, sendMore: Boolean) {
-        suspendOnIO { underlying.send(part, if (sendMore) ZMQ.SNDMORE else 0) }
+    private suspend fun sendPartSuspend(part: Buffer, sendMore: Boolean) {
+        suspendOnIO { underlying.sendMsg(part.toMsg(), if (sendMore) ZMQ.SNDMORE else 0) }
     }
 
     private fun sendImmediate(message: Message) = trace("sendImmediate") {
-        val parts = message.frames
+        val parts = message.readFrames()
         val lastIndex = parts.size - 1
         for ((index, part) in parts.withIndex()) {
             sendPartImmediate(part, index < lastIndex)
         }
     }
 
-    private fun sendPartImmediate(part: ByteArray, sendMore: Boolean) {
-        underlying.send(part, ZMQ.DONTWAIT or if (sendMore) ZMQ.SNDMORE else 0)
+    private fun sendPartImmediate(part: Buffer, sendMore: Boolean) {
+        underlying.sendMsg(part.toMsg(), ZMQ.DONTWAIT or if (sendMore) ZMQ.SNDMORE else 0)
     }
+
+    // TODO optimize?
+    private fun Buffer.toMsg(): Msg = Msg.Builder().apply { put(readByteArray()) }.build()
 
     // TODO multicastHops is a long in underlying socket
     var multicastHops: Int by notImplementedProperty()
@@ -89,28 +95,30 @@ internal abstract class JeroMQSocket internal constructor(
         get() = throw NotImplementedError("Not supported on JeroMQ engine")
 
     private suspend fun receiveSuspend(): Message = trace("receiveSuspend") {
-        val parts = mutableListOf<ByteArray>()
+        val parts = mutableListOf<Buffer>()
         do {
             parts.add(receivePartSuspend())
         } while (underlying.hasReceiveMore())
-        return Message(*parts.toTypedArray())
+        return Message(parts)
     }
 
-    private suspend fun receivePartSuspend(): ByteArray {
-        return suspendOnIO { underlying.recv(0) }
+    private suspend fun receivePartSuspend(): Buffer {
+        return suspendOnIO { underlying.recvMsg().toPart() }
     }
 
     private fun receiveImmediate(): Message = trace("receiveImmediate") {
-        val parts = mutableListOf<ByteArray>()
+        val parts = mutableListOf<Buffer>()
         do {
             parts.add(receivePartImmediate() ?: error("No message received"))
         } while (underlying.hasReceiveMore())
-        return Message(*parts.toTypedArray())
+        return Message(parts)
     }
 
-    private fun receivePartImmediate(): ByteArray? {
-        return underlying.recv(ZMQ.DONTWAIT)
+    private fun receivePartImmediate(): Buffer? {
+        return underlying.recvMsg(ZMQ.DONTWAIT)?.toPart()
     }
+
+    private fun Msg.toPart(): Buffer = Buffer().transferFrom(buf())
 
     var receiveBufferSize: Int by underlying::receiveBufferSize
     var receiveHighWaterMark: Int by underlying::rcvHWM
