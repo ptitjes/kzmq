@@ -8,6 +8,7 @@ package org.zeromq
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.*
 import kotlinx.coroutines.selects.*
+import kotlinx.io.*
 import org.zeromq.internal.*
 import org.zeromq.internal.utils.*
 
@@ -94,58 +95,7 @@ internal class CIOXPublisherSocket(
 ) : CIOSocket(engine, Type.XPUB), CIOSendSocket, CIOReceiveSocket, XPublisherSocket {
 
     override val validPeerTypes: Set<Type> get() = validPeerSocketTypes
-
-    override val sendChannel = Channel<Message>()
-    override val receiveChannel = Channel<Message>()
-
-    init {
-        setHandler {
-            val peerMailboxes = hashSetOf<PeerMailbox>()
-            var subscriptions = SubscriptionTrie<PeerMailbox>()
-
-            while (isActive) {
-                select<Unit> {
-                    peerEvents.onReceive { (kind, peerMailbox) ->
-                        when (kind) {
-                            PeerEvent.Kind.ADDITION -> peerMailboxes.add(peerMailbox)
-                            PeerEvent.Kind.REMOVAL -> peerMailboxes.remove(peerMailbox)
-                            else -> {}
-                        }
-                    }
-
-                    for (peerMailbox in peerMailboxes) {
-                        peerMailbox.receiveChannel.onReceive { commandOrMessage ->
-                            logger.d { "Handling $commandOrMessage from $peerMailbox" }
-                            if (commandOrMessage.isCommand) {
-                                subscriptions = when (val command = commandOrMessage.commandOrThrow()) {
-                                    is SubscribeCommand -> {
-                                        receiveChannel.send(subscriptionMessageOf(true, command.topic))
-                                        subscriptions.add(command.topic, peerMailbox)
-                                    }
-
-                                    is CancelCommand -> {
-                                        receiveChannel.send(subscriptionMessageOf(false, command.topic))
-                                        subscriptions.remove(command.topic, peerMailbox)
-                                    }
-
-                                    else -> protocolError("Expected SUBSCRIBE or CANCEL, but got ${command.name}")
-                                }
-                            } else {
-                                receiveChannel.send(commandOrMessage.messageOrThrow())
-                            }
-                        }
-                    }
-
-                    sendChannel.onReceive { message ->
-                        subscriptions.forEachMatching(message.first()) { peerMailbox ->
-                            logger.d { "Dispatching $message to $peerMailbox" }
-                            peerMailbox.sendChannel.send(CommandOrMessage(message))
-                        }
-                    }
-                }
-            }
-        }
-    }
+    override val handler = setupHandler(XPublisherSocketHandler())
 
     override var invertMatching: Boolean
         get() = TODO("Not yet implemented")
@@ -162,5 +112,58 @@ internal class CIOXPublisherSocket(
 
     companion object {
         private val validPeerSocketTypes = setOf(Type.SUB, Type.XSUB)
+    }
+}
+
+internal class XPublisherSocketHandler : SocketHandler {
+    private val mailboxes = hashSetOf<PeerMailbox>()
+    private var subscriptions = SubscriptionTrie<PeerMailbox>()
+
+    override suspend fun handle(peerEvents: ReceiveChannel<PeerEvent>) = coroutineScope {
+        while (isActive) {
+            select<Unit> {
+                peerEvents.onReceive { (kind, peerMailbox) ->
+                    when (kind) {
+                        PeerEvent.Kind.ADDITION -> mailboxes.add(peerMailbox)
+                        PeerEvent.Kind.REMOVAL -> mailboxes.remove(peerMailbox)
+                        else -> {}
+                    }
+                }
+            }
+        }
+    }
+
+    override suspend fun send(message: Message) {
+        subscriptions.forEachMatching(message.peekFirstFrame().readByteArray()) { peerMailbox ->
+            logger.d { "Dispatching $message to $peerMailbox" }
+            peerMailbox.sendChannel.send(CommandOrMessage(message))
+        }
+    }
+
+    override suspend fun receive(): Message {
+        return select {
+            for (mailbox in mailboxes) {
+                mailbox.receiveChannel.onReceive { commandOrMessage ->
+                    logger.d { "Handling $commandOrMessage from $mailbox" }
+                    if (commandOrMessage.isCommand) {
+                        when (val command = commandOrMessage.commandOrThrow()) {
+                            is SubscribeCommand -> {
+                                subscriptions = subscriptions.add(command.topic, mailbox)
+                                SubscriptionMessage(true, command.topic).toMessage()
+                            }
+
+                            is CancelCommand -> {
+                                subscriptions = subscriptions.remove(command.topic, mailbox)
+                                SubscriptionMessage(false, command.topic).toMessage()
+                            }
+
+                            else -> protocolError("Expected SUBSCRIBE or CANCEL, but got ${command.name}")
+                        }
+                    } else {
+                        commandOrMessage.messageOrThrow()
+                    }
+                }
+            }
+        }
     }
 }

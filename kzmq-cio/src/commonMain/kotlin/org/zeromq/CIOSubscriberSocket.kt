@@ -8,7 +8,9 @@ package org.zeromq
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.*
 import kotlinx.coroutines.selects.*
+import kotlinx.io.bytestring.*
 import org.zeromq.internal.*
+import org.zeromq.internal.utils.*
 
 /**
  * An implementation of the [SUB socket](https://rfc.zeromq.org/spec/29/).
@@ -78,100 +80,30 @@ internal class CIOSubscriberSocket(
 ) : CIOSocket(engine, Type.SUB), CIOReceiveSocket, SubscriberSocket {
 
     override val validPeerTypes: Set<Type> get() = validPeerSocketTypes
-
-    override val receiveChannel = Channel<Message>()
-
-    private var subscriptions = mutableListOf<ByteArray>()
-    private var lateSubscriptionCommands = Channel<Command>(10)
-
-    init {
-        setHandler {
-            val peerMailboxes = hashSetOf<PeerMailbox>()
-
-            while (isActive) {
-                select<Unit> {
-                    peerEvents.onReceive { (kind, peerMailbox) ->
-                        when (kind) {
-                            PeerEvent.Kind.ADDITION -> {
-                                peerMailboxes.add(peerMailbox)
-
-                                for (subscription in subscriptions) {
-                                    logger.d { "Sending subscription ${subscription.contentToString()} to $peerMailbox" }
-                                    peerMailbox.sendChannel.send(
-                                        CommandOrMessage(SubscribeCommand(subscription))
-                                    )
-                                }
-                            }
-
-                            PeerEvent.Kind.REMOVAL -> peerMailboxes.remove(peerMailbox)
-                            else -> {}
-                        }
-                    }
-
-                    lateSubscriptionCommands.onReceive { command ->
-                        for (peerMailbox in peerMailboxes) {
-                            logger.d { "Sending late subscription $command to $peerMailbox" }
-                            peerMailbox.sendChannel.send(CommandOrMessage(command))
-                        }
-                    }
-
-                    for (peerMailbox in peerMailboxes) {
-                        peerMailbox.receiveChannel.onReceive { commandOrMessage ->
-                            val message = commandOrMessage.messageOrThrow()
-                            logger.v { "Receiving $message from $peerMailbox" }
-                            receiveChannel.send(message)
-                        }
-                    }
-                }
-            }
-        }
-    }
+    override val handler = setupHandler(SubscriberSocketHandler())
 
     override suspend fun subscribe() {
-        subscribe(listOf())
+        handler.subscriptions.subscribe(listOf())
     }
 
-    override suspend fun subscribe(vararg topics: ByteArray) {
-        subscribe(topics.toList())
+    override suspend fun subscribe(vararg topics: ByteString) {
+        handler.subscriptions.subscribe(topics.toList())
     }
 
     override suspend fun subscribe(vararg topics: String) {
-        subscribe(topics.map { it.encodeToByteArray() })
-    }
-
-    private suspend fun subscribe(topics: List<ByteArray>) {
-        val effectiveTopics = topics.ifEmpty { listOf(byteArrayOf()) }
-
-        subscriptions.addAll(effectiveTopics)
-
-        for (topic in effectiveTopics) {
-            lateSubscriptionCommands.send(SubscribeCommand(topic))
-        }
+        handler.subscriptions.subscribe(topics.map { it.encodeToByteString() })
     }
 
     override suspend fun unsubscribe() {
-        unsubscribe(listOf())
+        handler.subscriptions.unsubscribe(listOf())
     }
 
-    override suspend fun unsubscribe(vararg topics: ByteArray) {
-        unsubscribe(topics.toList())
+    override suspend fun unsubscribe(vararg topics: ByteString) {
+        handler.subscriptions.unsubscribe(topics.toList())
     }
 
     override suspend fun unsubscribe(vararg topics: String) {
-        unsubscribe(topics.map { it.encodeToByteArray() })
-    }
-
-    private suspend fun unsubscribe(topics: List<ByteArray>) {
-        val effectiveTopics = topics.ifEmpty { listOf(byteArrayOf()) }
-
-        val removedTopics = mutableListOf<ByteArray>()
-        for (topic in effectiveTopics) {
-            if (subscriptions.remove(topic)) removedTopics += topic
-        }
-
-        for (topic in removedTopics) {
-            lateSubscriptionCommands.send(CancelCommand(topic))
-        }
+        handler.subscriptions.unsubscribe(topics.map { it.encodeToByteString() })
     }
 
     override var conflate: Boolean
@@ -184,5 +116,44 @@ internal class CIOSubscriberSocket(
 
     companion object {
         private val validPeerSocketTypes = setOf(Type.PUB, Type.XPUB)
+    }
+}
+
+internal class SubscriberSocketHandler : SocketHandler {
+    private val mailboxes = CircularQueue<PeerMailbox>()
+    val subscriptions = SubscriptionManager()
+
+    override suspend fun handle(peerEvents: ReceiveChannel<PeerEvent>) = coroutineScope {
+        while (isActive) {
+            select {
+                peerEvents.onReceive { event ->
+                    mailboxes.update(event)
+
+                    val (kind, mailbox) = event
+                    when (kind) {
+                        PeerEvent.Kind.ADDITION -> {
+                            for (subscription in subscriptions.existing) {
+                                logger.d { "Sending subscription $subscription to $mailbox" }
+                                mailbox.sendChannel.send(CommandOrMessage(SubscribeCommand(subscription)))
+                            }
+                        }
+
+                        else -> {}
+                    }
+                }
+
+                subscriptions.lateSubscriptionCommands.onReceive { command ->
+                    for (mailbox in mailboxes) {
+                        logger.d { "Sending late subscription $command to $mailbox" }
+                        mailbox.sendChannel.send(CommandOrMessage(command))
+                    }
+                }
+            }
+        }
+    }
+
+    override suspend fun receive(): Message {
+        val (_, message) = mailboxes.receiveFromFirst()
+        return message
     }
 }

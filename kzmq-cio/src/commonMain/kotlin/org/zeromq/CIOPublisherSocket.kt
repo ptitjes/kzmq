@@ -8,6 +8,7 @@ package org.zeromq
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.*
 import kotlinx.coroutines.selects.*
+import kotlinx.io.*
 import org.zeromq.internal.*
 import org.zeromq.internal.utils.*
 
@@ -87,45 +88,7 @@ internal class CIOPublisherSocket(
 ) : CIOSocket(engine, Type.PUB), CIOSendSocket, PublisherSocket {
 
     override val validPeerTypes: Set<Type> get() = validPeerSocketTypes
-
-    override val sendChannel = Channel<Message>()
-
-    init {
-        setHandler {
-            val peerMailboxes = hashSetOf<PeerMailbox>()
-            var subscriptions = SubscriptionTrie<PeerMailbox>()
-
-            while (isActive) {
-                select<Unit> {
-                    peerEvents.onReceive { (kind, peerMailbox) ->
-                        when (kind) {
-                            PeerEvent.Kind.ADDITION -> peerMailboxes.add(peerMailbox)
-                            PeerEvent.Kind.REMOVAL -> peerMailboxes.remove(peerMailbox)
-                            else -> {}
-                        }
-                    }
-
-                    for (peerMailbox in peerMailboxes) {
-                        peerMailbox.receiveChannel.onReceive { commandOrMessage ->
-                            logger.d { "Handling $commandOrMessage from $peerMailbox" }
-                            subscriptions = when (val command = commandOrMessage.commandOrThrow()) {
-                                is SubscribeCommand -> subscriptions.add(command.topic, peerMailbox)
-                                is CancelCommand -> subscriptions.remove(command.topic, peerMailbox)
-                                else -> protocolError("Expected SUBSCRIBE or CANCEL, but got ${command.name}")
-                            }
-                        }
-                    }
-
-                    sendChannel.onReceive { message ->
-                        subscriptions.forEachMatching(message.first()) { peerMailbox ->
-                            logger.d { "Dispatching $message to $peerMailbox" }
-                            peerMailbox.sendChannel.send(CommandOrMessage(message))
-                        }
-                    }
-                }
-            }
-        }
-    }
+    override val handler = setupHandler(PublisherSocketHandler())
 
     override var conflate: Boolean
         get() = TODO("Not yet implemented")
@@ -139,5 +102,42 @@ internal class CIOPublisherSocket(
 
     companion object {
         private val validPeerSocketTypes = setOf(Type.SUB, Type.XSUB)
+    }
+}
+
+internal class PublisherSocketHandler : SocketHandler {
+    private val mailboxes = hashSetOf<PeerMailbox>()
+    private var subscriptions = SubscriptionTrie<PeerMailbox>()
+
+    override suspend fun handle(peerEvents: ReceiveChannel<PeerEvent>) = coroutineScope {
+        while (isActive) {
+            select<Unit> {
+                peerEvents.onReceive { (kind, peerMailbox) ->
+                    when (kind) {
+                        PeerEvent.Kind.ADDITION -> mailboxes.add(peerMailbox)
+                        PeerEvent.Kind.REMOVAL -> mailboxes.remove(peerMailbox)
+                        else -> {}
+                    }
+                }
+
+                for (mailbox in mailboxes) {
+                    mailbox.receiveChannel.onReceive { commandOrMessage ->
+                        logger.d { "Handling $commandOrMessage from $mailbox" }
+                        subscriptions = when (val command = commandOrMessage.commandOrThrow()) {
+                            is SubscribeCommand -> subscriptions.add(command.topic, mailbox)
+                            is CancelCommand -> subscriptions.remove(command.topic, mailbox)
+                            else -> protocolError("Expected SUBSCRIBE or CANCEL, but got ${command.name}")
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    override suspend fun send(message: Message) {
+        subscriptions.forEachMatching(message.peekFirstFrame().readByteArray()) { mailbox ->
+            logger.d { "Dispatching $message to $mailbox" }
+            mailbox.sendChannel.send(CommandOrMessage(message))
+        }
     }
 }

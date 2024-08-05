@@ -10,6 +10,7 @@ import io.ktor.utils.io.core.*
 import io.ktor.utils.io.core.writeUByte
 import kotlinx.io.*
 import kotlinx.io.Buffer
+import kotlinx.io.bytestring.*
 import org.zeromq.*
 
 private suspend inline fun ByteWriteChannel.write(writer: Sink.() -> Unit) {
@@ -68,19 +69,19 @@ internal suspend fun ByteWriteChannel.writeCommand(command: ReadyCommand) = writ
 
 internal suspend fun ByteWriteChannel.writeCommand(command: ErrorCommand) = write {
     writeCommand(CommandName.READY) {
-        writeShortString(command.reason.encodeToByteArray())
+        writeShortString(command.reason.encodeToByteString())
     }
 }
 
 internal suspend fun ByteWriteChannel.writeCommand(command: SubscribeCommand) = write {
     writeCommand(CommandName.SUBSCRIBE) {
-        writeFully(command.topic)
+        write(command.topic)
     }
 }
 
 internal suspend fun ByteWriteChannel.writeCommand(command: CancelCommand) = write {
     writeCommand(CommandName.CANCEL) {
-        writeFully(command.topic)
+        write(command.topic)
     }
 }
 
@@ -88,13 +89,13 @@ internal suspend fun ByteWriteChannel.writeCommand(command: CancelCommand) = wri
 internal suspend fun ByteWriteChannel.writeCommand(command: PingCommand) = write {
     writeCommand(CommandName.PING) {
         writeUShort(command.ttl)
-        writeFully(command.context)
+        write(command.context)
     }
 }
 
 internal suspend fun ByteWriteChannel.writeCommand(command: PongCommand) = write {
     writeCommand(CommandName.PONG) {
-        writeFully(command.context)
+        write(command.context)
     }
 }
 
@@ -113,20 +114,20 @@ private fun Sink.writeCommand(
 
 private fun Sink.writeProperty(
     propertyName: PropertyName,
-    valueBytes: ByteArray,
+    valueBytes: ByteString,
 ) {
     writeShortString(propertyName.bytes)
     writeInt(valueBytes.size)
-    writeFully(valueBytes)
+    write(valueBytes)
 }
 
-private fun Sink.writeShortString(bytes: ByteArray) {
+private fun Sink.writeShortString(bytes: ByteString) {
     writeUByte(bytes.size.toUByte())
-    writeFully(bytes)
+    write(bytes)
 }
 
 private suspend fun ByteWriteChannel.writeMessage(message: Message) = write {
-    val parts = message.frames
+    val parts = message.readFrames()
     val lastIndex = parts.lastIndex
     for ((index, part) in parts.withIndex()) {
         val hasMore = index < lastIndex
@@ -134,10 +135,10 @@ private suspend fun ByteWriteChannel.writeMessage(message: Message) = write {
     }
 }
 
-private fun Sink.writeMessagePart(hasMore: Boolean, part: ByteArray) {
+private fun Sink.writeMessagePart(hasMore: Boolean, part: Buffer) {
     val flags = if (hasMore) ZmqFlags.more else ZmqFlags.none
-    writeFrameHeader(flags, part.size.toLong())
-    writeFully(part)
+    writeFrameHeader(flags, part.size)
+    transferFrom(part)
 }
 
 private fun Sink.writeFrameHeader(flags: ZmqFlags, size: Long) {

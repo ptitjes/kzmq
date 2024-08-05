@@ -6,6 +6,9 @@
 package org.zeromq.internal
 
 import kotlinx.coroutines.channels.*
+import kotlinx.io.bytestring.*
+import kotlin.jvm.*
+import kotlin.random.*
 
 internal class PeerMailbox(val endpoint: String, socketOptions: SocketOptions) {
     val receiveChannel = Channel<CommandOrMessage>(socketOptions.receiveQueueSize)
@@ -33,19 +36,9 @@ internal class PeerMailbox(val endpoint: String, socketOptions: SocketOptions) {
     }
 }
 
-internal class Identity(val value: ByteArray) {
-    override fun equals(other: Any?): Boolean {
-        if (this === other) return true
-        if (other == null || this::class != other::class) return false
-
-        other as Identity
-
-        if (!value.contentEquals(other.value)) return false
-
-        return true
-    }
-
-    override fun hashCode(): Int {
-        return value.contentHashCode()
+@JvmInline
+internal value class Identity(val value: ByteString) {
+    companion object {
+        fun random() = Identity(ByteString(Random.nextBytes(ByteArray(16))))
     }
 }

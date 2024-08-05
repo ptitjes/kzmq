@@ -8,6 +8,7 @@ package org.zeromq.internal.tcp
 import io.ktor.network.sockets.*
 import io.ktor.network.sockets.Socket
 import kotlinx.coroutines.*
+import kotlinx.io.bytestring.*
 import org.zeromq.*
 import org.zeromq.internal.*
 
@@ -41,8 +42,8 @@ internal class TcpSocketHandler(
         if (mechanism != peerSecuritySpec.mechanism)
             protocolError("Invalid peer security mechanism: ${peerSecuritySpec.mechanism}")
 
-        val localProperties = mutableMapOf<PropertyName, ByteArray>().apply {
-            put(PropertyName.SOCKET_TYPE, socketInfo.type.name.encodeToByteArray())
+        val localProperties = mutableMapOf<PropertyName, ByteString>().apply {
+            put(PropertyName.SOCKET_TYPE, socketInfo.type.name.encodeToByteString())
             socketInfo.options.routingId?.let { identity -> put(PropertyName.IDENTITY, identity) }
         }
 
@@ -81,6 +82,7 @@ internal class TcpSocketHandler(
         }
     }
 
+    @OptIn(DelicateCoroutinesApi::class)
     suspend fun handleLinger() {
         withTimeout(socketInfo.options.lingerTimeout) {
             try {
@@ -108,7 +110,6 @@ internal class TcpSocketHandler(
             transformSubscriptionMessages(raw)
         } else raw
 
-        logger.v { "Read: $incoming" }
         return incoming
     }
 
@@ -119,8 +120,6 @@ internal class TcpSocketHandler(
         } else outgoing
 
         output.writeCommandOrMessage(transformed)
-
-        logger.v { "Wrote: $outgoing" }
     }
 }
 
@@ -130,7 +129,9 @@ private fun transformSubscriptionMessages(commandOrMessage: CommandOrMessage): C
     } else commandOrMessage
 
 private fun extractSubscriptionCommand(message: Message): CommandOrMessage? {
-    return destructureSubscriptionMessage(message)?.let { (subscribe, topic) ->
+    return message.toSubscriptionMessage()?.let {
+        it.subscribe to it.topic
+    }?.let { (subscribe, topic) ->
         CommandOrMessage(
             if (subscribe) SubscribeCommand(topic) else CancelCommand(topic)
         )
@@ -140,16 +141,16 @@ private fun extractSubscriptionCommand(message: Message): CommandOrMessage? {
 private fun transformSubscriptionCommands(commandOrMessage: CommandOrMessage): CommandOrMessage =
     if (commandOrMessage.isCommand) {
         when (val command = commandOrMessage.commandOrThrow()) {
-            is SubscribeCommand -> CommandOrMessage(subscriptionMessageOf(true, command.topic))
+            is SubscribeCommand -> CommandOrMessage(SubscriptionMessage(true, command.topic).toMessage())
 
-            is CancelCommand -> CommandOrMessage(subscriptionMessageOf(false, command.topic))
+            is CancelCommand -> CommandOrMessage(SubscriptionMessage(false, command.topic).toMessage())
 
             else -> commandOrMessage
         }
     } else commandOrMessage
 
 private fun validateSocketType(
-    properties: Map<PropertyName, ByteArray>,
+    properties: Map<PropertyName, ByteString>,
     peerSocketTypes: Set<Type>,
 ) {
     val socketTypeProperty =
@@ -159,4 +160,4 @@ private fun validateSocketType(
 }
 
 private fun findSocketType(socketTypeString: String): Type? =
-    Type.values().find { it.name == socketTypeString.uppercase() }
+    Type.entries.find { it.name == socketTypeString.uppercase() }

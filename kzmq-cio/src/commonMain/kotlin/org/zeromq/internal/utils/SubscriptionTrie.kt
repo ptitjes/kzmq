@@ -5,6 +5,8 @@
 
 package org.zeromq.internal.utils
 
+import kotlinx.io.bytestring.*
+
 /**
  * Represents a subscription trie.
  *
@@ -20,7 +22,7 @@ internal data class SubscriptionTrie<T>(
     val subscriptions: Map<T, Int> = hashMapOf(),
     val children: Map<Byte, SubscriptionTrie<T>> = hashMapOf(),
 ) {
-    fun add(prefix: ByteArray, element: T): SubscriptionTrie<T> = this.add(prefix.iterator(), element)
+    fun add(prefix: ByteString, element: T): SubscriptionTrie<T> = this.add(prefix.iterator(), element)
 
     private fun add(prefix: ByteIterator, element: T): SubscriptionTrie<T> = if (prefix.hasNext()) {
         val byte = prefix.nextByte()
@@ -31,7 +33,7 @@ internal data class SubscriptionTrie<T>(
         this.copy(subscriptions = subscriptions + (element to newCount))
     }
 
-    fun remove(prefix: ByteArray, element: T): SubscriptionTrie<T> = this.remove(prefix.iterator(), element)
+    fun remove(prefix: ByteString, element: T): SubscriptionTrie<T> = this.remove(prefix.iterator(), element)
 
     private fun remove(prefix: ByteIterator, element: T): SubscriptionTrie<T> = if (prefix.hasNext()) {
         val byte = prefix.nextByte()
@@ -68,4 +70,10 @@ internal data class SubscriptionTrie<T>(
             child.forEachMatching(content, alreadyVisited, block)
         }
     }
+}
+
+private fun ByteString.iterator() = object : ByteIterator() {
+    private var index = 0
+    override fun hasNext(): Boolean = index < size
+    override fun nextByte(): Byte = get(index++)
 }

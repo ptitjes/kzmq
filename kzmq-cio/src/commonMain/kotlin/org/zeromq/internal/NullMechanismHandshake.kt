@@ -6,13 +6,14 @@
 package org.zeromq.internal
 
 import io.ktor.utils.io.*
+import kotlinx.io.bytestring.*
 
 internal suspend fun nullMechanismHandshake(
-    localProperties: MutableMap<PropertyName, ByteArray>,
+    localProperties: MutableMap<PropertyName, ByteString>,
     isServer: Boolean,
     input: ByteReadChannel,
     output: ByteWriteChannel,
-): Map<PropertyName, ByteArray> {
+): Map<PropertyName, ByteString> {
     return if (isServer) {
         logger.v { "Expecting READY command" }
         val properties = expectReadyCommand(input)
@@ -27,7 +28,7 @@ internal suspend fun nullMechanismHandshake(
     }
 }
 
-private suspend fun expectReadyCommand(input: ByteReadChannel): Map<PropertyName, ByteArray> {
+private suspend fun expectReadyCommand(input: ByteReadChannel): Map<PropertyName, ByteString> {
     return when (val command = input.readCommand()) {
         is ReadyCommand -> command.properties
         is ErrorCommand -> fatalProtocolError("Peer error occurred: ${command.reason}")
@@ -35,6 +36,6 @@ private suspend fun expectReadyCommand(input: ByteReadChannel): Map<PropertyName
     }
 }
 
-private suspend fun ByteWriteChannel.sendReadyCommand(properties: MutableMap<PropertyName, ByteArray>) {
+private suspend fun ByteWriteChannel.sendReadyCommand(properties: MutableMap<PropertyName, ByteString>) {
     writeCommand(ReadyCommand(properties))
 }

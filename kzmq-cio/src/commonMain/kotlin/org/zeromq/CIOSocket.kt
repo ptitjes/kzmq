@@ -20,7 +20,7 @@ internal abstract class CIOSocket(
         engine.lingerScope,
         engine.transportRegistry
     )
-    protected val peerEvents = peerManager.peerEvents
+    private val peerEvents = peerManager.peerEvents
 
     private val exceptionHandler = CoroutineExceptionHandler { _, throwable ->
         logger.e(throwable) { "An error occurred in socket" }
@@ -29,10 +29,11 @@ internal abstract class CIOSocket(
 
     private lateinit var socketJob: Job
 
-    fun setHandler(block: suspend CoroutineScope.() -> Unit) {
+    fun <H: SocketHandler> setupHandler(handler: H): H {
         socketJob = engine.mainScope.launch(exceptionHandler + coroutineName) {
-            block()
+            handler.handle(peerEvents)
         }
+        return handler
     }
 
     override fun close() {

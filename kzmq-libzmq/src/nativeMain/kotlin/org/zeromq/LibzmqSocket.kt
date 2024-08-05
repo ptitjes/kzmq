@@ -8,6 +8,8 @@ package org.zeromq
 import kotlinx.cinterop.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.selects.*
+import kotlinx.io.*
+import kotlinx.io.bytestring.*
 import org.zeromq.internal.libzmq.*
 
 @OptIn(ExperimentalForeignApi::class)
@@ -34,9 +36,9 @@ internal abstract class LibzmqSocket internal constructor(
         subscribe(byteArrayOf().toCValues())
     }
 
-    suspend fun subscribe(vararg topics: ByteArray) {
+    suspend fun subscribe(vararg topics: ByteString) {
         if (topics.isEmpty()) subscribe(byteArrayOf().toCValues())
-        else topics.forEach { subscribe(it.toCValues()) }
+        else topics.forEach { subscribe(it.toByteArray().toCValues()) }
     }
 
     suspend fun subscribe(vararg topics: String) {
@@ -59,9 +61,9 @@ internal abstract class LibzmqSocket internal constructor(
         unsubscribe(byteArrayOf().toCValues())
     }
 
-    suspend fun unsubscribe(vararg topics: ByteArray) {
+    suspend fun unsubscribe(vararg topics: ByteString) {
         if (topics.isEmpty()) unsubscribe(byteArrayOf().toCValues())
-        else topics.forEach { unsubscribe(it.toCValues()) }
+        else topics.forEach { unsubscribe(it.toByteArray().toCValues()) }
     }
 
     suspend fun unsubscribe(vararg topics: String) {
@@ -93,14 +95,14 @@ internal abstract class LibzmqSocket internal constructor(
     }
 
     private fun doSend(message: Message, blocking: Boolean) {
-        val parts = message.frames
-        val lastPartIndex = parts.lastIndex
+        val frames = message.readFrames()
+        val lastFrameIndex = frames.lastIndex
 
         val baseFlags = if (blocking) 0 else ZMQ_DONTWAIT
 
-        for ((index, part) in parts.withIndex()) {
-            val nativeData = part.toCValues()
-            val flags = baseFlags or if (index < lastPartIndex) ZMQ_SNDMORE else 0
+        for ((index, frame) in frames.withIndex()) {
+            val nativeData = frame.readByteArray().toCValues()
+            val flags = baseFlags or if (index < lastFrameIndex) ZMQ_SNDMORE else 0
             checkNativeError(zmq_send(underlying, nativeData, nativeData.size.toULong(), flags))
         }
     }
@@ -132,12 +134,12 @@ internal abstract class LibzmqSocket internal constructor(
     val onReceive: SelectClause1<Message> get() = TODO()
 
     private fun doReceiveMessage(blocking: Boolean): Message {
-        val parts = mutableListOf<ByteArray>()
+        val frames = mutableListOf<Buffer>()
         do {
-            val part = doReceiveMessagePart(blocking) ?: continue
-            parts += part
+            val frame = doReceiveMessagePart(blocking) ?: continue
+            frames += Buffer().apply { write(frame) }
         } while (hasMoreParts)
-        return Message(parts)
+        return Message(frames)
     }
 
     private val hasMoreParts: Boolean by socketOption(underlying, ZMQ_RCVMORE, booleanConverter)

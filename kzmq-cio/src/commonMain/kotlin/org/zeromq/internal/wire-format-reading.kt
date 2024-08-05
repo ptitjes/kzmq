@@ -9,6 +9,8 @@ import io.ktor.utils.io.*
 import io.ktor.utils.io.core.*
 import kotlinx.coroutines.channels.*
 import kotlinx.io.*
+import kotlinx.io.Buffer
+import kotlinx.io.bytestring.*
 import org.zeromq.*
 
 @OptIn(ExperimentalUnsignedTypes::class)
@@ -65,15 +67,15 @@ private fun Source.readCommandContent(): Command {
         null -> invalidFrame("Invalid command name: ${readShortString()}")
         CommandName.READY -> ReadyCommand(readProperties())
         CommandName.ERROR -> ErrorCommand(readShortString())
-        CommandName.SUBSCRIBE -> SubscribeCommand(readByteArray())
-        CommandName.CANCEL -> CancelCommand(readByteArray())
-        CommandName.PING -> PingCommand(readUShort(), readByteArray())
-        CommandName.PONG -> PongCommand(readByteArray())
+        CommandName.SUBSCRIBE -> SubscribeCommand(readByteString())
+        CommandName.CANCEL -> CancelCommand(readByteString())
+        CommandName.PING -> PingCommand(readUShort(), readByteString())
+        CommandName.PONG -> PongCommand(readByteString())
     }
 }
 
-private fun Source.readProperties(): Map<PropertyName, ByteArray> {
-    val properties = mutableMapOf<PropertyName, ByteArray>()
+private fun Source.readProperties(): Map<PropertyName, ByteString> {
+    val properties = mutableMapOf<PropertyName, ByteString>()
     while (remaining > 0) {
         val (propertyName, value) = readProperty()
         properties[propertyName] = value
@@ -81,11 +83,11 @@ private fun Source.readProperties(): Map<PropertyName, ByteArray> {
     return properties
 }
 
-private fun Source.readProperty(): Pair<PropertyName, ByteArray> {
+private fun Source.readProperty(): Pair<PropertyName, ByteString> {
     val propertyNameString = readShortString()
     val propertyName = PropertyName.find(propertyNameString) ?: invalidFrame("Can't read property")
     val valueSize = readInt()
-    val valueBytes = readByteArray(valueSize)
+    val valueBytes = readByteString(valueSize)
     return propertyName to valueBytes
 }
 
@@ -96,7 +98,7 @@ private fun Source.readShortString(): String {
 
 private suspend fun ByteReadChannel.readMessageContent(initialFlags: ZmqFlags): Message {
     var flags = initialFlags
-    val parts = mutableListOf<ByteArray>()
+    val parts = mutableListOf<Buffer>()
 
     do {
         if (flags.isCommand) invalidFrame("Expected message")
@@ -110,9 +112,9 @@ private suspend fun ByteReadChannel.readMessageContent(initialFlags: ZmqFlags): 
     return Message(parts)
 }
 
-private suspend fun ByteReadChannel.readMessagePartContent(flags: ZmqFlags): ByteArray {
+private suspend fun ByteReadChannel.readMessagePartContent(flags: ZmqFlags): Buffer {
     val size = readSize(flags)
-    return readBuffer(size.toInt()).readByteArray()
+    return readBuffer(size.toInt())
 }
 
 private suspend fun ByteReadChannel.readSize(flags: ZmqFlags): Long {

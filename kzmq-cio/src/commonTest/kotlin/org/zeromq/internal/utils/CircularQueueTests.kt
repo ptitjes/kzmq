@@ -8,6 +8,7 @@ package org.zeromq.internal.utils
 import io.kotest.assertions.throwables.*
 import io.kotest.core.spec.style.*
 import io.kotest.matchers.*
+import io.kotest.matchers.equals.*
 
 @Suppress("unused")
 class CircularQueueTests : FunSpec({
@@ -31,5 +32,43 @@ class CircularQueueTests : FunSpec({
             queue.rotate() shouldBe 2
             queue.rotate() shouldBe 3
         }
+    }
+
+    test("remove current element") {
+        val queue = CircularQueue<Int>().apply { add(1); add(2); add(3) }
+        queue.remove(1)
+        queue.elements shouldBeEqual listOf(2, 3)
+    }
+
+    test("remove other element") {
+        val queue = CircularQueue<Int>().apply { add(1); add(2); add(3) }
+        queue.remove(2)
+        queue.elements shouldBeEqual listOf(1, 3)
+    }
+
+    test("rotates to original with rotate(count)") {
+        val queue = CircularQueue<Int>().apply { add(1); add(2); add(3) }
+        queue.rotate(3)
+        queue.elements shouldBeEqual listOf(1, 2, 3)
+    }
+
+    test("rotates to original with rotateAfter(index)") {
+        val queue = CircularQueue<Int>().apply { add(1); add(2); add(3) }
+        queue.rotateAfter(2)
+        queue.elements shouldBeEqual listOf(1, 2, 3)
+    }
+
+    test("remove last element after rotation") {
+        val queue = CircularQueue<Int>().apply { add(1); add(2); add(3) }
+        queue.rotate(2)
+        queue.remove(2)
+        queue.elements shouldBeEqual listOf(3, 1)
+    }
+
+    test("remove next element after rotation") {
+        val queue = CircularQueue<Int>().apply { add(1); add(2); add(3) }
+        queue.rotate(2)
+        queue.remove(3)
+        queue.elements shouldBeEqual listOf(1, 2)
     }
 })
