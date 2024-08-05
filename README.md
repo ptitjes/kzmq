@@ -16,7 +16,7 @@
 > See [Implementation status](#implementation-status) for more information.
 
 Kzmq is a Kotlin multi-platform ZeroMQ library. It supports four backend engines:
-- CIO, a pure Kotlin coroutine-based implementation (using `ktor-network` and `ktor-io`),
+- CIO, a pure Kotlin coroutine-based implementation (using `ktor-network`),
 - [JeroMQ](https://github.com/zeromq/jeromq), a pure Java implementation of ZeroMQ,
 - [ZeroMQjs](https://github.com/zeromq/zeromq.js), a Node.JS addon implementation of ZeroMQ,
 - [Libzmq](https://github.com/zeromq/libzmq), the main native implementation of ZeroMQ.
@@ -33,23 +33,25 @@ import kotlinx.coroutines.*
 import org.zeromq.*
 
 suspend fun main() = coroutineScope {
-  // Create a ZeroMQ context (with an auto-discoverd engine)
+  // Create a ZeroMQ context (with an auto-discovered engine)
   Context().use { context ->
-    // Socket to talk to clients
-    val socket = context.createReply().apply {
+    // Create a "Reply" socket to talk to clients
+    context.createReply().apply {
       bind("tcp://localhost:5555")
-    }
-
-    socket.use {
+    }.use { socket ->
       while (isActive) {
         // Suspend until a message is received
-        val message = it.receive()
+        val content = socket.receive {
+            readFrame { readString() }
+        }
 
         // Print the message
-        println(message.singleOrThrow().decodeToString())
+        println(content)
 
-        // Send a response
-        it.send(Message("Hello, world!".encodeToByteArray()))
+        // Send a response back
+        socket.send {
+            writeFrame("Hello, $content!")
+        }
       }
     }
   }
@@ -68,7 +70,7 @@ You can generate the Kdoc documentation by running the `dokkaHtmlMultiModule` gr
 # Engines
 
 Kzmq supports four backend engines:
-- CIO, a pure Kotlin coroutine-based implementation (using `ktor-network` and `ktor-io`),
+- CIO, a pure Kotlin coroutine-based implementation (using `ktor-network`),
 - [JeroMQ](https://github.com/zeromq/jeromq), a pure Java implementation of ZeroMQ,
 - [ZeroMQjs](https://github.com/zeromq/zeromq.js), a Node.JS addon implementation of ZeroMQ,
 - [Libzmq](https://github.com/zeromq/libzmq), the main native implementation of ZeroMQ.
@@ -139,9 +141,10 @@ repositories {
 ```kotlin
 kotlin {
     sourceSets {
-        val commonMain by getting {
+        commonMain {
             dependencies {
                 implementation("org.zeromq:kzmq-core:0.1.0")
+                implementation("org.jetbrains.kotlinx:kotlinx-io-core:0.5.1")
             }
         }
     }
@@ -162,9 +165,9 @@ Add the CIO engine package to your `commonMain` source-set dependencies
 ```kotlin
 kotlin {
     sourceSets {
-        val commonMain by getting {
+        commonMain {
             dependencies {
-                implementation("org.zeromq:kzmq-cio:0.1.0")
+                implementation("org.zeromq:kzmq-engine-cio:0.1.0")
             }
         }
     }
@@ -179,9 +182,9 @@ Add the JeroMQ engine package to your `jvmMain` source-set dependencies:
 ```kotlin
 kotlin {
     sourceSets {
-        val jvmMain by getting {
+        jvmMain {
             dependencies {
-                implementation("org.zeromq:kzmq-jeromq:0.1.0")
+                implementation("org.zeromq:kzmq-engine-jeromq:0.1.0")
             }
         }
     }
@@ -196,9 +199,9 @@ Add the ZeroMQ.js engine package to your `jsMain` source-set dependencies:
 ```kotlin
 kotlin {
     sourceSets {
-        val jsMain by getting {
+        jsMain {
             dependencies {
-                implementation("org.zeromq:kzmq-zeromqjs:0.1.0")
+                implementation("org.zeromq:kzmq-engine-zeromqjs:0.1.0")
             }
         }
     }
@@ -213,9 +216,9 @@ Add the Libzmq engine package to your `nativeMain` source-set dependencies:
 ```kotlin
 kotlin {
     sourceSets {
-        val nativeMain by getting {
+        nativeMain {
             dependencies {
-                implementation("org.zeromq:kzmq-libzmq:0.1.0")
+                implementation("org.zeromq:kzmq-engine-libzmq:0.1.0")
             }
         }
     }
