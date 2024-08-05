@@ -6,16 +6,19 @@
 package org.zeromq.tests.sockets
 
 import io.kotest.core.spec.style.*
-import io.kotest.matchers.*
+import kotlinx.io.bytestring.*
 import org.zeromq.*
+import org.zeromq.test.*
 import org.zeromq.tests.utils.*
 
 @Suppress("unused")
 class PairTests : FunSpec({
 
     withContexts("bind-connect") { ctx1, ctx2, protocol ->
-        val address = randomAddress(protocol)
-        val message = Message("Hello 0MQ!".encodeToByteArray())
+        val address = randomEndpoint(protocol)
+        val message = message {
+            writeFrame("Hello 0MQ!".encodeToByteString())
+        }
 
         val pair1 = ctx1.createPair().apply { bind(address) }
         val pair2 = ctx2.createPair().apply { connect(address) }
@@ -23,15 +26,17 @@ class PairTests : FunSpec({
         waitForConnections()
 
         pair1.send(message)
-        pair2.receive() shouldBe message
+        pair2 shouldReceive message
 
         pair2.send(message)
-        pair1.receive() shouldBe message
+        pair1 shouldReceive message
     }
 
     withContexts("connect-bind") { ctx1, ctx2, protocol ->
-        val address = randomAddress(protocol)
-        val message = Message("Hello 0MQ!".encodeToByteArray())
+        val address = randomEndpoint(protocol)
+        val message = message {
+            writeFrame("Hello 0MQ!".encodeToByteString())
+        }
 
         val pair2 = ctx2.createPair().apply { bind(address) }
         val pair1 = ctx1.createPair().apply { connect(address) }
@@ -39,9 +44,9 @@ class PairTests : FunSpec({
         waitForConnections()
 
         pair1.send(message)
-        pair2.receive() shouldBe message
+        pair2 shouldReceive message
 
         pair2.send(message)
-        pair1.receive() shouldBe message
+        pair1 shouldReceive message
     }
 })

@@ -7,8 +7,11 @@ package org.zeromq.tests.sockets
 
 import io.kotest.core.spec.style.*
 import io.kotest.matchers.*
+import io.kotest.matchers.equals.*
 import kotlinx.atomicfu.*
 import kotlinx.coroutines.*
+import kotlinx.io.*
+import kotlinx.io.bytestring.*
 import org.zeromq.*
 import org.zeromq.tests.utils.*
 
@@ -20,25 +23,22 @@ class DealerRouterTests : FunSpec({
 
     withContexts("base").config(
         // TODO fix when testing more Dealer and Router logic
-        skip = setOf("inproc"),
+//        skip = setOf("jeromq"),
     ) { ctx1, ctx2, protocol ->
         val dealerCount = 2
         val routerCount = 3
-        val addresses = Array(routerCount) { randomAddress(protocol) }
+        val addresses = Array(routerCount) { randomEndpoint(protocol) }
 
         val routers = addresses.map {
-            ctx2.createRouter().apply {
-                bind(it)
-            }
+            ctx2.createRouter().apply { bind(it) }
         }
         val dealers = Array(dealerCount) { index ->
             ctx1.createDealer().apply {
-                routingId = index.encodeRoutingId()
+                routingId = index.encodeAsRoutingId()
                 addresses.forEach { connect(it) }
+                waitForConnections(addresses.size)
             }
         }
-
-        waitForConnections(dealerCount * routerCount)
 
         class Trace {
             val receivedReplyIds = atomic(setOf<Int>())
@@ -49,70 +49,68 @@ class DealerRouterTests : FunSpec({
         coroutineScope {
             launch {
                 repeat(dealerCount * routerCount) { requestId ->
-                    val dealer = dealers[requestId % dealers.size]
-                    val requestData = byteArrayOf(requestId.toByte())
+                    val dealerId = requestId % dealers.size
+                    val dealer = dealers[dealerId]
 
-                    dealer.send(
-                        Message(
-                            REQUEST_MARKER.encodeToByteArray(),
-                            requestData
-                        )
-                    )
+                    dealer.send {
+                        writeFrame(REQUEST_MARKER)
+                        writeFrame { writeByte(requestId.toByte()) }
+                    }
                 }
             }
             routers.forEach { router ->
                 launch {
                     repeat(dealerCount) {
-                        val request = router.receive()
+                        val (dealerId, requestId) = router.receive {
+                            val dealerId = readFrame { readByteString() }
+                            readFrame { readString() shouldBe REQUEST_MARKER }
+                            val requestId = readFrame { readByte() }
+                            dealerId to requestId
+                        }
 
-                        request.frames.size shouldBe 3
-                        val dealerIdFrame = request.frames[0]
-                        request.frames[1].decodeToString() shouldBe REQUEST_MARKER
-                        val requestIdFrame = request.frames[2]
-
-                        router.send(
-                            Message(
-                                dealerIdFrame,
-                                REPLY_MARKER.encodeToByteArray(),
-                                requestIdFrame,
-                                dealerIdFrame
-                            )
-                        )
+                        router.send {
+                            writeFrame(dealerId)
+                            writeFrame(REPLY_MARKER)
+                            writeFrame { writeByte(requestId) }
+                            writeFrame(dealerId)
+                        }
                     }
                 }
             }
             dealers.forEach { dealer ->
                 launch {
                     repeat(routerCount) {
-                        val reply = dealer.receive()
+                        val (dealerId, requestId) = dealer.receive {
+                            readFrame { readString() shouldBe REPLY_MARKER }
+                            val requestId = readFrame { readByte() }
+                            val dealerId = readFrame { readByteString() }
+                            dealerId to requestId
+                        }
 
-                        reply.frames.size shouldBe 3
-                        reply.frames[0].decodeToString() shouldBe REPLY_MARKER
-                        val requestIdFrame = reply.frames[1]
-                        val dealerIdFrame = reply.frames[2]
+                        val realDealerId = dealerId.decodeFromRoutingId()
+                        realDealerId shouldBe dealer.routingId?.decodeFromRoutingId()
+                        realDealerId shouldBe requestId % dealerCount
 
-                        val requestId = requestIdFrame[0].toInt()
-                        val dealerId = dealerIdFrame.decodeRoutingId()
-
-                        dealerId shouldBe dealer.routingId?.decodeRoutingId()
-                        dealerId shouldBe requestId % dealerCount
-
-                        trace.receivedReplyIds.getAndUpdate { it + requestId }
+                        trace.receivedReplyIds.getAndUpdate { it + requestId.toInt() }
                     }
                 }
             }
         }
 
-        trace.receivedReplyIds.value shouldBe (0 until 6).toSet()
+        trace.receivedReplyIds.value shouldBeEqual (0 until 6).toSet()
     }
 })
 
 /*
  * TODO Remove when https://github.com/zeromq/zeromq.js/issues/506 is fixed.
  */
-private fun Int.encodeRoutingId(): ByteArray = byteArrayOf(1, (this + 1).toByte())
-private fun ByteArray.decodeRoutingId(): Int {
-    require(size == 2) //{ "Size should be 2, but is $size" }
+private fun Int.encodeAsRoutingId(): ByteString = buildByteString {
+    append(1.toByte())
+    append((this@encodeAsRoutingId + 1).toByte())
+}
+
+private fun ByteString.decodeFromRoutingId(): Int {
+    require(size == 2) { "Size should be 2, but is $size" }
     require(this[0] == 1.toByte())
     return this[1].toInt() - 1
 }

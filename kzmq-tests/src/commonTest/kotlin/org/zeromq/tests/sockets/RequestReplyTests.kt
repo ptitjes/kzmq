@@ -6,130 +6,162 @@
 package org.zeromq.tests.sockets
 
 import io.kotest.core.spec.style.*
-import io.kotest.matchers.*
+import io.kotest.matchers.equals.*
 import kotlinx.coroutines.*
-import kotlinx.coroutines.selects.*
+import kotlinx.io.*
+import kotlinx.io.bytestring.*
 import org.zeromq.*
+import org.zeromq.test.*
 import org.zeromq.tests.utils.*
 
 @Suppress("unused")
 class RequestReplyTests : FunSpec({
 
     withContexts("bind-connect") { ctx1, ctx2, protocol ->
-        val address = randomAddress(protocol)
-        val requestMessage = Message("Hello 0MQ!".encodeToByteArray())
-        val replyMessage = Message("Hello back!".encodeToByteArray())
+        val address = randomEndpoint(protocol)
+        val requestTemplate = message {
+            writeFrame("Hello, 0MQ!".encodeToByteString())
+        }
+        val replyTemplate = message {
+            writeFrame("Hello back!".encodeToByteString())
+        }
 
         val request = ctx1.createRequest().apply { bind(address) }
         val reply = ctx2.createReply().apply { connect(address) }
 
         waitForConnections()
 
-        request.send(requestMessage)
-        reply.receive() shouldBe requestMessage
+        request.send(requestTemplate)
+        reply shouldReceive requestTemplate
 
-        reply.send(replyMessage)
-        request.receive() shouldBe replyMessage
+        reply.send(replyTemplate)
+        request shouldReceive replyTemplate
     }
 
     withContexts("connect-bind") { ctx1, ctx2, protocol ->
-        val address = randomAddress(protocol)
-        val requestMessage = Message("Hello 0MQ!".encodeToByteArray())
-        val replyMessage = Message("Hello back!".encodeToByteArray())
+        val address = randomEndpoint(protocol)
+        val requestTemplate = message {
+            writeFrame("Hello, 0MQ!".encodeToByteString())
+        }
+        val replyTemplate = message {
+            writeFrame("Hello back!".encodeToByteString())
+        }
 
         val request = ctx1.createRequest().apply { bind(address) }
         val reply = ctx2.createReply().apply { connect(address) }
 
         waitForConnections()
 
-        request.send(requestMessage)
-        reply.receive() shouldBe requestMessage
+        request.send(requestTemplate)
+        reply shouldReceive requestTemplate
 
-        reply.send(replyMessage)
-        request.receive() shouldBe replyMessage
+        reply.send(replyTemplate)
+        request shouldReceive replyTemplate
     }
 
     withContexts("round-robin connected reply sockets").config(
         skip = setOf("jeromq", "zeromq.js"),
     ) { ctx1, ctx2, protocol ->
-        val address = randomAddress(protocol)
+        val address = randomEndpoint(protocol)
 
         val request = ctx1.createRequest().apply { bind(address) }
-        val reply1 = ctx2.createReply().apply { connect(address) }
-        val reply2 = ctx2.createReply().apply { connect(address) }
 
+        val reply1 = ctx2.createReply().apply { connect(address) }
+        waitForConnections(2)
+        val reply2 = ctx2.createReply().apply { connect(address) }
         waitForConnections(2)
 
-        var lastReplier: ReplySocket? = null
-        repeat(10) { i ->
-            val requestMessage = Message("Hello $i".encodeToByteArray())
-            val replyMessage = Message("Hello back $i".encodeToByteArray())
+        val replies = listOf(reply1, reply2)
 
-            request.send(requestMessage)
+        val replyJob = launch {
+            replies.forEachIndexed { replyIndex, reply ->
+                launch {
+                    while (true) {
+                        val index = reply.receive {
+                            readFrame { readString() } shouldBeEqual "some request"
+                            readFrame { readByte() }
+                        }
 
-            select<Unit> {
-                reply1.onReceive { message ->
-                    lastReplier shouldNotBe reply1
-                    lastReplier = reply1
-
-                    message shouldBe requestMessage
-                    reply1.send(replyMessage)
-                }
-                reply2.onReceive { message ->
-                    lastReplier shouldNotBe reply2
-                    lastReplier = reply2
-
-                    message shouldBe requestMessage
-                    reply2.send(replyMessage)
+                        reply.send {
+                            writeFrame("some reply")
+                            writeFrame { writeByte(index) }
+                            writeFrame { writeByte(replyIndex.toByte()) }
+                        }
+                    }
                 }
             }
-
-            request.receive() shouldBe replyMessage
         }
+
+        repeat(10) { index ->
+            request.send {
+                writeFrame("some request")
+                writeFrame { writeByte(index.toByte()) }
+            }
+
+            request shouldReceive message {
+                writeFrame("some reply")
+                writeFrame { writeByte(index.toByte()) }
+                writeFrame { writeByte((index % 2).toByte()) }
+            }
+        }
+
+        replyJob.cancelAndJoin()
     }
 
     withContexts("fair-queuing request sockets").config(
-        skip = setOf("cio", "jeromq", "zeromq.js"),
+        skip = setOf("jeromq", "zeromq.js"),
     ) { ctx1, ctx2, protocol ->
-        val address = randomAddress(protocol)
+        val address = randomEndpoint(protocol)
 
         val reply = ctx2.createReply().apply { bind(address) }
-        val request1 = ctx1.createRequest().apply { connect(address) }
-        val request2 = ctx1.createRequest().apply { connect(address) }
 
+        val request1 = ctx1.createRequest().apply { connect(address) }
+        waitForConnections(2)
+        val request2 = ctx1.createRequest().apply { connect(address) }
         waitForConnections(2)
 
-        coroutineScope {
-            launch {
-                var lastRequester: String? = null
-                repeat(10) {
-                    val request = reply.receive()
-                    val requester = request.singleOrThrow().decodeToString().substringAfterLast(" ")
+        val requests = listOf(request1, request2)
 
-                    lastRequester shouldNotBe requester
-                    lastRequester = requester
-
-                    reply.send(Message("Hello back to $requester".encodeToByteArray()))
+        val replyJob = launch {
+            repeat(10) { replyMessageIndex ->
+                val (requestIndex, messageIndex) = reply.receive {
+                    readFrame { readString() } shouldBeEqual "some request"
+                    val requestIndex = readFrame { readByte() }
+                    val messageIndex = readFrame { readByte() }
+                    requestIndex to messageIndex
                 }
-            }
-            launch {
-                val requestMessage = Message("Hello from request1".encodeToByteArray())
-                val replyMessage = Message("Hello back to request1".encodeToByteArray())
 
-                repeat(5) {
-                    request1.send(requestMessage)
-                    request1.receive() shouldBe replyMessage
-                }
-            }
-            launch {
-                val requestMessage = Message("Hello from request2".encodeToByteArray())
-                val replyMessage = Message("Hello back to request2".encodeToByteArray())
-
-                repeat(5) {
-                    request2.send(requestMessage)
-                    request2.receive() shouldBe replyMessage
+                reply.send {
+                    writeFrame("some reply")
+                    writeFrame { writeByte(requestIndex) }
+                    writeFrame { writeByte(messageIndex) }
+                    writeFrame { writeByte(replyMessageIndex.toByte()) }
                 }
             }
         }
+
+        coroutineScope {
+            requests.forEachIndexed { requestIndex, request ->
+                launch {
+                    repeat(5) { messageIndex ->
+                        request.send {
+                            writeFrame("some request")
+                            writeFrame { writeByte(requestIndex.toByte()) }
+                            writeFrame { writeByte(messageIndex.toByte()) }
+                        }
+
+                        val expectedMessageIndex = messageIndex * 2 + requestIndex
+                        request shouldReceive message {
+                            writeFrame("some reply")
+                            writeFrame { writeByte(requestIndex.toByte()) }
+                            writeFrame { writeByte(messageIndex.toByte()) }
+                            writeFrame { writeByte(expectedMessageIndex.toByte()) }
+                        }
+                    }
+                }
+            }
+        }
+
+        replyJob.cancelAndJoin()
     }
 })

@@ -6,18 +6,22 @@
 package org.zeromq.tests.sockets
 
 import io.kotest.core.spec.style.*
-import io.kotest.matchers.*
 import io.kotest.matchers.collections.*
 import kotlinx.coroutines.*
+import kotlinx.io.*
+import kotlinx.io.bytestring.*
 import org.zeromq.*
+import org.zeromq.test.*
 import org.zeromq.tests.utils.*
 
 @Suppress("unused")
 class PublisherSubscriberTests : FunSpec({
 
     withContexts("bind-connect") { ctx1, ctx2, protocol ->
-        val address = randomAddress(protocol)
-        val message = Message("Hello 0MQ!".encodeToByteArray())
+        val address = randomEndpoint(protocol)
+        val template = message {
+            writeFrame("Hello, 0MQ!".encodeToByteString())
+        }
 
         val publisher = ctx1.createPublisher().apply { bind(address) }
         val subscriber = ctx2.createSubscriber().apply { connect(address) }
@@ -29,19 +33,19 @@ class PublisherSubscriberTests : FunSpec({
         waitForSubscriptions()
 
         coroutineScope {
-            launch { publisher.send(message) }
-            launch { subscriber.receive() shouldBe message }
+            launch { publisher.send(template) }
+            launch { subscriber shouldReceive template }
         }
     }
 
     // TODO Figure out why this test is hanging with JeroMQ and ZeroMQ.js
-    // TODO Figure out why this test makes all jvmTest hang
     withContexts("connect-bind").config(
         skip = setOf("jeromq", "zeromq.js"),
-        only = setOf("tcp")
     ) { ctx1, ctx2, protocol ->
-        val address = randomAddress(protocol)
-        val message = Message("Hello 0MQ!".encodeToByteArray())
+        val address = randomEndpoint(protocol)
+        val template = message {
+            writeFrame("Hello, 0MQ!".encodeToByteString())
+        }
 
         val subscriber = ctx2.createSubscriber().apply { bind(address) }
         val publisher = ctx1.createPublisher().apply { connect(address) }
@@ -53,13 +57,13 @@ class PublisherSubscriberTests : FunSpec({
         waitForSubscriptions()
 
         coroutineScope {
-            launch { publisher.send(message) }
-            launch { subscriber.receive() shouldBe message }
+            launch { publisher.send(template) }
+            launch { subscriber shouldReceive template }
         }
     }
 
     withContexts("subscription filter") { ctx1, ctx2, protocol ->
-        val address = randomAddress(protocol)
+        val address = randomEndpoint(protocol)
 
         val sent = listOf("prefixed data", "non-prefixed data", "prefix is good")
         val expected = sent.filter { it.startsWith("prefix") }
@@ -75,13 +79,13 @@ class PublisherSubscriberTests : FunSpec({
 
         coroutineScope {
             launch {
-                sent.forEach { publisher.send(Message(it.encodeToByteArray())) }
+                sent.forEach { publisher.send(Message(it.encodeToByteString())) }
             }
 
             launch {
                 val received = mutableListOf<String>()
                 repeat(2) {
-                    received += subscriber.receive().singleOrThrow().decodeToString()
+                    received += subscriber.receive().singleOrThrow().readByteArray().decodeToString()
                 }
                 received shouldContainExactly expected
             }

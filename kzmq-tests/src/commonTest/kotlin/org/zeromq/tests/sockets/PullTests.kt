@@ -8,7 +8,9 @@ package org.zeromq.tests.sockets
 import io.kotest.assertions.*
 import io.kotest.common.*
 import io.kotest.core.spec.style.*
+import kotlinx.io.bytestring.*
 import org.zeromq.*
+import org.zeromq.test.*
 import org.zeromq.tests.utils.*
 
 @OptIn(ExperimentalKotest::class)
@@ -22,7 +24,7 @@ class PullTests : FunSpec({
         // TODO Investigate why this fails with CIO native
         if (platform == Platform.Native) return@config
 
-        val address = randomAddress(protocol)
+        val address = randomEndpoint(protocol)
 
         val pushSocketCount = 5
         val pullSocket = ctx2.createPull().apply { bind(address) }
@@ -30,18 +32,16 @@ class PullTests : FunSpec({
 
         waitForConnections(pushSocketCount)
 
-        val messages = List(10) { index -> Message(ByteArray(1) { index.toByte() }) }
+        val templates = messages(10) { index ->
+            writeFrame(ByteString(index.toByte()))
+        }
 
         pushSockets.forEach { pushSocket ->
-            messages.forEach { message ->
-                pushSocket.send(message)
-            }
+            templates.forEach { pushSocket.send(it) }
         }
 
         all {
-            messages.forEach { message ->
-                pullSocket shouldReceiveExactly List(pushSocketCount) { message }
-            }
+            pullSocket shouldReceiveExactly templates.flatMap { template -> List(pushSocketCount) { template } }
         }
     }
 })
