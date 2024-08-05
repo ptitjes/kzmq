@@ -5,6 +5,7 @@
 
 package org.zeromq
 
+import kotlinx.io.bytestring.*
 import org.zeromq.internal.zeromqjs.Subscriber as ZSubscriber
 
 internal class ZeroMQJsSubscriberSocket internal constructor(override val underlying: ZSubscriber = ZSubscriber()) :
@@ -16,7 +17,7 @@ internal class ZeroMQJsSubscriberSocket internal constructor(override val underl
         underlying.subscribe()
     }
 
-    override suspend fun subscribe(vararg topics: ByteArray) {
+    override suspend fun subscribe(vararg topics: ByteString) {
         underlying.subscribe(*topics.map { it.decodeToString() }.toTypedArray())
     }
 
@@ -28,7 +29,7 @@ internal class ZeroMQJsSubscriberSocket internal constructor(override val underl
         underlying.unsubscribe()
     }
 
-    override suspend fun unsubscribe(vararg topics: ByteArray) {
+    override suspend fun unsubscribe(vararg topics: ByteString) {
         underlying.unsubscribe(*topics.map { it.decodeToString() }.toTypedArray())
     }
 

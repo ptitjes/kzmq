@@ -6,12 +6,13 @@
 package org.zeromq
 
 import kotlinx.coroutines.*
+import kotlinx.io.*
 import org.zeromq.internal.zeromqjs.*
 
 internal class ZeroMQJsSendSocket(private val underlying: Writable) : SendSocket {
 
     override suspend fun send(message: Message): Unit =
-        underlying.send(message.frames.map { it.toBuffer() }.toTypedArray()).await()
+        underlying.send(message.readFrames().map { it.readByteArray().toBuffer() }.toTypedArray()).await()
 
     override suspend fun sendCatching(message: Message): SocketResult<Unit> = try {
         SocketResult.success(send(message))

@@ -5,6 +5,7 @@
 
 package org.zeromq
 
+import kotlinx.io.bytestring.*
 import org.zeromq.internal.zeromqjs.Dealer as ZDealer
 
 internal class ZeroMQJsDealerSocket internal constructor(
@@ -17,7 +18,7 @@ internal class ZeroMQJsDealerSocket internal constructor(
 
     override var conflate: Boolean by underlying::conflate
 
-    override var routingId: ByteArray? by underlying::routingId.asNullableByteArrayProperty()
+    override var routingId: ByteString? by underlying::routingId.asNullableByteStringProperty()
 
     override var probeRouter: Boolean by underlying::probeRouter
 }

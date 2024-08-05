@@ -14,6 +14,7 @@ kotlin {
         jsMain {
             dependencies {
                 implementation(project(":kzmq-core"))
+                implementation(libs.kotlinx.io.core)
                 implementation(npm("zeromq", libs.versions.zeromqjs.get()))
             }
         }
