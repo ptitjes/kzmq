@@ -7,6 +7,7 @@ package org.zeromq
 
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.*
+import kotlinx.io.bytestring.*
 import org.zeromq.internal.*
 import org.zeromq.internal.utils.*
 
@@ -60,52 +61,13 @@ internal class CIODealerSocket(
 ) : CIOSocket(engine, Type.DEALER), CIOSendSocket, CIOReceiveSocket, DealerSocket {
 
     override val validPeerTypes: Set<Type> get() = validPeerSocketTypes
-
-    override val sendChannel = Channel<Message>()
-    override val receiveChannel = Channel<Message>()
-
-    init {
-        setHandler {
-            val forwardJobs = JobMap<PeerMailbox>()
-
-            while (isActive) {
-                val (kind, peerMailbox) = peerEvents.receive()
-                when (kind) {
-                    PeerEvent.Kind.ADDITION -> forwardJobs.add(peerMailbox) { dispatchRequestsReplies(peerMailbox) }
-                    PeerEvent.Kind.REMOVAL -> forwardJobs.remove(peerMailbox)
-                    else -> {}
-                }
-            }
-        }
-    }
-
-    private fun CoroutineScope.dispatchRequestsReplies(peerMailbox: PeerMailbox) = launch {
-        launch {
-            while (isActive) {
-                val request = sendChannel.receive()
-                logger.d { "Dispatching request $request to $peerMailbox" }
-                peerMailbox.sendChannel.send(CommandOrMessage(request))
-            }
-        }
-        launch {
-            try {
-                while (isActive) {
-                    val reply = peerMailbox.receiveChannel.receive().messageOrThrow()
-                    logger.d { "Dispatching reply $reply from $peerMailbox" }
-                    receiveChannel.send(reply)
-                }
-            } catch (e: ClosedReceiveChannelException) {
-                // Coroutine's cancellation happened while suspending on receive
-                // and the receiveChannel of the peerMailbox has already been closed
-            }
-        }
-    }
+    override val handler = setupHandler(DealerSocketHandler())
 
     override var conflate: Boolean
         get() = TODO("Not yet implemented")
         set(value) {}
 
-    override var routingId: ByteArray? by options::routingId
+    override var routingId: ByteString? by options::routingId
 
     override var probeRouter: Boolean
         get() = TODO("Not yet implemented")
@@ -113,5 +75,24 @@ internal class CIODealerSocket(
 
     companion object {
         private val validPeerSocketTypes = setOf(Type.REP, Type.ROUTER)
+    }
+}
+
+internal class DealerSocketHandler : SocketHandler {
+    private val mailboxes = CircularQueue<PeerMailbox>()
+
+    override suspend fun handle(peerEvents: ReceiveChannel<PeerEvent>) = coroutineScope {
+        while (isActive) {
+            mailboxes.update(peerEvents.receive())
+        }
+    }
+
+    override suspend fun send(message: Message) {
+        mailboxes.sendToFirstAvailable(message)
+    }
+
+    override suspend fun receive(): Message {
+        val (_, message) = mailboxes.receiveFromFirst()
+        return message
     }
 }

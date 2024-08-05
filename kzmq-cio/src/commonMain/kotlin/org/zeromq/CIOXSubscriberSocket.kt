@@ -9,6 +9,7 @@ import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.*
 import kotlinx.coroutines.selects.*
 import org.zeromq.internal.*
+import org.zeromq.internal.utils.*
 
 /**
  * An implementation of the [XSUB socket](https://rfc.zeromq.org/spec/29/).
@@ -90,92 +91,64 @@ internal class CIOXSubscriberSocket(
 
     override val validPeerTypes: Set<Type> get() = validPeerSocketTypes
 
-    override val sendChannel = Channel<Message>()
-    override val receiveChannel = Channel<Message>()
+    override val handler = setupHandler(XSubscriberSocketHandler())
 
-    private var subscriptions = mutableListOf<ByteArray>()
-    private var lateSubscriptionCommands = Channel<Command>(10)
+    companion object {
+        private val validPeerSocketTypes = setOf(Type.PUB, Type.XPUB)
+    }
+}
 
-    init {
-        setHandler {
-            val peerMailboxes = hashSetOf<PeerMailbox>()
+internal class XSubscriberSocketHandler : SocketHandler {
+    private val mailboxes = CircularQueue<PeerMailbox>()
+    private val subscriptions = SubscriptionManager()
 
-            while (isActive) {
-                select<Unit> {
-                    peerEvents.onReceive { (kind, peerMailbox) ->
-                        when (kind) {
-                            PeerEvent.Kind.ADDITION -> {
-                                peerMailboxes.add(peerMailbox)
+    override suspend fun handle(peerEvents: ReceiveChannel<PeerEvent>) = coroutineScope {
+        while (isActive) {
+            select {
+                peerEvents.onReceive { event ->
+                    mailboxes.update(event)
 
-                                for (subscription in subscriptions) {
-                                    logger.d { "Sending subscription ${subscription.contentToString()} to $peerMailbox" }
-                                    peerMailbox.sendChannel.send(
-                                        CommandOrMessage(SubscribeCommand(subscription))
-                                    )
-                                }
-                            }
-
-                            PeerEvent.Kind.REMOVAL -> peerMailboxes.remove(peerMailbox)
-                            else -> {}
-                        }
-                    }
-
-                    sendChannel.onReceive { message ->
-                        val subscriptionTopicPair = destructureSubscriptionMessage(message)
-                        if (subscriptionTopicPair != null) {
-                            val (subscribe, topic) = subscriptionTopicPair
-                            if (subscribe) subscribe(listOf(topic)) else unsubscribe(listOf(topic))
-                        } else {
-                            peerMailboxes.forEach { peerMailbox ->
-                                logger.v { "Sending message $message to $peerMailbox" }
-                                peerMailbox.sendChannel.send(CommandOrMessage(message))
+                    val (kind, peerMailbox) = event
+                    when (kind) {
+                        PeerEvent.Kind.ADDITION -> {
+                            for (subscription in subscriptions.existing) {
+                                logger.d { "Sending subscription $subscription to $peerMailbox" }
+                                peerMailbox.sendChannel.send(CommandOrMessage(SubscribeCommand(subscription)))
                             }
                         }
-                    }
 
-                    lateSubscriptionCommands.onReceive { command ->
-                        for (peerMailbox in peerMailboxes) {
-                            logger.d { "Sending late subscription $command to $peerMailbox" }
-                            peerMailbox.sendChannel.send(CommandOrMessage(command))
-                        }
+                        else -> {}
                     }
+                }
 
-                    for (peerMailbox in peerMailboxes) {
-                        peerMailbox.receiveChannel.onReceive { commandOrMessage ->
-                            val message = commandOrMessage.messageOrThrow()
-                            logger.v { "Receiving $message from $peerMailbox" }
-                            receiveChannel.send(message)
-                        }
+                subscriptions.lateSubscriptionCommands.onReceive { command ->
+                    for (peerMailbox in mailboxes) {
+                        logger.d { "Sending late subscription $command to $peerMailbox" }
+                        peerMailbox.sendChannel.send(CommandOrMessage(command))
                     }
                 }
             }
         }
     }
 
-    private suspend fun subscribe(topics: List<ByteArray>) {
-        val effectiveTopics = topics.ifEmpty { listOf(byteArrayOf()) }
-
-        subscriptions.addAll(effectiveTopics)
-
-        for (topic in effectiveTopics) {
-            lateSubscriptionCommands.send(SubscribeCommand(topic))
+    override suspend fun send(message: Message) {
+        val subscriptionTopicPair = message.toSubscriptionMessage()?.let {
+            it.subscribe to it.topic
+        }
+        if (subscriptionTopicPair != null) {
+            val (subscribe, topic) = subscriptionTopicPair
+            if (subscribe) subscriptions.subscribe(listOf(topic))
+            else subscriptions.unsubscribe(listOf(topic))
+        } else {
+            mailboxes.forEach { mailbox ->
+                logger.v { "Sending message $message to $mailbox" }
+                mailbox.sendChannel.send(CommandOrMessage(message))
+            }
         }
     }
 
-    private suspend fun unsubscribe(topics: List<ByteArray>) {
-        val effectiveTopics = topics.ifEmpty { listOf(byteArrayOf()) }
-
-        val removedTopics = mutableListOf<ByteArray>()
-        for (topic in effectiveTopics) {
-            if (subscriptions.remove(topic)) removedTopics += topic
-        }
-
-        for (topic in removedTopics) {
-            lateSubscriptionCommands.send(CancelCommand(topic))
-        }
-    }
-
-    companion object {
-        private val validPeerSocketTypes = setOf(Type.PUB, Type.XPUB)
+    override suspend fun receive(): Message {
+        val (_, message) = mailboxes.receiveFromFirst()
+        return message
     }
 }

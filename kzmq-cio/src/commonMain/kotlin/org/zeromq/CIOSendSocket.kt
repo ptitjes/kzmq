@@ -10,22 +10,19 @@ import org.zeromq.internal.*
 
 internal interface CIOSendSocket : SendSocket {
 
-    val sendChannel: SendChannel<Message>
+    val handler: SocketHandler
     val options: SocketOptions
 
-    override suspend fun send(message: Message) = sendChannel.send(message)
+    override suspend fun send(message: Message) = handler.send(message)
 
-    override suspend fun sendCatching(message: Message): SocketResult<Unit> = try {
-        sendChannel.send(message)
-        SocketResult.success(Unit)
-    } catch (t: Throwable) {
-        SocketResult.failure(t)
+    override suspend fun sendCatching(message: Message): SocketResult<Unit> {
+        val result = runCatching { send(message) }
+        return if (result.isSuccess) SocketResult.success(result.getOrThrow())
+        else SocketResult.failure(result.exceptionOrNull())
     }
 
     override fun trySend(message: Message): SocketResult<Unit> {
-        val result = sendChannel.trySend(message)
-        return if (result.isSuccess) SocketResult.success(Unit)
-        else SocketResult.failure(result.exceptionOrNull())
+        TODO()
     }
 
     override var multicastHops: Int

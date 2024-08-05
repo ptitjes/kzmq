@@ -10,24 +10,22 @@ import org.zeromq.internal.*
 
 internal interface CIOReceiveSocket : ReceiveSocket {
 
-    val receiveChannel: ReceiveChannel<Message>
+    val handler: SocketHandler
     val options: SocketOptions
 
-    override suspend fun receive(): Message = receiveChannel.receive()
+    override suspend fun receive(): Message = handler.receive()
 
     override suspend fun receiveCatching(): SocketResult<Message> {
-        val result = receiveChannel.receiveCatching()
+        val result = runCatching { receive() }
         return if (result.isSuccess) SocketResult.success(result.getOrThrow())
         else SocketResult.failure(result.exceptionOrNull())
     }
 
     override fun tryReceive(): SocketResult<Message> {
-        val result = receiveChannel.tryReceive()
-        return if (result.isSuccess) SocketResult.success(result.getOrThrow())
-        else SocketResult.failure(result.exceptionOrNull())
+        TODO()
     }
 
-    override val onReceive get() = receiveChannel.onReceive
+    override val onReceive get() = TODO()
 
     override var receiveBufferSize: Int
         get() = TODO("Not yet implemented")

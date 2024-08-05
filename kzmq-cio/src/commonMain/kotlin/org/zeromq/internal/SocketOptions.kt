@@ -5,6 +5,7 @@
 
 package org.zeromq.internal
 
+import kotlinx.io.bytestring.*
 import kotlin.time.*
 
 internal class SocketOptions {
@@ -16,7 +17,7 @@ internal class SocketOptions {
 
     var lingerTimeout: Duration = Duration.INFINITE
 
-    var routingId: ByteArray? = null
+    var routingId: ByteString? = null
 }
 
 internal class PlainMechanismOptions {
@@ -26,9 +27,9 @@ internal class PlainMechanismOptions {
 }
 
 internal class CurveMechanismOptions {
-    var publicKey: ByteArray? = null
-    var secretKey: ByteArray? = null
-    var serverKey: ByteArray? = null
+    var publicKey: ByteString? = null
+    var secretKey: ByteString? = null
+    var serverKey: ByteString? = null
     var asServer: Boolean = false
 }
 

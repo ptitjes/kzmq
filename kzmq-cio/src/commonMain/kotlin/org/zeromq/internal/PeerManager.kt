@@ -50,6 +50,7 @@ internal class PeerManager(
     private val _peerEvents = Channel<PeerEvent>()
     val peerEvents: ReceiveChannel<PeerEvent> get() = _peerEvents
 
+    @OptIn(DelicateCoroutinesApi::class)
     suspend fun notify(event: PeerEvent) {
         if (!_peerEvents.isClosedForSend) {
             logger.d { "Peer event: $event" }

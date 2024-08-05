@@ -5,8 +5,11 @@
 
 package org.zeromq
 
+import kotlinx.atomicfu.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.*
+import kotlinx.coroutines.sync.*
+import kotlinx.io.bytestring.*
 import org.zeromq.internal.*
 import org.zeromq.internal.utils.*
 
@@ -54,17 +57,9 @@ internal class CIORequestSocket(
 ) : CIOSocket(engine, Type.REQ), CIOSendSocket, CIOReceiveSocket, RequestSocket {
 
     override val validPeerTypes: Set<Type> get() = validPeerSocketTypes
+    override val handler = setupHandler(RequestSocketHandler())
 
-    override val sendChannel = Channel<Message>()
-    override val receiveChannel = Channel<Message>()
-
-    init {
-        setHandler {
-            handleRequestSocket(peerEvents, sendChannel, receiveChannel)
-        }
-    }
-
-    override var routingId: ByteArray? by options::routingId
+    override var routingId: ByteString? by options::routingId
     override var probeRouter: Boolean
         get() = TODO("Not yet implemented")
         set(value) {}
@@ -80,68 +75,48 @@ internal class CIORequestSocket(
     }
 }
 
-internal suspend fun handleRequestSocket(
-    peerEvents: ReceiveChannel<PeerEvent>,
-    sendChannel: ReceiveChannel<Message>,
-    receiveChannel: SendChannel<Message>,
-) = coroutineScope {
+internal class RequestSocketHandler : SocketHandler {
+    private val mailboxes = CircularQueue<PeerMailbox>()
+    private var lastSentPeer = atomic<PeerMailbox?>(null)
+    private val requestReplyLock = Mutex()
 
-    val requestsChannel = Channel<Pair<PeerMailbox, Message>>()
-    val repliesChannel = Channel<Pair<PeerMailbox, Message>>()
+    private suspend fun awaitLastSentPeer(predicate: (PeerMailbox?) -> Boolean) {
+        while (!predicate(lastSentPeer.value)) yield()
+    }
 
-    fun CoroutineScope.dispatchRequestsReplies(peerMailbox: PeerMailbox) = launch {
-        launch {
-            while (isActive) {
-                val request = sendChannel.receive()
-                logger.v { "Dispatching request $request to $peerMailbox" }
-                requestsChannel.send(peerMailbox to request)
-            }
-        }
-        launch {
-            try {
-                while (isActive) {
-                    val reply = peerMailbox.receiveChannel.receive().messageOrThrow()
-                    logger.v { "Dispatching reply $reply from $peerMailbox" }
-                    repliesChannel.send(peerMailbox to reply)
-                }
-            } catch (e: ClosedReceiveChannelException) {
-                // Coroutine's cancellation happened while suspending on receive
-                // and the receiveChannel of the peerMailbox has already been closed
-            }
+    override suspend fun handle(peerEvents: ReceiveChannel<PeerEvent>) = coroutineScope {
+        while (isActive) {
+            mailboxes.update(peerEvents.receive())
         }
     }
 
-    launch {
-        val forwardJobs = JobMap<PeerMailbox>()
-
-        while (isActive) {
-            val (kind, peerMailbox) = peerEvents.receive()
-            when (kind) {
-                PeerEvent.Kind.ADDITION -> forwardJobs.add(peerMailbox) { dispatchRequestsReplies(peerMailbox) }
-                PeerEvent.Kind.REMOVAL -> forwardJobs.remove(peerMailbox)
-                else -> {}
-            }
+    override suspend fun send(message: Message) {
+        awaitLastSentPeer { it == null }
+        requestReplyLock.withLock {
+            message.pushPrefixAddress()
+            val mailbox = mailboxes.sendToFirstAvailable(message)
+            lastSentPeer.value = mailbox
+            logger.v { "Sent request to $mailbox" }
         }
     }
-    launch {
-        while (isActive) {
-            val (peerMailbox, requestData) = requestsChannel.receive()
 
-            val request = addPrefixAddress(requestData)
-            logger.v { "Sending request $request to $peerMailbox" }
-            peerMailbox.sendChannel.send(CommandOrMessage(request))
+    override suspend fun receive(): Message {
+        awaitLastSentPeer { it != null }
+        requestReplyLock.withLock {
+            while (true) {
+                val (mailbox, message) = mailboxes.receiveFromFirst()
 
-            while (isActive) {
-                val (otherPeerMailbox, reply) = repliesChannel.receive()
-                if (otherPeerMailbox != peerMailbox) {
-                    logger.w { "Ignoring reply $reply from $otherPeerMailbox" }
+                message.popPrefixAddress()
+
+                // Should we "discard" messages in another coroutine in `handle()`?
+                if (mailbox != lastSentPeer.value) {
+                    logger.w { "Ignoring reply $message from $mailbox" }
                     continue
                 }
 
-                logger.v { "Sending back reply $reply from $peerMailbox" }
-                val (_, replyData) = extractPrefixAddress(reply)
-                receiveChannel.send(replyData)
-                break
+                logger.v { "Received reply $message from $mailbox" }
+                lastSentPeer.value = null
+                return message
             }
         }
     }

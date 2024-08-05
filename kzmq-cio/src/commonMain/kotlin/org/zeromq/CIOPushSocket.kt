@@ -7,7 +7,6 @@ package org.zeromq
 
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.*
-import kotlinx.coroutines.selects.*
 import org.zeromq.internal.*
 import org.zeromq.internal.utils.*
 
@@ -53,12 +52,7 @@ internal class CIOPushSocket(
 ) : CIOSocket(engine, Type.PUSH), CIOSendSocket, PushSocket {
 
     override val validPeerTypes: Set<Type> get() = validPeerSocketTypes
-
-    override val sendChannel = Channel<Message>()
-
-    init {
-        setHandler { handlePushSocket(peerEvents, sendChannel) }
-    }
+    override val handler = setupHandler(PushSocketHandler())
 
     override var conflate: Boolean
         get() = TODO("Not yet implemented")
@@ -69,64 +63,16 @@ internal class CIOPushSocket(
     }
 }
 
-internal suspend fun handlePushSocket(
-    peerEvents: ReceiveChannel<PeerEvent>,
-    sendChannel: ReceiveChannel<Message>,
-) = coroutineScope {
-    val mailboxes = CircularQueue<PeerMailbox>()
+internal class PushSocketHandler : SocketHandler {
+    private val mailboxes = CircularQueue<PeerMailbox>()
 
-    while (isActive) {
-        select {
-            peerEvents.onReceive(mailboxes::update)
-
-            if (mailboxes.isNotEmpty()) {
-                sendChannel.onReceive { message ->
-                    // Fast path: Find the first mailbox we can send immediately
-                    logger.v { "Try send message to first available" }
-                    val sent = mailboxes.trySendToFirstAvailable(message)
-
-                    if (!sent) {
-                        // Slow path: Biased select on each mailbox's onSend
-                        logger.v { "Send message to first available" }
-                        select {
-                            peerEvents.onReceive(mailboxes::update)
-
-                            val commandOrMessage = CommandOrMessage(message)
-                            mailboxes.forEachIndexed { index, mailbox ->
-                                mailbox.sendChannel.onSend(commandOrMessage) {
-                                    logger.v { "Sent message to $mailbox" }
-                                    mailboxes.rotateAfter(index)
-                                }
-                            }
-                        }
-                    }
-                }
-            }
+    override suspend fun handle(peerEvents: ReceiveChannel<PeerEvent>) = coroutineScope {
+        while (isActive) {
+            mailboxes.update(peerEvents.receive())
         }
     }
-}
 
-internal fun CircularQueue<PeerMailbox>.update(event: PeerEvent) {
-    val mailbox = event.peerMailbox
-    when (event.kind) {
-        PeerEvent.Kind.ADDITION -> add(mailbox)
-        PeerEvent.Kind.REMOVAL -> remove(mailbox)
-        else -> {}
+    override suspend fun send(message: Message) {
+        mailboxes.sendToFirstAvailable(message)
     }
-}
-
-internal fun CircularQueue<PeerMailbox>.trySendToFirstAvailable(message: Message): Boolean {
-    val commandOrMessage = CommandOrMessage(message)
-    val index = indexOfFirst { mailbox ->
-        val result = mailbox.sendChannel.trySend(commandOrMessage)
-        logger.v {
-            if (result.isSuccess) "Sent message to $mailbox"
-            else "Failed to send message to $mailbox"
-        }
-        result.isSuccess
-    }
-
-    val sent = index != -1
-    if (sent) rotateAfter(index)
-    return sent
 }

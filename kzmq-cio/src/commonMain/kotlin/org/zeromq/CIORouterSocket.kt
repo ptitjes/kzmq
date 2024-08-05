@@ -7,10 +7,9 @@ package org.zeromq
 
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.*
-import kotlinx.coroutines.selects.*
+import kotlinx.io.bytestring.*
 import org.zeromq.internal.*
 import org.zeromq.internal.utils.*
-import kotlin.random.*
 
 /**
  * An implementation of the [ROUTER socket](https://rfc.zeromq.org/spec/28/).
@@ -66,74 +65,9 @@ internal class CIORouterSocket(
 ) : CIOSocket(engine, Type.ROUTER), CIOReceiveSocket, CIOSendSocket, RouterSocket {
 
     override val validPeerTypes: Set<Type> get() = validPeerSocketTypes
+    override val handler = setupHandler(RouterSocketHandler())
 
-    override val receiveChannel = Channel<Message>()
-    override val sendChannel = Channel<Message>()
-
-    init {
-        setHandler {
-            val forwardJobs = JobMap<PeerMailbox>()
-            val perIdentityMailboxes = hashMapOf<Identity, PeerMailbox>()
-
-            fun generateNewIdentity(): Identity {
-                while (true) {
-                    val identity = Identity(Random.nextBytes(ByteArray(16)))
-                    if (identity !in perIdentityMailboxes) return identity
-                }
-            }
-
-            while (isActive) {
-                select<Unit> {
-                    peerEvents.onReceive { (kind, peerMailbox) ->
-                        when (kind) {
-                            PeerEvent.Kind.CONNECTION -> {
-                                val identity =
-                                    peerMailbox.identity ?: generateNewIdentity().also { peerMailbox.identity = it }
-                                perIdentityMailboxes[identity] = peerMailbox
-
-                                forwardJobs.add(peerMailbox) { routeRequests(peerMailbox) }
-                            }
-
-                            PeerEvent.Kind.DISCONNECTION -> {
-                                peerMailbox.identity?.let { identity ->
-                                    perIdentityMailboxes[identity] = peerMailbox
-                                }
-
-                                forwardJobs.remove(peerMailbox)
-                            }
-
-                            else -> {}
-                        }
-                    }
-
-                    sendChannel.onReceive {
-                        val (identity, message) = extractIdentity(it)
-                        perIdentityMailboxes[identity]?.let { peerMailbox ->
-                            logger.d { "Forwarding reply $message to $peerMailbox with identity $identity" }
-                            peerMailbox.sendChannel.send(CommandOrMessage(message))
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    private fun CoroutineScope.routeRequests(peerMailbox: PeerMailbox) = launch {
-        try {
-            while (isActive) {
-                val message = peerMailbox.receiveChannel.receive().messageOrThrow()
-                peerMailbox.identity?.let { identity ->
-                    logger.d { "Forwarding request $message from $peerMailbox with identity $identity" }
-                    receiveChannel.send(prependIdentity(message, identity))
-                }
-            }
-        } catch (e: ClosedReceiveChannelException) {
-            // Coroutine's cancellation happened while suspending on receive
-            // and the receiveChannel of the peerMailbox has already been closed
-        }
-    }
-
-    override var routingId: ByteArray? by options::routingId
+    override var routingId: ByteString? by options::routingId
     override var probeRouter: Boolean
         get() = TODO("Not yet implemented")
         set(value) {}
@@ -149,8 +83,52 @@ internal class CIORouterSocket(
     }
 }
 
-private fun prependIdentity(message: Message, identity: Identity): Message =
-    Message(listOf(identity.value) + message.frames)
+internal class RouterSocketHandler : SocketHandler {
+    private val mailboxes = CircularQueue<PeerMailbox>()
+    private val perIdentityMailboxes = hashMapOf<Identity, PeerMailbox>()
 
-private fun extractIdentity(message: Message): Pair<Identity, Message> =
-    Identity(message.frames[0]) to Message(message.frames.subList(1, message.frames.size))
+    private fun randomIdentity(): Identity {
+        while (true) {
+            val identity = Identity.random()
+            if (identity !in perIdentityMailboxes) return identity
+        }
+    }
+
+    override suspend fun handle(peerEvents: ReceiveChannel<PeerEvent>) = coroutineScope {
+        while (isActive) {
+            val event = peerEvents.receive()
+
+            mailboxes.update(event)
+
+            val (kind, mailbox) = event
+            when (kind) {
+                PeerEvent.Kind.CONNECTION -> {
+                    val identity = mailbox.identity ?: randomIdentity().also { mailbox.identity = it }
+                    perIdentityMailboxes[identity] = mailbox
+                }
+
+                PeerEvent.Kind.DISCONNECTION -> {
+                    val identity = mailbox.identity ?: error("Peer identity should not be null")
+                    perIdentityMailboxes.remove(identity)
+                }
+
+                else -> {}
+            }
+        }
+    }
+
+    override suspend fun send(message: Message) {
+        val identity = message.popIdentity()
+        perIdentityMailboxes[identity]?.let { peerMailbox ->
+            logger.d { "Forwarding reply $message to $peerMailbox with identity $identity" }
+            peerMailbox.sendChannel.send(CommandOrMessage(message))
+        }
+    }
+
+    override suspend fun receive(): Message {
+        val (peerMailbox, message) = mailboxes.receiveFromFirst()
+        val identity = peerMailbox.identity ?: error("Peer identity should not be null")
+        message.pushIdentity(identity)
+        return message
+    }
+}

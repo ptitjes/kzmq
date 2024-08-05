@@ -5,6 +5,7 @@
 
 package org.zeromq
 
+import kotlinx.atomicfu.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.*
 import org.zeromq.internal.*
@@ -36,7 +37,7 @@ import org.zeromq.internal.*
  *    socket SHALL destroy its double queue and SHALL discard any messages it contains.
  * 6. SHOULD constrain incoming and outgoing queue sizes to a runtime-configurable limit.
  *
- * B. For processing incoming messages:
+ * B. For processing outgoing messages:
  * 1. SHALL consider its peer as available only when it has a outgoing queue that is not full.
  * 2. SHALL block on sending, or return a suitable error, when it has no available peer.
  * 3. SHALL not accept further messages when it has no available peer.
@@ -51,56 +52,48 @@ internal class CIOPairSocket(
 ) : CIOSocket(engine, Type.PAIR), CIOReceiveSocket, CIOSendSocket, PairSocket {
 
     override val validPeerTypes: Set<Type> get() = validPeerSocketTypes
-
-    override val receiveChannel = Channel<Message>()
-    override val sendChannel = Channel<Message>()
-
-    init {
-        setHandler {
-            var forwardJob: Job? = null
-
-            while (isActive) {
-                val (kind, peerMailbox) = peerEvents.receive()
-                when (kind) {
-                    PeerEvent.Kind.ADDITION -> {
-                        // FIXME what should we do if it already has a peer?
-                        if (forwardJob != null) continue
-
-                        forwardJob = forwardJob(peerMailbox)
-                    }
-
-                    PeerEvent.Kind.REMOVAL -> {
-                        if (forwardJob == null) continue
-
-                        forwardJob.cancel()
-                        forwardJob = null
-                    }
-
-                    else -> {}
-                }
-            }
-        }
-    }
-
-    private fun CoroutineScope.forwardJob(mailbox: PeerMailbox) = launch {
-        launch {
-            while (isActive) {
-                val message = sendChannel.receive()
-                logger.v { "Sending $message to $mailbox" }
-                mailbox.sendChannel.send(CommandOrMessage(message))
-            }
-        }
-        launch {
-            while (isActive) {
-                val commandOrMessage = mailbox.receiveChannel.receive()
-                val message = commandOrMessage.messageOrThrow()
-                logger.v { "Receiving $message from $mailbox" }
-                receiveChannel.send(message)
-            }
-        }
-    }
+    override val handler = setupHandler(PairSocketHandler())
 
     companion object {
         private val validPeerSocketTypes = setOf(Type.PAIR)
+    }
+}
+
+internal class PairSocketHandler : SocketHandler {
+    private val mailbox = atomic<PeerMailbox?>(null)
+
+    private suspend fun awaitCurrentPeer() {
+        var counter = 0
+        while (mailbox.value == null) {
+            if (counter++ < 100) println("in awaitCurrentPeer: ${mailbox.value}")
+            yield()
+        }
+    }
+
+    override suspend fun handle(peerEvents: ReceiveChannel<PeerEvent>) = coroutineScope {
+        while (isActive) {
+            val (kind, peerMailbox) = peerEvents.receive()
+            when (kind) {
+                PeerEvent.Kind.ADDITION -> mailbox.value = peerMailbox
+                PeerEvent.Kind.REMOVAL -> mailbox.value = null
+                else -> {}
+            }
+        }
+    }
+
+    override suspend fun send(message: Message) {
+        awaitCurrentPeer()
+        val mailbox = mailbox.value!!
+        logger.v { "Sending $message to $mailbox" }
+        mailbox.sendChannel.send(CommandOrMessage(message))
+    }
+
+    override suspend fun receive(): Message {
+        awaitCurrentPeer()
+        val mailbox = mailbox.value!!
+        val commandOrMessage = mailbox.receiveChannel.receive()
+        val message = commandOrMessage.messageOrThrow()
+        logger.v { "Receiving $message from $mailbox" }
+        return message
     }
 }

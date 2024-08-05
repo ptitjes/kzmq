@@ -7,7 +7,6 @@ package org.zeromq
 
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.*
-import kotlinx.coroutines.selects.*
 import org.zeromq.internal.*
 import org.zeromq.internal.utils.*
 
@@ -50,12 +49,7 @@ internal class CIOPullSocket(
 ) : CIOSocket(engine, Type.PULL), CIOReceiveSocket, PullSocket {
 
     override val validPeerTypes: Set<Type> get() = validPeerSocketTypes
-
-    override val receiveChannel = Channel<Message>()
-
-    init {
-        setHandler { handlePullSocket(peerEvents, receiveChannel) }
-    }
+    override val handler = setupHandler(PullSocketHandler())
 
     override var conflate: Boolean
         get() = TODO("Not yet implemented")
@@ -66,25 +60,17 @@ internal class CIOPullSocket(
     }
 }
 
-internal suspend fun handlePullSocket(
-    peerEvents: ReceiveChannel<PeerEvent>,
-    receiveChannel: SendChannel<Message>,
-) = coroutineScope {
-    val mailboxes = CircularQueue<PeerMailbox>()
+internal class PullSocketHandler : SocketHandler {
+    private val mailboxes = CircularQueue<PeerMailbox>()
 
-    while (isActive) {
-        select {
-            peerEvents.onReceive(mailboxes::update)
-
-            if (mailboxes.isNotEmpty()) {
-                mailboxes.forEachIndexed { index, mailbox ->
-                    mailbox.receiveChannel.onReceive { commandOrMessage ->
-                        logger.v { "Received command or message from $mailbox" }
-                        mailboxes.rotateAfter(index)
-                        receiveChannel.send(commandOrMessage.messageOrThrow())
-                    }
-                }
-            }
+    override suspend fun handle(peerEvents: ReceiveChannel<PeerEvent>) = coroutineScope {
+        while (isActive) {
+            mailboxes.update(peerEvents.receive())
         }
+    }
+
+    override suspend fun receive(): Message {
+        val (_, message) = mailboxes.receiveFromFirst()
+        return message
     }
 }

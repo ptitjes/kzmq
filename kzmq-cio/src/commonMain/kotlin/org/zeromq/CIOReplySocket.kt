@@ -5,8 +5,11 @@
 
 package org.zeromq
 
+import kotlinx.atomicfu.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.*
+import kotlinx.coroutines.sync.*
+import kotlinx.io.bytestring.*
 import org.zeromq.internal.*
 import org.zeromq.internal.utils.*
 
@@ -58,59 +61,57 @@ internal class CIOReplySocket(
 ) : CIOSocket(engine, Type.REP), CIOReceiveSocket, CIOSendSocket, ReplySocket {
 
     override val validPeerTypes: Set<Type> get() = validPeerSocketTypes
+    override val handler = setupHandler(ReplySocketHandler())
 
-    override val receiveChannel = Channel<Message>()
-    override val sendChannel = Channel<Message>()
-
-    private val requestsChannel = Channel<Pair<PeerMailbox, Message>>()
-
-    init {
-        setHandler {
-            launch {
-                val forwardJobs = JobMap<PeerMailbox>()
-
-                while (isActive) {
-                    val (kind, peerMailbox) = peerEvents.receive()
-                    when (kind) {
-                        PeerEvent.Kind.ADDITION -> forwardJobs.add(peerMailbox) { forwardRequests(peerMailbox) }
-                        PeerEvent.Kind.REMOVAL -> forwardJobs.remove(peerMailbox)
-                        else -> {}
-                    }
-                }
-            }
-            launch {
-                while (isActive) {
-                    val (peerMailbox, request) = requestsChannel.receive()
-
-                    logger.v { "Received request $request from $peerMailbox" }
-                    val (identities, requestData) = extractPrefixAddress(request)
-                    receiveChannel.send(requestData)
-
-                    val replyData = sendChannel.receive()
-                    val reply = addPrefixAddress(replyData, identities)
-                    logger.v { "Sending reply $reply back to $peerMailbox" }
-                    peerMailbox.sendChannel.send(CommandOrMessage(reply))
-                }
-            }
-        }
-    }
-
-    private fun CoroutineScope.forwardRequests(peerMailbox: PeerMailbox) = launch {
-        try {
-            while (isActive) {
-                val message = peerMailbox.receiveChannel.receive().messageOrThrow()
-                logger.v { "Forwarding request $message from $peerMailbox" }
-                requestsChannel.send(peerMailbox to message)
-            }
-        } catch (e: ClosedReceiveChannelException) {
-            // Coroutine's cancellation happened while suspending on receive
-            // and the receiveChannel of the peerMailbox has already been closed
-        }
-    }
-
-    override var routingId: ByteArray? by options::routingId
+    override var routingId: ByteString? by options::routingId
 
     companion object {
         private val validPeerSocketTypes = setOf(Type.REQ, Type.DEALER)
     }
+}
+
+internal class ReplySocketHandler : SocketHandler {
+    private val mailboxes = CircularQueue<PeerMailbox>()
+    private var state = atomic<ReplySocketState>(ReplySocketState.Idle)
+    private val requestReplyLock = Mutex()
+
+    private suspend fun awaitState(predicate: (ReplySocketState?) -> Boolean) {
+        while (!predicate(state.value)) yield()
+    }
+
+    override suspend fun handle(peerEvents: ReceiveChannel<PeerEvent>) = coroutineScope {
+        while (isActive) {
+            val event = peerEvents.receive()
+            mailboxes.update(event)
+        }
+    }
+
+    override suspend fun receive(): Message {
+        awaitState { it is ReplySocketState.Idle }
+        requestReplyLock.withLock {
+            val (mailbox, message) = mailboxes.receiveFromFirst()
+            state.value = ReplySocketState.ProcessingRequest(mailbox, message.popPrefixAddress())
+            return message
+        }
+    }
+
+    override suspend fun send(message: Message) {
+        awaitState { it is ReplySocketState.ProcessingRequest }
+        requestReplyLock.withLock {
+            val (peer, address) = state.value as ReplySocketState.ProcessingRequest
+
+            message.pushPrefixAddress(address)
+            peer.sendChannel.send(CommandOrMessage(message))
+            state.value = ReplySocketState.Idle
+        }
+    }
+}
+
+private sealed interface ReplySocketState {
+    data object Idle : ReplySocketState
+
+    data class ProcessingRequest(
+        val peer: PeerMailbox,
+        val address: List<ByteString>,
+    ) : ReplySocketState
 }
