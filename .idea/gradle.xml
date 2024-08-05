@@ -25,6 +25,7 @@
             <option value="$PROJECT_DIR$/kzmq-core" />
             <option value="$PROJECT_DIR$/kzmq-jeromq" />
             <option value="$PROJECT_DIR$/kzmq-libzmq" />
+            <option value="$PROJECT_DIR$/kzmq-test" />
             <option value="$PROJECT_DIR$/kzmq-tests" />
             <option value="$PROJECT_DIR$/kzmq-tools" />
             <option value="$PROJECT_DIR$/kzmq-zeromqjs" />
