@@ -7,6 +7,8 @@ package org.zeromq.benchmarks
 
 import kotlinx.benchmark.*
 import kotlinx.coroutines.*
+import kotlinx.io.*
+import kotlinx.io.bytestring.*
 import org.zeromq.*
 import kotlin.random.*
 
@@ -23,7 +25,7 @@ open class PullPushBenchmark() {
     @Param("10", "100", "1000", "10000", "100000")
     var messageSize = 10
 
-    private lateinit var message: Message
+    private lateinit var messageData: ByteString
 
     private lateinit var scope: CoroutineScope
     private lateinit var context: Context
@@ -41,7 +43,7 @@ open class PullPushBenchmark() {
             else -> error("Unsuported transport '$transport'")
         }
 
-        message = Message(ByteArray(messageSize))
+        messageData = ByteString(ByteArray(messageSize))
 
         val engine = engines.find { it.name.lowercase() == engineName } ?: error("Engine '$engineName' not found")
         if (!engine.supportedTransports.contains(transport))
@@ -63,8 +65,8 @@ open class PullPushBenchmark() {
     }
 
     @Benchmark
-    fun sendReceive() = runBlocking {
-        pushSocket.send(message)
-        pullSocket.receive()
+    fun sendReceive(blackhole: Blackhole) = runBlocking {
+        pushSocket.send { writeFrame { write(messageData) } }
+        blackhole.consume(pullSocket.receive { readFrame { readByteString() } })
     }
 }
