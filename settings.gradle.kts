@@ -22,6 +22,7 @@ dependencyResolutionManagement {
 rootProject.name = "kzmq"
 
 include(":kzmq-core")
+include(":kzmq-test")
 include(":kzmq-zeromqjs")
 include(":kzmq-jeromq")
 include(":kzmq-libzmq")
