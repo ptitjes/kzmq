@@ -18,7 +18,9 @@ subprojects {
 
 dependencies {
     kover(project(":kzmq-core"))
-    kover(project(":kzmq-cio"))
-    kover(project(":kzmq-libzmq"))
+    kover(project(":kzmq-engine-cio"))
+    kover(project(":kzmq-engine-jeromq"))
+    kover(project(":kzmq-engine-libzmq"))
+    kover(project(":kzmq-engine-zeromqjs"))
     kover(project(":kzmq-tests"))
 }

@@ -47,22 +47,22 @@ kotlin {
 
         jvmTest {
             dependencies {
-                implementation(project(":kzmq-jeromq"))
-                implementation(project(":kzmq-cio"))
+                implementation(project(":kzmq-engine-jeromq"))
+                implementation(project(":kzmq-engine-cio"))
             }
         }
 
         jsTest {
             dependencies {
-                implementation(project(":kzmq-zeromqjs"))
+                implementation(project(":kzmq-engine-zeromqjs"))
             }
         }
 
         targets.withType<KotlinNativeTarget>().forEach { target ->
             getByName("${target.name}Test").apply {
                 dependencies {
-                    if (target.konanTarget.isSupportedByLibzmq) implementation(project(":kzmq-libzmq"))
-                    if (target.konanTarget.isSupportedByCIO) implementation(project(":kzmq-cio"))
+                    if (target.konanTarget.isSupportedByLibzmq) implementation(project(":kzmq-engine-libzmq"))
+                    if (target.konanTarget.isSupportedByCIO) implementation(project(":kzmq-engine-cio"))
                 }
             }
         }

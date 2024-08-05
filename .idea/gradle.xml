@@ -21,14 +21,14 @@
             <option value="$PROJECT_DIR$" />
             <option value="$PROJECT_DIR$/build-logic" />
             <option value="$PROJECT_DIR$/kzmq-benchmarks" />
-            <option value="$PROJECT_DIR$/kzmq-cio" />
             <option value="$PROJECT_DIR$/kzmq-core" />
-            <option value="$PROJECT_DIR$/kzmq-jeromq" />
-            <option value="$PROJECT_DIR$/kzmq-libzmq" />
+            <option value="$PROJECT_DIR$/kzmq-engine-cio" />
+            <option value="$PROJECT_DIR$/kzmq-engine-jeromq" />
+            <option value="$PROJECT_DIR$/kzmq-engine-libzmq" />
+            <option value="$PROJECT_DIR$/kzmq-engine-zeromqjs" />
             <option value="$PROJECT_DIR$/kzmq-test" />
             <option value="$PROJECT_DIR$/kzmq-tests" />
             <option value="$PROJECT_DIR$/kzmq-tools" />
-            <option value="$PROJECT_DIR$/kzmq-zeromqjs" />
           </set>
         </option>
       </GradleProjectSettings>
