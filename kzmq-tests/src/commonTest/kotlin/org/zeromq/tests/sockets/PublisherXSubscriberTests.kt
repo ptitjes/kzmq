@@ -8,6 +8,8 @@ package org.zeromq.tests.sockets
 import io.kotest.core.spec.style.*
 import io.kotest.matchers.collections.*
 import kotlinx.coroutines.*
+import kotlinx.io.*
+import kotlinx.io.bytestring.*
 import org.zeromq.*
 import org.zeromq.tests.utils.*
 
@@ -15,7 +17,7 @@ import org.zeromq.tests.utils.*
 class PublisherXSubscriberTests : FunSpec({
 
     withContexts("subscription filter") { ctx1, ctx2, protocol ->
-        val address = randomAddress(protocol)
+        val address = randomEndpoint(protocol)
 
         val sent = listOf("prefixed data", "non-prefixed data", "prefix is good")
         val expected = sent.filter { it.startsWith("prefix") }
@@ -25,19 +27,19 @@ class PublisherXSubscriberTests : FunSpec({
 
         waitForConnections()
 
-        subscriber.send(subscriptionMessageOf(true, "prefix".encodeToByteArray()))
+        subscriber.send(SubscriptionMessage(true, "prefix".encodeToByteString()).toMessage())
 
         waitForSubscriptions()
 
         coroutineScope {
             launch {
-                sent.forEach { publisher.send(Message(it.encodeToByteArray())) }
+                sent.forEach { publisher.send(Message(it.encodeToByteString())) }
             }
 
             launch {
                 val received = mutableListOf<String>()
                 repeat(2) {
-                    received += subscriber.receive().singleOrThrow().decodeToString()
+                    received += subscriber.receive().singleOrThrow().readByteArray().decodeToString()
                 }
                 received shouldContainExactly expected
             }

@@ -22,6 +22,8 @@ kotlin {
         commonMain {
             dependencies {
                 implementation(project(":kzmq-core"))
+                implementation(project(":kzmq-test"))
+                implementation(libs.kotlinx.io.core)
             }
         }
 
