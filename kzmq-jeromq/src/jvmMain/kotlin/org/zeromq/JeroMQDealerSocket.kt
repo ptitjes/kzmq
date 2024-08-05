@@ -5,12 +5,14 @@
 
 package org.zeromq
 
+import kotlinx.io.bytestring.*
+
 internal class JeroMQDealerSocket internal constructor(
     factory: (type: SocketType) -> ZMQ.Socket,
 ) : JeroMQSocket(factory, SocketType.DEALER, Type.DEALER), DealerSocket {
 
     override var conflate: Boolean by underlying::conflate
-    override var routingId: ByteArray? by underlying::identity
+    override var routingId: ByteString? by underlying::identity.converted()
 
     // TODO there no getter for setProbeRouter in underlying socket
     override var probeRouter: Boolean by notImplementedProperty()

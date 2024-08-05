@@ -5,6 +5,7 @@
 
 package org.zeromq
 
+import kotlinx.io.bytestring.*
 import kotlin.reflect.*
 
 internal fun <T> notImplementedProperty() = NotImplementedPropertyDelegate<T>()
@@ -16,3 +17,21 @@ internal class NotImplementedPropertyDelegate<T>() {
     operator fun setValue(thisRef: Any?, property: KProperty<*>, value: T): Unit =
         TODO("JeroMQ does not implement ${property.name}")
 }
+
+internal fun <V, U> KMutableProperty0<V>.converted(into: (V) -> U, from: (U) -> V) =
+    MappedPropertyDelegate(this, into, from)
+
+internal class MappedPropertyDelegate<V, U>(
+    private val delegate: KMutableProperty0<V>,
+    private val into: (V) -> U,
+    private val from: (U) -> V,
+) {
+    operator fun getValue(thisRef: Any?, property: KProperty<*>): U = into(delegate.get())
+
+    operator fun setValue(thisRef: Any?, property: KProperty<*>, value: U): Unit = delegate.set(from(value))
+}
+
+internal fun KMutableProperty0<ByteArray?>.converted() = converted(
+    into = { it?.let { ByteString(it) } },
+    from = { it?.toByteArray() }
+)

@@ -6,6 +6,7 @@
 package org.zeromq
 
 import kotlinx.coroutines.test.*
+import kotlinx.io.*
 import kotlin.test.*
 
 class SimpleTest {
@@ -19,7 +20,7 @@ class SimpleTest {
         val pull = ctx2.createPull().apply { connect(address) }
 
         val messageContent = "Hello"
-        push.send(Message(messageContent.encodeToByteArray()))
-        assertEquals(messageContent, pull.receive().frames.getOrNull(0)?.decodeToString())
+        push.send { writeFrame { writeString(messageContent) } }
+        assertEquals(messageContent, pull.receive { readFrame { readString() } })
     }
 }
