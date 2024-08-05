@@ -34,7 +34,7 @@ kotlin {
         commonMain {
             dependencies {
                 implementation(project(":kzmq-core"))
-                implementation(project(":kzmq-cio"))
+                implementation(project(":kzmq-engine-cio"))
                 implementation(libs.kotlinx.io.core)
                 implementation(libs.kotlinx.cli)
             }
@@ -42,7 +42,7 @@ kotlin {
 
         jvmMain {
             dependencies {
-                implementation(project(":kzmq-jeromq"))
+                implementation(project(":kzmq-engine-jeromq"))
             }
         }
     }

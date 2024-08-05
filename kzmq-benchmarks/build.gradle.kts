@@ -24,8 +24,8 @@ kotlin {
 
         jvmMain {
             dependencies {
-                implementation(project(":kzmq-jeromq"))
-                implementation(project(":kzmq-cio"))
+                implementation(project(":kzmq-engine-jeromq"))
+                implementation(project(":kzmq-engine-cio"))
             }
         }
     }
