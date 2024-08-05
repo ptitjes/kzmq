@@ -35,6 +35,7 @@ kotlin {
             dependencies {
                 implementation(project(":kzmq-core"))
                 implementation(project(":kzmq-cio"))
+                implementation(libs.kotlinx.io.core)
                 implementation(libs.kotlinx.cli)
             }
         }
