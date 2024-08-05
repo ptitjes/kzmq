@@ -22,5 +22,10 @@ kotlin {
                 implementation(libs.kermit)
             }
         }
+        commonTest {
+            dependencies {
+                implementation(project(":kzmq-test"))
+            }
+        }
     }
 }
