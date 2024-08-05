@@ -16,7 +16,7 @@ class SendSocketOpsTests : FunSpec({
         val socket = mock<SendSocket> {
             everySuspend { send(any()) } returns Unit
         }
-        val messages = List(10) { Message("message-$it".encodeToByteArray()) }
+        val messages = List(10) { Message("message-$it") }
 
         messages.asFlow().collectToSocket(socket)
 

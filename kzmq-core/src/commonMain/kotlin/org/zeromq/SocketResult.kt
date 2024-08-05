@@ -58,3 +58,8 @@ public sealed class SocketResult<out T> {
         public fun <T> failure(cause: Throwable? = null): SocketResult<T> = Failure(cause)
     }
 }
+
+public fun <T, R> SocketResult<T>.map(transform: (T) -> R): SocketResult<R> = when (this) {
+    is SocketResult.Success -> SocketResult.success(transform(value))
+    is SocketResult.Failure -> this
+}

@@ -17,6 +17,14 @@ kotlin {
     jvmTargets()
     jsTargets()
     nativeTargets { it.isSupportedByCIO || it.isSupportedByLibzmq }
+
+    sourceSets {
+        commonMain {
+            dependencies {
+                implementation(libs.kotlinx.io.core)
+            }
+        }
+    }
 }
 
 tasks.withType<DokkaTask> {

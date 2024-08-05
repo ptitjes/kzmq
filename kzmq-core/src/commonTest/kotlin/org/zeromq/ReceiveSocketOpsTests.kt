@@ -13,7 +13,7 @@ import kotlinx.coroutines.flow.*
 
 class ReceiveSocketOpsTests : FunSpec({
     test("consumeAsFlow") {
-        val messages = List(10) { Message("message-$it".encodeToByteArray()) }
+        val messages = List(10) { Message("message-$it") }
 
         val socket = mock<ReceiveSocket> {
             val messageIterator = messages.iterator()
