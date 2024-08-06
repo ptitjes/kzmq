@@ -7,6 +7,16 @@ package org.zeromq
 
 import kotlinx.coroutines.flow.*
 
+public suspend fun SendSocket.send(sender: WriteScope.() -> Unit) {
+    send(buildMessage { sender() })
+}
+
+public suspend fun SendSocket.sendCatching(sender: WriteScope.() -> Unit): SocketResult<Unit> =
+    sendCatching(buildMessage { sender() })
+
+public fun SendSocket.trySend(sender: WriteScope.() -> Unit): SocketResult<Unit> =
+    trySend(buildMessage { sender() })
+
 /**
  * Experimental API. Implementation is subject to change.
  */

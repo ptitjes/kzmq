@@ -78,13 +78,3 @@ public interface SendSocket {
      */
     public var sendTimeout: Int
 }
-
-public suspend fun SendSocket.send(sender: WriteScope.() -> Unit) {
-    send(Message(listOf<ByteString>()).apply { sender() })
-}
-
-public suspend fun SendSocket.sendCatching(sender: WriteScope.() -> Unit): SocketResult<Unit> =
-    sendCatching(Message(listOf<ByteString>()).apply { sender() })
-
-public fun SendSocket.trySend(sender: WriteScope.() -> Unit): SocketResult<Unit> =
-    trySend(Message(listOf<ByteString>()).apply { sender() })
