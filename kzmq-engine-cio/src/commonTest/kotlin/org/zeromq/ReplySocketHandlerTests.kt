@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 Didier Villevalois and Kzmq contributors.
+ * Copyright (c) 2024-2025 Didier Villevalois and Kzmq contributors.
  * Use of this source code is governed by the Apache 2.0 license.
  */
 
@@ -7,19 +7,17 @@ package org.zeromq
 
 import io.kotest.assertions.*
 import io.kotest.core.spec.style.*
-import io.kotest.core.test.*
 import kotlinx.coroutines.*
 import kotlinx.io.bytestring.*
 import org.zeromq.internal.*
 import org.zeromq.test.*
 import org.zeromq.utils.*
 
-class ReplySocketHandlerTests : FunSpec({
-    suspend fun TestScope.withHandler(test: SocketHandlerTest) =
-        withSocketHandler(ReplySocketHandler(), test)
+internal class ReplySocketHandlerTests : FunSpec({
+    val factory = ::ReplySocketHandler
 
     test("SHALL receive incoming messages from its peers using a fair-queuing strategy") {
-        withHandler { peerEvents, send, receive ->
+        factory.runTest { peerEvents, send, receive ->
             val peerCount = 5
             val messageCount = 10
 

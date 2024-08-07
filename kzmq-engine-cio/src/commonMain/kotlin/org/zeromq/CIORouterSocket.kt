@@ -98,7 +98,7 @@ internal class RouterSocketHandler : SocketHandler {
         while (isActive) {
             val event = peerEvents.receive()
 
-            mailboxes.update(event)
+            mailboxes.updateOnAdditionRemoval(event)
 
             val (kind, mailbox) = event
             when (kind) {

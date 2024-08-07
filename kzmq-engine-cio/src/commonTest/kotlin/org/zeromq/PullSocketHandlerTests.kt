@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2024 Didier Villevalois and Kzmq contributors.
+ * Copyright (c) 2022-2025 Didier Villevalois and Kzmq contributors.
  * Use of this source code is governed by the Apache 2.0 license.
  */
 
@@ -7,17 +7,15 @@ package org.zeromq
 
 import io.kotest.assertions.*
 import io.kotest.core.spec.style.*
-import io.kotest.core.test.*
 import org.zeromq.internal.*
 import org.zeromq.test.*
 import org.zeromq.utils.*
 
-class PullSocketHandlerTests : FunSpec({
-    suspend fun TestScope.withHandler(test: SocketHandlerTest) =
-        withSocketHandler(PullSocketHandler(), test)
+internal class PullSocketHandlerTests : FunSpec({
+    val factory = ::PullSocketHandler
 
     test("SHALL receive incoming messages from its peers using a fair-queuing strategy") {
-        withHandler { peerEvents, _, receive ->
+        factory.runTest { peerEvents, _, receive ->
             val peers = List(5) { index ->
                 PeerMailbox(index.toString(), SocketOptions()).also { peer ->
                     peerEvents.send(PeerEvent(PeerEvent.Kind.ADDITION, peer))
@@ -42,7 +40,7 @@ class PullSocketHandlerTests : FunSpec({
     }
 
     test("SHALL deliver these to its calling application") {
-        withHandler { peerEvents, _, receive ->
+        factory.runTest { peerEvents, _, receive ->
             val peer = PeerMailbox("peer", SocketOptions()).also { peer ->
                 peerEvents.send(PeerEvent(PeerEvent.Kind.ADDITION, peer))
                 peerEvents.send(PeerEvent(PeerEvent.Kind.CONNECTION, peer))

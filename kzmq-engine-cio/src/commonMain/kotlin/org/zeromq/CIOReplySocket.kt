@@ -82,7 +82,7 @@ internal class ReplySocketHandler : SocketHandler {
     override suspend fun handle(peerEvents: ReceiveChannel<PeerEvent>) = coroutineScope {
         while (isActive) {
             val event = peerEvents.receive()
-            mailboxes.update(event)
+            mailboxes.updateOnAdditionRemoval(event)
         }
     }
 

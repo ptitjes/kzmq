@@ -14,6 +14,20 @@ import org.zeromq.test.*
 import kotlin.jvm.*
 import kotlin.time.Duration.Companion.seconds
 
+private val SUSPENSION_HINT_TIMEOUT = 1.seconds
+
+internal suspend fun shouldSuspend(block: suspend () -> Unit) {
+    withTimeoutOrNull(SUSPENSION_HINT_TIMEOUT) {
+        block()
+    } shouldBe null
+}
+
+internal suspend fun shouldNotSuspend(block: suspend () -> Unit) {
+    withTimeoutOrNull(SUSPENSION_HINT_TIMEOUT) {
+        block()
+    } shouldNotBe null
+}
+
 @JvmName("messageChannelShouldReceiveExactly")
 internal suspend infix fun ReceiveChannel<Message>.shouldReceiveExactly(expected: List<MessageTemplate>) {
     shouldReceiveExactly(expected) { receive() }
@@ -37,9 +51,7 @@ internal suspend infix fun (suspend () -> Message).shouldReceiveExactly(expected
 }
 
 internal suspend fun (suspend () -> Message).shouldReceiveNothing() {
-    withTimeoutOrNull(1.seconds) {
-        this@shouldReceiveNothing()
-    } shouldBe null
+    shouldSuspend { this() }
 }
 
 internal suspend infix fun (suspend (Message) -> Unit).send(expected: MessageTemplate) {

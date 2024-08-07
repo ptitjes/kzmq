@@ -62,14 +62,6 @@ internal class CIOPairSocket(
 internal class PairSocketHandler : SocketHandler {
     private val mailbox = atomic<PeerMailbox?>(null)
 
-    private suspend fun awaitCurrentPeer() {
-        var counter = 0
-        while (mailbox.value == null) {
-            if (counter++ < 100) println("in awaitCurrentPeer: ${mailbox.value}")
-            yield()
-        }
-    }
-
     override suspend fun handle(peerEvents: ReceiveChannel<PeerEvent>) = coroutineScope {
         while (isActive) {
             val (kind, peerMailbox) = peerEvents.receive()
@@ -82,18 +74,31 @@ internal class PairSocketHandler : SocketHandler {
     }
 
     override suspend fun send(message: Message) {
-        awaitCurrentPeer()
-        val mailbox = mailbox.value!!
-        logger.v { "Sending $message to $mailbox" }
-        mailbox.sendChannel.send(CommandOrMessage(message))
+        while (true) {
+            val mailbox = mailbox.value
+            if (mailbox != null) {
+                val result = mailbox.sendChannel.trySend(CommandOrMessage(message))
+                if (result.isSuccess) {
+                    logger.v { "Sent message to $mailbox" }
+                    return
+                }
+            }
+            yield()
+        }
     }
 
     override suspend fun receive(): Message {
-        awaitCurrentPeer()
-        val mailbox = mailbox.value!!
-        val commandOrMessage = mailbox.receiveChannel.receive()
-        val message = commandOrMessage.messageOrThrow()
-        logger.v { "Receiving $message from $mailbox" }
-        return message
+        while (true) {
+            val mailbox = mailbox.value
+            if (mailbox != null) {
+                val result = mailbox.receiveChannel.tryReceive()
+                if (result.isSuccess) {
+                    val message = result.getOrThrow().messageOrThrow()
+                    logger.v { "Receiving $message from $mailbox" }
+                    return message
+                }
+            }
+            yield()
+        }
     }
 }

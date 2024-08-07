@@ -68,7 +68,7 @@ internal class PushSocketHandler : SocketHandler {
 
     override suspend fun handle(peerEvents: ReceiveChannel<PeerEvent>) = coroutineScope {
         while (isActive) {
-            mailboxes.update(peerEvents.receive())
+            mailboxes.updateOnAdditionRemoval(peerEvents.receive())
         }
     }
 
