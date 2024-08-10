@@ -12,10 +12,7 @@ import org.zeromq.internal.*
 import org.zeromq.test.*
 import org.zeromq.utils.*
 
-class PullSocketHandlerTests : FunSpec({
-    suspend fun TestScope.withHandler(test: SocketHandlerTest) =
-        withSocketHandler(PullSocketHandler(), test)
-
+internal class PullSocketHandlerTests : SocketHandlerTests(::PullSocketHandler, {
     test("SHALL receive incoming messages from its peers using a fair-queuing strategy") {
         withHandler { peerEvents, _, receive ->
             val peers = List(5) { index ->
@@ -30,7 +27,9 @@ class PullSocketHandlerTests : FunSpec({
             }
 
             peers.forEach { peer ->
-                messages.forEach { peer.receiveChannel.send(it) }
+                messages.forEach {
+                    peer.receiveChannel.send(it)
+                }
             }
 
             all {

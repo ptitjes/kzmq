@@ -98,7 +98,7 @@ internal class RouterSocketHandler : SocketHandler {
         while (isActive) {
             val event = peerEvents.receive()
 
-            mailboxes.update(event)
+            mailboxes.updateOnAdditionRemoval(event)
 
             val (kind, mailbox) = event
             when (kind) {
@@ -118,10 +118,20 @@ internal class RouterSocketHandler : SocketHandler {
     }
 
     override suspend fun send(message: Message) {
-        val identity = message.popIdentity()
-        perIdentityMailboxes[identity]?.let { peerMailbox ->
-            logger.d { "Forwarding reply $message to $peerMailbox with identity $identity" }
-            peerMailbox.sendChannel.send(CommandOrMessage(message))
+        val toSend = message.copy()
+        val identity = toSend.popIdentity()
+        perIdentityMailboxes[identity]?.let { mailbox ->
+            logger.d { "Forwarding reply $toSend to $mailbox with identity $identity" }
+            mailbox.sendChannel.send(CommandOrMessage(toSend))
+        }
+    }
+
+    override fun trySend(message: Message): Unit? {
+        val toSend = message.copy()
+        val identity = toSend.popIdentity()
+        return perIdentityMailboxes[identity]?.let { mailbox ->
+            logger.d { "Forwarding reply $toSend to $mailbox with identity $identity" }
+            mailbox.sendChannel.trySend(CommandOrMessage(toSend)).getOrNull()
         }
     }
 
@@ -130,5 +140,14 @@ internal class RouterSocketHandler : SocketHandler {
         val identity = peerMailbox.identity ?: error("Peer identity should not be null")
         message.pushIdentity(identity)
         return message
+    }
+
+    override fun tryReceive(): Message? {
+        val maybeMailboxAndMessage = mailboxes.tryReceiveFromFirst()
+        return maybeMailboxAndMessage?.let { (mailbox, message) ->
+            val identity = mailbox.identity ?: error("Peer identity should not be null")
+            message.pushIdentity(identity)
+            message
+        }
     }
 }

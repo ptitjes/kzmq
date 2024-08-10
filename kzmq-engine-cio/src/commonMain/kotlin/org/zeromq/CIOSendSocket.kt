@@ -5,7 +5,6 @@
 
 package org.zeromq
 
-import kotlinx.coroutines.channels.*
 import org.zeromq.internal.*
 
 internal interface CIOSendSocket : SendSocket {
@@ -22,7 +21,9 @@ internal interface CIOSendSocket : SendSocket {
     }
 
     override fun trySend(message: Message): SocketResult<Unit> {
-        TODO()
+        val maybeUnit = handler.trySend(message)
+        return if (maybeUnit != null) SocketResult.success(maybeUnit)
+        else SocketResult.failure()
     }
 
     override var multicastHops: Int

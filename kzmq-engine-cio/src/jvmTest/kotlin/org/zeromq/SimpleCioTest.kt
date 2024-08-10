@@ -5,15 +5,15 @@
 
 package org.zeromq
 
-import kotlinx.coroutines.test.*
+import kotlinx.coroutines.*
 import kotlinx.io.*
 import kotlin.test.*
 
-class SimpleTest {
+class SimpleCioTest {
     @Test
-    fun testSimple() = runTest {
-        val ctx1 = Context(JeroMQ)
-        val ctx2 = Context(JeroMQ)
+    fun testSimple() = runBlocking {
+        val ctx1 = Context(CIO)
+        val ctx2 = Context(CIO)
 
         val address = "tcp://localhost:9000"
         val push = ctx1.createPush().apply { connect(address) }

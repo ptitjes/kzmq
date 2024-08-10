@@ -8,7 +8,6 @@ package org.zeromq
 import kotlinx.atomicfu.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.*
-import kotlinx.coroutines.sync.*
 import kotlinx.io.bytestring.*
 import org.zeromq.internal.*
 import org.zeromq.internal.utils.*
@@ -76,9 +75,9 @@ internal class CIORequestSocket(
 }
 
 internal class RequestSocketHandler : SocketHandler {
-    private val mailboxes = CircularQueue<PeerMailbox>()
+    private val outgoingMailboxes = CircularQueue<PeerMailbox>()
+    private val incomingMailboxes = CircularQueue<PeerMailbox>()
     private var lastSentPeer = atomic<PeerMailbox?>(null)
-    private val requestReplyLock = Mutex()
 
     private suspend fun awaitLastSentPeer(predicate: (PeerMailbox?) -> Boolean) {
         while (!predicate(lastSentPeer.value)) yield()
@@ -86,25 +85,54 @@ internal class RequestSocketHandler : SocketHandler {
 
     override suspend fun handle(peerEvents: ReceiveChannel<PeerEvent>) = coroutineScope {
         while (isActive) {
-            mailboxes.update(peerEvents.receive())
+            // FIXME Use updateOnConnectionDisconnection!!!
+            val event = peerEvents.receive()
+            outgoingMailboxes.updateOnAdditionRemoval(event)
+            incomingMailboxes.updateOnAdditionRemoval(event)
         }
     }
 
     override suspend fun send(message: Message) {
         awaitLastSentPeer { it == null }
-        requestReplyLock.withLock {
-            message.pushPrefixAddress()
-            val mailbox = mailboxes.sendToFirstAvailable(message)
-            lastSentPeer.value = mailbox
-            logger.v { "Sent request to $mailbox" }
-        }
+        val toSend = message.copy().apply { pushPrefixAddress() }
+        val mailbox = outgoingMailboxes.sendToFirstAvailable(toSend)
+        lastSentPeer.value = mailbox
+    }
+
+    override fun trySend(message: Message): Unit? {
+        if (lastSentPeer.value != null) return null
+        val toSend = message.copy().apply { pushPrefixAddress() }
+        val maybeMailbox = outgoingMailboxes.trySendToFirstAvailable(toSend)
+        lastSentPeer.value = maybeMailbox
+        return maybeMailbox?.let {}
     }
 
     override suspend fun receive(): Message {
         awaitLastSentPeer { it != null }
-        requestReplyLock.withLock {
-            while (true) {
-                val (mailbox, message) = mailboxes.receiveFromFirst()
+        while (true) {
+            val (mailbox, message) = incomingMailboxes.receiveFromFirst()
+
+            message.popPrefixAddress()
+
+            // Should we "discard" messages in another coroutine in `handle()`?
+            if (mailbox != lastSentPeer.value) {
+                logger.w { "Ignoring reply $message from $mailbox" }
+                continue
+            }
+
+            logger.v { "Received reply $message from $mailbox" }
+            lastSentPeer.value = null
+            return message
+        }
+    }
+
+    override fun tryReceive(): Message? {
+        if (lastSentPeer.value == null) return null
+        while (true) {
+            val maybeMailboxAndMessage = incomingMailboxes.tryReceiveFromFirst()
+
+            if (maybeMailboxAndMessage != null) {
+                val (mailbox, message) = maybeMailboxAndMessage
 
                 message.popPrefixAddress()
 
@@ -117,6 +145,8 @@ internal class RequestSocketHandler : SocketHandler {
                 logger.v { "Received reply $message from $mailbox" }
                 lastSentPeer.value = null
                 return message
+            } else {
+                return null
             }
         }
     }

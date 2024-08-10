@@ -127,7 +127,7 @@ internal class SubscriberSocketHandler : SocketHandler {
         while (isActive) {
             select {
                 peerEvents.onReceive { event ->
-                    mailboxes.update(event)
+                    mailboxes.updateOnAdditionRemoval(event)
 
                     val (kind, mailbox) = event
                     when (kind) {

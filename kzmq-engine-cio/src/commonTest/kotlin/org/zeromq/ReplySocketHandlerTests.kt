@@ -14,10 +14,7 @@ import org.zeromq.internal.*
 import org.zeromq.test.*
 import org.zeromq.utils.*
 
-class ReplySocketHandlerTests : FunSpec({
-    suspend fun TestScope.withHandler(test: SocketHandlerTest) =
-        withSocketHandler(ReplySocketHandler(), test)
-
+internal class ReplySocketHandlerTests : SocketHandlerTests(::ReplySocketHandler, {
     test("SHALL receive incoming messages from its peers using a fair-queuing strategy") {
         withHandler { peerEvents, send, receive ->
             val peerCount = 5

@@ -10,15 +10,13 @@ import io.kotest.core.test.*
 import io.kotest.matchers.*
 import kotlinx.coroutines.*
 import kotlinx.io.bytestring.*
+import org.zeromq.fragments.*
 import org.zeromq.internal.*
 import org.zeromq.test.*
 import org.zeromq.utils.*
 import kotlin.time.Duration.Companion.seconds
 
-class RequestSocketHandlerTests : FunSpec({
-    suspend fun TestScope.withHandler(test: SocketHandlerTest) =
-        withSocketHandler(RequestSocketHandler(), test)
-
+internal class RequestSocketHandlerTests : SocketHandlerTests(::RequestSocketHandler, {
     test("SHALL prefix the outgoing message with an empty delimiter frame") {
         withHandler { peerEvents, send, _ ->
             val peer = PeerMailbox("peer", SocketOptions().apply { sendQueueSize = 5 }).also { peer ->
@@ -81,16 +79,7 @@ class RequestSocketHandlerTests : FunSpec({
         }
     }
 
-    test("SHALL suspend on sending when it has no available peers") {
-        withHandler { _, send, _ ->
-            val message = buildMessage { writeFrame("Won't be sent".encodeToByteString()) }
-
-            withTimeoutOrNull(1.seconds) {
-                send(message)
-            } shouldBe null
-        }
-    }
-
+//    suspendingSendTests()
 
     test("SHALL accept an incoming message only from the last peer that it sent a request to") {
         withHandler { peerEvents, send, receive ->

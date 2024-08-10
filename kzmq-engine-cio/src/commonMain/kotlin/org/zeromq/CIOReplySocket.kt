@@ -8,7 +8,6 @@ package org.zeromq
 import kotlinx.atomicfu.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.*
-import kotlinx.coroutines.sync.*
 import kotlinx.io.bytestring.*
 import org.zeromq.internal.*
 import org.zeromq.internal.utils.*
@@ -73,7 +72,6 @@ internal class CIOReplySocket(
 internal class ReplySocketHandler : SocketHandler {
     private val mailboxes = CircularQueue<PeerMailbox>()
     private var state = atomic<ReplySocketState>(ReplySocketState.Idle)
-    private val requestReplyLock = Mutex()
 
     private suspend fun awaitState(predicate: (ReplySocketState?) -> Boolean) {
         while (!predicate(state.value)) yield()
@@ -82,28 +80,42 @@ internal class ReplySocketHandler : SocketHandler {
     override suspend fun handle(peerEvents: ReceiveChannel<PeerEvent>) = coroutineScope {
         while (isActive) {
             val event = peerEvents.receive()
-            mailboxes.update(event)
+            mailboxes.updateOnAdditionRemoval(event)
         }
     }
 
     override suspend fun receive(): Message {
         awaitState { it is ReplySocketState.Idle }
-        requestReplyLock.withLock {
-            val (mailbox, message) = mailboxes.receiveFromFirst()
+        val (mailbox, message) = mailboxes.receiveFromFirst()
+        state.value = ReplySocketState.ProcessingRequest(mailbox, message.popPrefixAddress())
+        return message
+    }
+
+    override fun tryReceive(): Message? {
+        if (state.value !is ReplySocketState.Idle) return null
+        val maybeMailboxAndMessage = mailboxes.tryReceiveFromFirst()
+        return maybeMailboxAndMessage?.let { (mailbox, message) ->
             state.value = ReplySocketState.ProcessingRequest(mailbox, message.popPrefixAddress())
-            return message
+            message
         }
     }
 
     override suspend fun send(message: Message) {
         awaitState { it is ReplySocketState.ProcessingRequest }
-        requestReplyLock.withLock {
-            val (peer, address) = state.value as ReplySocketState.ProcessingRequest
+        val (mailbox, address) = state.value as ReplySocketState.ProcessingRequest
 
-            message.pushPrefixAddress(address)
-            peer.sendChannel.send(CommandOrMessage(message))
-            state.value = ReplySocketState.Idle
-        }
+        message.pushPrefixAddress(address)
+        mailbox.sendChannel.send(CommandOrMessage(message))
+        state.value = ReplySocketState.Idle
+    }
+
+    override fun trySend(message: Message): Unit? {
+        if (state.value !is ReplySocketState.ProcessingRequest) return null
+        val (mailbox, address) = state.value as ReplySocketState.ProcessingRequest
+
+        message.pushPrefixAddress(address)
+        val result = mailbox.sendChannel.trySend(CommandOrMessage(message))
+        return result.getOrNull()
     }
 }
 

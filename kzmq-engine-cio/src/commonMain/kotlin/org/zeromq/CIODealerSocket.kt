@@ -79,20 +79,32 @@ internal class CIODealerSocket(
 }
 
 internal class DealerSocketHandler : SocketHandler {
-    private val mailboxes = CircularQueue<PeerMailbox>()
+    private val outgoingMailboxes = CircularQueue<PeerMailbox>()
+    private val incomingMailboxes = CircularQueue<PeerMailbox>()
 
     override suspend fun handle(peerEvents: ReceiveChannel<PeerEvent>) = coroutineScope {
         while (isActive) {
-            mailboxes.update(peerEvents.receive())
+            val event = peerEvents.receive()
+            outgoingMailboxes.updateOnAdditionRemoval(event)
+            incomingMailboxes.updateOnAdditionRemoval(event)
         }
     }
 
     override suspend fun send(message: Message) {
-        mailboxes.sendToFirstAvailable(message)
+        outgoingMailboxes.sendToFirstAvailable(message)
+    }
+
+    override fun trySend(message: Message): Unit? {
+        return outgoingMailboxes.trySendToFirstAvailable(message)?.let {}
     }
 
     override suspend fun receive(): Message {
-        val (_, message) = mailboxes.receiveFromFirst()
+        val (_, message) = incomingMailboxes.receiveFromFirst()
         return message
+    }
+
+    override fun tryReceive(): Message? {
+        val maybeMailboxAndMessage = incomingMailboxes.tryReceiveFromFirst()
+        return maybeMailboxAndMessage?.let { (_, message) -> message }
     }
 }

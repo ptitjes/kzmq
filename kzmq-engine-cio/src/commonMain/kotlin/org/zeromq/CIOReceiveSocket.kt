@@ -5,7 +5,6 @@
 
 package org.zeromq
 
-import kotlinx.coroutines.channels.*
 import org.zeromq.internal.*
 
 internal interface CIOReceiveSocket : ReceiveSocket {
@@ -22,7 +21,9 @@ internal interface CIOReceiveSocket : ReceiveSocket {
     }
 
     override fun tryReceive(): SocketResult<Message> {
-        TODO()
+        val maybeMessage = handler.tryReceive()
+        return if (maybeMessage != null) SocketResult.success(maybeMessage)
+        else SocketResult.failure()
     }
 
     override val onReceive get() = TODO()

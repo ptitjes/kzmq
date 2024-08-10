@@ -10,6 +10,7 @@ import kotlinx.coroutines.*
 import kotlinx.io.bytestring.*
 import org.zeromq.*
 import kotlin.time.*
+import kotlin.time.Duration.Companion.seconds
 
 fun main(args: Array<String>) = runBlocking {
     val parser = ArgParser("throughput")
@@ -38,7 +39,7 @@ fun main(args: Array<String>) = runBlocking {
 
     val engine = engines.find { it.name == engineName } ?: error("No such engine: $engineName")
 
-    val message = Message(buildByteString(messageSize) {})
+    val messageContent = buildByteString(messageSize) {}
 
     val handler = CoroutineExceptionHandler { _, throwable -> throwable.printStackTrace() }
     val context = Context(engine, coroutineContext + handler + dispatcher)
@@ -46,18 +47,38 @@ fun main(args: Array<String>) = runBlocking {
     withContext(dispatcher) {
         when (side) {
             Side.PUSH -> {
-                val pushJob = launch { context.push(message, messageCount, verbose) { connect(address) } }
+                val pushJob = launch {
+                    context.push(messageContent, messageCount, verbose) {
+                        println("Connecting to $address")
+                        connect(address)
+                    }
+                }
                 pushJob.join()
             }
 
             Side.PULL -> {
-                val pullJob = launch { context.pull(messageCount, verbose) { bind(address) } }
+                val pullJob = launch {
+                    context.pull(messageContent, messageCount, verbose) {
+                        println("Binding to $address")
+                        bind(address)
+                    }
+                }
                 pullJob.join()
             }
 
             Side.BOTH -> {
-                val pushJob = launch { context.push(message, messageCount, verbose) { connect(address) } }
-                val pullJob = launch { context.pull(messageCount, verbose) { bind(address) } }
+                val pushJob = launch {
+                    context.push(messageContent, messageCount, verbose) {
+                        println("Connecting to $address")
+                        connect(address)
+                    }
+                }
+                val pullJob = launch {
+                    context.pull(messageContent, messageCount, verbose) {
+                        println("Binding to $address")
+                        bind(address)
+                    }
+                }
 
                 pullJob.join()
                 pushJob.cancelAndJoin()
@@ -73,15 +94,18 @@ private enum class Side {
 }
 
 private suspend fun Context.push(
-    message: Message,
+    messageContent: ByteString,
     messageCount: Int,
     verbose: Boolean,
     configure: suspend PushSocket.() -> Unit,
-) {
+) = withContext(Dispatchers.IO) {
+    println("Creating Push socket")
     createPush().apply { configure() }.use { socket ->
+        delay(1.seconds)
+
         var sent = 0
         while (sent < messageCount) {
-            socket.send(message)
+            socket.send { writeFrame(messageContent) }
             sent++
             if (verbose && sent % 1000 == 0) println("Sent $sent")
         }
@@ -89,15 +113,20 @@ private suspend fun Context.push(
 }
 
 private suspend fun Context.pull(
+    messageContent: ByteString,
     messageCount: Int,
     verbose: Boolean,
     configure: suspend PullSocket.() -> Unit,
-) {
+) = withContext(Dispatchers.IO) {
+    val messageSize = messageContent.size
+    println("Creating Pull socket")
     createPull().apply { configure() }.use { socket ->
+        delay(1.seconds)
+
         var received = 0
         val elapsed = measureTime {
             while (received < messageCount) {
-                socket.receive()
+                socket.receive { readFrame { skip(messageSize.toLong()) } }
                 received++
                 if (verbose && received % 1000 == 0) println("Received $received")
             }

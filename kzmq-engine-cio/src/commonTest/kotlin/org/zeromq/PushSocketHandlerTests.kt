@@ -6,20 +6,12 @@
 package org.zeromq
 
 import io.kotest.assertions.*
-import io.kotest.core.spec.style.*
-import io.kotest.core.test.*
-import io.kotest.matchers.*
-import kotlinx.coroutines.*
-import kotlinx.io.bytestring.*
+import org.zeromq.fragments.*
 import org.zeromq.internal.*
 import org.zeromq.test.*
 import org.zeromq.utils.*
-import kotlin.time.Duration.Companion.seconds
 
-class PushSocketHandlerTests : FunSpec({
-    suspend fun TestScope.withHandler(test: SocketHandlerTest) =
-        withSocketHandler(PushSocketHandler(), test)
-
+internal class PushSocketHandlerTests : SocketHandlerTests(::PushSocketHandler, {
     test("SHALL consider a peer as available only when it has an outgoing queue that is not full") {
         withHandler { peerEvents, send, _ ->
             val peer1 = PeerMailbox("1", SocketOptions())
@@ -78,40 +70,6 @@ class PushSocketHandlerTests : FunSpec({
         }
     }
 
-    test("SHALL suspend on sending when it has no available peers") {
-        withHandler { _, send, _ ->
-            val message = buildMessage { writeFrame("Won't be sent".encodeToByteString()) }
-
-            withTimeoutOrNull(1.seconds) {
-                send(message)
-            } shouldBe null
-        }
-    }
-
-    test("SHALL not accept further messages when it has no available peers") {
-        withHandler { _, send, _ ->
-            val message = buildMessage { writeFrame("Won't be sent".encodeToByteString()) }
-
-            withTimeoutOrNull(1.seconds) {
-                send(message)
-            } shouldBe null
-        }
-    }
-
-    test("SHALL NOT discard messages that it cannot queue") {
-        withHandler { peerEvents, send, _ ->
-            val peer = PeerMailbox("1", SocketOptions())
-            peerEvents.send(PeerEvent(PeerEvent.Kind.ADDITION, peer))
-
-            val messages = messages(10) { index -> writeFrame { writeByte(index.toByte()) } }
-
-            // Send each message once
-            messages.forEach { send(it.buildMessage()) }
-
-            peerEvents.send(PeerEvent(PeerEvent.Kind.CONNECTION, peer))
-
-            // Check each receiver got every messages
-            peer.sendChannel shouldReceiveExactly messages
-        }
-    }
+    suspendingSendTests()
 })
+

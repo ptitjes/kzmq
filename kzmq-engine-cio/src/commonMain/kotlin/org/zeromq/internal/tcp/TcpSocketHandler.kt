@@ -70,11 +70,19 @@ internal class TcpSocketHandler(
             coroutineScope {
                 launch {
                     val incoming = mailbox.receiveChannel
-                    while (isActive) incoming.send(readIncoming())
+                    while (isActive) {
+                        val incomingMessage = readIncoming()
+                        logger.v { "(TCP: $mailbox) Incoming message: $incomingMessage" }
+                        incoming.send(incomingMessage)
+                    }
                 }
                 launch {
                     val outgoing = mailbox.sendChannel
-                    while (isActive) writeOutgoing(outgoing.receive())
+                    while (isActive) {
+                        val outgoingMessage = outgoing.receive()
+                        logger.v { "(TCP: $mailbox) Outgoing message: $outgoingMessage" }
+                        writeOutgoing(outgoingMessage)
+                    }
                 }
             }
         } finally {

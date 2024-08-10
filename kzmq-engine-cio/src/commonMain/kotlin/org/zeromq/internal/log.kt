@@ -9,7 +9,7 @@ import co.touchlab.kermit.*
 
 internal val logger = Logger(
     StaticConfig(
-        minSeverity = Severity.Warn,
+        minSeverity = Severity.Verbose,
         logWriterList = listOf(CommonWriter())
     )
 )

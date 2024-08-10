@@ -9,7 +9,4 @@ import kotlinx.coroutines.*
 import platform.linux.*
 import kotlin.math.*
 
-private val nThreads = max(get_nprocs(), 64)
-private val IO_DISPATCHER = newFixedThreadPoolContext(nThreads, "IO")
-
-actual val dispatcher: CoroutineDispatcher = IO_DISPATCHER
+actual val dispatcher: CoroutineDispatcher = Dispatchers.IO

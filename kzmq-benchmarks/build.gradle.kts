@@ -37,8 +37,8 @@ benchmark {
     }
     configurations {
         val main by getting {
-            warmups = 3
-            iterations = 3
+            warmups = 5
+            iterations = 10
         }
     }
 }

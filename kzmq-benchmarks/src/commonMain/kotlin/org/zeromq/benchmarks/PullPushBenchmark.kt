@@ -17,14 +17,13 @@ open class PullPushBenchmark() {
     @Param("jeromq", "cio")
     var engineName = ""
 
-    @Param("inproc", "ipc", "tcp")
+    @Param("inproc", "tcp")
     var transport = "tcp"
-
-    private lateinit var address: String
 
     @Param("10", "100", "1000", "10000", "100000")
     var messageSize = 10
 
+    private lateinit var address: String
     private lateinit var messageData: ByteString
 
     private lateinit var scope: CoroutineScope
