@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2024 Didier Villevalois and Kzmq contributors.
+ * Copyright (c) 2021-2025 Didier Villevalois and Kzmq contributors.
  * Use of this source code is governed by the Apache 2.0 license.
  */
 
@@ -118,16 +118,34 @@ internal class RouterSocketHandler : SocketHandler {
     }
 
     override suspend fun send(message: Message) {
-        val identity = message.popIdentity()
-        perIdentityMailboxes[identity]?.let { peerMailbox ->
-            logger.d { "Forwarding reply $message to $peerMailbox with identity $identity" }
-            peerMailbox.sendChannel.send(CommandOrMessage(message))
+        val toSend = message.copy()
+        val identity = toSend.popIdentity()
+        perIdentityMailboxes[identity]?.let { mailbox ->
+            logger.d { "Forwarding reply $toSend to $mailbox with identity $identity" }
+            mailbox.sendChannel.send(CommandOrMessage(toSend))
+        }
+    }
+
+    override fun trySend(message: Message): Unit? {
+        val toSend = message.copy()
+        val identity = toSend.popIdentity()
+        return perIdentityMailboxes[identity]?.let { mailbox ->
+            logger.d { "Forwarding reply $toSend to $mailbox with identity $identity" }
+            mailbox.sendChannel.trySend(CommandOrMessage(toSend)).getOrNull()
         }
     }
 
     override suspend fun receive(): Message {
-        val (peerMailbox, message) = mailboxes.receiveFromFirst()
-        val identity = peerMailbox.identity ?: error("Peer identity should not be null")
+        return mailboxes.receiveFromFirst().messageWithIdentity()
+    }
+
+    override fun tryReceive(): Message? {
+        return mailboxes.tryReceiveFromFirst()?.messageWithIdentity()
+    }
+
+    private fun Receipt.messageWithIdentity(): Message {
+        val identity = sourceMailbox.identity ?: error("Peer identity should not be null")
+        val message = commandOrMessage.messageOrThrow()
         message.pushIdentity(identity)
         return message
     }

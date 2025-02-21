@@ -1,11 +1,10 @@
 /*
- * Copyright (c) 2021-2024 Didier Villevalois and Kzmq contributors.
+ * Copyright (c) 2021-2025 Didier Villevalois and Kzmq contributors.
  * Use of this source code is governed by the Apache 2.0 license.
  */
 
 package org.zeromq
 
-import kotlinx.coroutines.channels.*
 import org.zeromq.internal.*
 
 internal interface CIOReceiveSocket : ReceiveSocket {
@@ -22,7 +21,9 @@ internal interface CIOReceiveSocket : ReceiveSocket {
     }
 
     override fun tryReceive(): SocketResult<Message> {
-        TODO()
+        val maybeMessage = handler.tryReceive()
+        return if (maybeMessage != null) SocketResult.success(maybeMessage)
+        else SocketResult.failure()
     }
 
     override val onReceive get() = TODO()

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2024 Didier Villevalois and Kzmq contributors.
+ * Copyright (c) 2021-2025 Didier Villevalois and Kzmq contributors.
  * Use of this source code is governed by the Apache 2.0 license.
  */
 
@@ -75,30 +75,42 @@ internal class PairSocketHandler : SocketHandler {
 
     override suspend fun send(message: Message) {
         while (true) {
-            val mailbox = mailbox.value
-            if (mailbox != null) {
-                val result = mailbox.sendChannel.trySend(CommandOrMessage(message))
-                if (result.isSuccess) {
-                    logger.v { "Sent message to $mailbox" }
-                    return
-                }
-            }
+            val result = trySend(message)
+            if (result != null) return
             yield()
         }
     }
 
+    override fun trySend(message: Message): Unit? {
+        val maybeMailbox = mailbox.value
+        if (maybeMailbox != null) {
+            val result = maybeMailbox.sendChannel.trySend(CommandOrMessage(message))
+            if (result.isSuccess) {
+                logger.v { "Sent message to $maybeMailbox" }
+                return Unit
+            }
+        }
+        return null
+    }
+
     override suspend fun receive(): Message {
         while (true) {
-            val mailbox = mailbox.value
-            if (mailbox != null) {
-                val result = mailbox.receiveChannel.tryReceive()
-                if (result.isSuccess) {
-                    val message = result.getOrThrow().messageOrThrow()
-                    logger.v { "Receiving $message from $mailbox" }
-                    return message
-                }
-            }
+            val result = tryReceive()
+            if (result != null) return result
             yield()
         }
+    }
+
+    override fun tryReceive(): Message? {
+        val mailbox = mailbox.value
+        if (mailbox != null) {
+            val result = mailbox.receiveChannel.tryReceive()
+            if (result.isSuccess) {
+                val message = result.getOrThrow().messageOrThrow()
+                logger.v { "Receiving $message from $mailbox" }
+                return message
+            }
+        }
+        return null
     }
 }

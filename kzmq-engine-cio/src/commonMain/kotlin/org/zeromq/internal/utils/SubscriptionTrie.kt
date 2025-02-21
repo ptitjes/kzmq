@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2024 Didier Villevalois and Kzmq contributors.
+ * Copyright (c) 2021-2025 Didier Villevalois and Kzmq contributors.
  * Use of this source code is governed by the Apache 2.0 license.
  */
 
@@ -49,14 +49,14 @@ internal data class SubscriptionTrie<T>(
         }
     }
 
-    suspend fun forEachMatching(content: ByteArray, block: suspend (T) -> Unit) {
+    fun forEachMatching(content: ByteArray, block: (T) -> Unit) {
         forEachMatching(content.iterator(), mutableSetOf(), block)
     }
 
-    private suspend fun forEachMatching(
+    private fun forEachMatching(
         content: ByteIterator,
         alreadyVisited: MutableSet<T>,
-        block: suspend (T) -> Unit,
+        block: (T) -> Unit,
     ) {
         for (mailbox in subscriptions.keys) {
             if (!alreadyVisited.contains(mailbox)) {

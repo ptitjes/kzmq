@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2024 Didier Villevalois and Kzmq contributors.
+ * Copyright (c) 2021-2025 Didier Villevalois and Kzmq contributors.
  * Use of this source code is governed by the Apache 2.0 license.
  */
 
@@ -8,7 +8,6 @@ package org.zeromq
 import kotlinx.atomicfu.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.*
-import kotlinx.coroutines.sync.*
 import kotlinx.io.bytestring.*
 import org.zeromq.internal.*
 import org.zeromq.internal.utils.*
@@ -73,10 +72,14 @@ internal class CIOReplySocket(
 internal class ReplySocketHandler : SocketHandler {
     private val mailboxes = CircularQueue<PeerMailbox>()
     private var state = atomic<ReplySocketState>(ReplySocketState.Idle)
-    private val requestReplyLock = Mutex()
 
     private suspend fun awaitState(predicate: (ReplySocketState?) -> Boolean) {
         while (!predicate(state.value)) yield()
+    }
+
+    private fun setProcessingStateFrom(receipt: Receipt) {
+        val message = receipt.messageOrThrow()
+        state.value = ReplySocketState.ProcessingRequest(receipt.sourceMailbox, message.popPrefixAddress())
     }
 
     override suspend fun handle(peerEvents: ReceiveChannel<PeerEvent>) = coroutineScope {
@@ -88,22 +91,33 @@ internal class ReplySocketHandler : SocketHandler {
 
     override suspend fun receive(): Message {
         awaitState { it is ReplySocketState.Idle }
-        requestReplyLock.withLock {
-            val (mailbox, message) = mailboxes.receiveFromFirst()
-            state.value = ReplySocketState.ProcessingRequest(mailbox, message.popPrefixAddress())
-            return message
-        }
+        return mailboxes.receiveFromFirst().also { setProcessingStateFrom(it) }.messageOrThrow()
     }
+
+    override fun tryReceive(): Message? {
+        if (state.value !is ReplySocketState.Idle) return null
+        return mailboxes.tryReceiveFromFirst()?.also { setProcessingStateFrom(it) }?.messageOrThrow()
+    }
+
+    private fun Receipt.messageOrThrow() = commandOrMessage.messageOrThrow()
 
     override suspend fun send(message: Message) {
         awaitState { it is ReplySocketState.ProcessingRequest }
-        requestReplyLock.withLock {
-            val (peer, address) = state.value as ReplySocketState.ProcessingRequest
+        val (mailbox, address) = state.value as ReplySocketState.ProcessingRequest
 
-            message.pushPrefixAddress(address)
-            peer.sendChannel.send(CommandOrMessage(message))
-            state.value = ReplySocketState.Idle
-        }
+        message.pushPrefixAddress(address)
+        mailbox.sendChannel.send(CommandOrMessage(message))
+        state.value = ReplySocketState.Idle
+    }
+
+    override fun trySend(message: Message): Unit? {
+        if (state.value !is ReplySocketState.ProcessingRequest) return null
+        val (mailbox, address) = state.value as ReplySocketState.ProcessingRequest
+
+        message.pushPrefixAddress(address)
+        val result = mailbox.sendChannel.trySend(CommandOrMessage(message))
+        if (result.isSuccess) state.value = ReplySocketState.Idle
+        return result.getOrNull()
     }
 }
 

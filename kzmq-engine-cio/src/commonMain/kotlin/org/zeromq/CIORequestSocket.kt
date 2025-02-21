@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2024 Didier Villevalois and Kzmq contributors.
+ * Copyright (c) 2021-2025 Didier Villevalois and Kzmq contributors.
  * Use of this source code is governed by the Apache 2.0 license.
  */
 
@@ -77,44 +77,92 @@ internal class CIORequestSocket(
 internal class RequestSocketHandler : SocketHandler {
     private val outgoingMailboxes = CircularQueue<PeerMailbox>()
     private val incomingMailboxes = CircularQueue<PeerMailbox>()
-    private var lastSentPeer = atomic<PeerMailbox?>(null)
+    private var state = atomic<RequestSocketState>(RequestSocketState.Idle)
 
-    private suspend fun awaitLastSentPeer(predicate: (PeerMailbox?) -> Boolean) {
-        while (!predicate(lastSentPeer.value)) yield()
+    private suspend fun awaitState(predicate: (RequestSocketState?) -> Boolean) {
+        while (!predicate(state.value)) yield()
     }
 
     override suspend fun handle(peerEvents: ReceiveChannel<PeerEvent>) = coroutineScope {
         while (isActive) {
-            // FIXME Use updateOnConnectionDisconnection!!!
             val event = peerEvents.receive()
-            outgoingMailboxes.updateOnAdditionRemoval(event)
-            incomingMailboxes.updateOnAdditionRemoval(event)
+            outgoingMailboxes.updateOnConnectionDisconnection(event)
+            incomingMailboxes.updateOnConnectionDisconnection(event)
         }
     }
 
     override suspend fun send(message: Message) {
-        awaitLastSentPeer { it == null }
+        awaitState { it is RequestSocketState.Idle }
         val toSend = message.copy().apply { pushPrefixAddress() }
         val mailbox = outgoingMailboxes.sendToFirstAvailable(toSend)
-        lastSentPeer.value = mailbox
+        state.value = RequestSocketState.AwaitingReply(mailbox)
+    }
+
+    override fun trySend(message: Message): Unit? {
+        if (state.value !is RequestSocketState.Idle) return null
+        val toSend = message.copy().apply { pushPrefixAddress() }
+        val maybeMailbox = outgoingMailboxes.trySendToFirstAvailable(toSend)
+        return maybeMailbox?.let { mailbox ->
+            state.value = RequestSocketState.AwaitingReply(mailbox)
+        }
     }
 
     override suspend fun receive(): Message {
-        awaitLastSentPeer { it != null }
+        awaitState { it is RequestSocketState.AwaitingReply }
+        val (requestingPeer) = state.value as RequestSocketState.AwaitingReply
+
         while (true) {
-            val (mailbox, message) = incomingMailboxes.receiveFromFirst()
+            val receipt = incomingMailboxes.receiveFromFirst()
+            val (mailbox, commandOrMessage) = receipt
+            val message = commandOrMessage.messageOrThrow()
 
             message.popPrefixAddress()
 
             // Should we "discard" messages in another coroutine in `handle()`?
-            if (mailbox != lastSentPeer.value) {
+            if (mailbox != requestingPeer) {
                 logger.w { "Ignoring reply $message from $mailbox" }
                 continue
             }
 
             logger.v { "Received reply $message from $mailbox" }
-            lastSentPeer.value = null
+            state.value = RequestSocketState.Idle
             return message
         }
     }
+
+    override fun tryReceive(): Message? {
+        if (state.value !is RequestSocketState.AwaitingReply) return null
+        val (requestingPeer) = state.value as RequestSocketState.AwaitingReply
+
+        while (true) {
+            val maybeReceipt = incomingMailboxes.tryReceiveFromFirst()
+
+            if (maybeReceipt != null) {
+                val (mailbox, commandOrMessage) = maybeReceipt
+                val message = commandOrMessage.messageOrThrow()
+
+                message.popPrefixAddress()
+
+                // Should we "discard" messages in another coroutine in `handle()`?
+                if (mailbox != requestingPeer) {
+                    logger.w { "Ignoring reply $message from $mailbox" }
+                    continue
+                }
+
+                logger.v { "Received reply $message from $mailbox" }
+                state.value = RequestSocketState.Idle
+                return message
+            } else {
+                return null
+            }
+        }
+    }
+}
+
+private sealed interface RequestSocketState {
+    data object Idle : RequestSocketState
+
+    data class AwaitingReply(
+        val peer: PeerMailbox,
+    ) : RequestSocketState
 }

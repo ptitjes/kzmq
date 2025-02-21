@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2024 Didier Villevalois and Kzmq contributors.
+ * Copyright (c) 2021-2025 Didier Villevalois and Kzmq contributors.
  * Use of this source code is governed by the Apache 2.0 license.
  */
 
@@ -152,8 +152,9 @@ internal class SubscriberSocketHandler : SocketHandler {
         }
     }
 
-    override suspend fun receive(): Message {
-        val (_, message) = mailboxes.receiveFromFirst()
-        return message
-    }
+    override suspend fun receive(): Message = mailboxes.receiveFromFirst().messageOrThrow()
+
+    override fun tryReceive(): Message? = mailboxes.tryReceiveFromFirst()?.messageOrThrow()
+
+    private fun Receipt.messageOrThrow() = commandOrMessage.messageOrThrow()
 }
