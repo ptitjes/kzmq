@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2024 Didier Villevalois and Kzmq contributors.
+ * Copyright (c) 2021-2025 Didier Villevalois and Kzmq contributors.
  * Use of this source code is governed by the Apache 2.0 license.
  */
 
@@ -55,6 +55,7 @@ kotlin {
         jsTest {
             dependencies {
                 implementation(project(":kzmq-engine-zeromqjs"))
+                implementation(project(":kzmq-engine-cio"))
             }
         }
 
