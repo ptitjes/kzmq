@@ -7,7 +7,6 @@ package org.zeromq.internal
 
 import io.ktor.utils.io.*
 import io.ktor.utils.io.core.*
-import io.ktor.utils.io.core.writeUByte
 import kotlinx.io.*
 import kotlinx.io.Buffer
 import kotlinx.io.bytestring.*
@@ -154,4 +153,3 @@ private fun Sink.writeFrameHeader(flags: ZmqFlags, size: Long) {
 private fun Sink.writeZmqFlags(flags: ZmqFlags) {
     writeUByte(flags.data)
 }
-

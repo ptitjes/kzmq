@@ -13,7 +13,7 @@ kotlin {
     sourceSets {
         jvmMain {
             languageSettings {
-                languageVersion = "2.1"
+                languageVersion = "2.2"
             }
             dependencies {
                 implementation(project(":kzmq-core"))
