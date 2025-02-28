@@ -42,7 +42,7 @@ internal class TcpSocketHandler(
         if (mechanism != peerSecuritySpec.mechanism)
             protocolError("Invalid peer security mechanism: ${peerSecuritySpec.mechanism}")
 
-        val localProperties = mutableMapOf<PropertyName, ByteString>().apply {
+        val localProperties = buildMap {
             put(PropertyName.SOCKET_TYPE, socketInfo.type.name.encodeToByteString())
             socketInfo.options.routingId?.let { identity -> put(PropertyName.IDENTITY, identity) }
         }

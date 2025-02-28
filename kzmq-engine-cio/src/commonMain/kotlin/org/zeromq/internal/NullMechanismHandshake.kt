@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2024 Didier Villevalois and Kzmq contributors.
+ * Copyright (c) 2021-2025 Didier Villevalois and Kzmq contributors.
  * Use of this source code is governed by the Apache 2.0 license.
  */
 
@@ -9,7 +9,7 @@ import io.ktor.utils.io.*
 import kotlinx.io.bytestring.*
 
 internal suspend fun nullMechanismHandshake(
-    localProperties: MutableMap<PropertyName, ByteString>,
+    localProperties: Map<PropertyName, ByteString>,
     isServer: Boolean,
     input: ByteReadChannel,
     output: ByteWriteChannel,
@@ -36,6 +36,6 @@ private suspend fun expectReadyCommand(input: ByteReadChannel): Map<PropertyName
     }
 }
 
-private suspend fun ByteWriteChannel.sendReadyCommand(properties: MutableMap<PropertyName, ByteString>) {
+private suspend fun ByteWriteChannel.sendReadyCommand(properties: Map<PropertyName, ByteString>) {
     writeCommand(ReadyCommand(properties))
 }
