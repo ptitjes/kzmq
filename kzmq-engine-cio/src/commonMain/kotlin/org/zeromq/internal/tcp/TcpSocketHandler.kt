@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2024 Didier Villevalois and Kzmq contributors.
+ * Copyright (c) 2022-2025 Didier Villevalois and Kzmq contributors.
  * Use of this source code is governed by the Apache 2.0 license.
  */
 
@@ -11,6 +11,8 @@ import kotlinx.coroutines.*
 import kotlinx.io.bytestring.*
 import org.zeromq.*
 import org.zeromq.internal.*
+
+private const val ZEROMQ_JS_COMPAT = true
 
 internal class TcpSocketHandler(
     private val socketInfo: SocketInfo,
@@ -114,7 +116,7 @@ internal class TcpSocketHandler(
         val raw = input.readCommandOrMessage()
 
         // Specially handle ZMTP 3.0 subscriptions
-        val incoming = if (peerMinorVersion == 0 && isPublisher) {
+        val incoming = if ((peerMinorVersion == 0 || ZEROMQ_JS_COMPAT) && isPublisher) {
             transformSubscriptionMessages(raw)
         } else raw
 
@@ -149,7 +151,7 @@ private fun extractSubscriptionCommand(message: Message): CommandOrMessage? {
 private fun transformSubscriptionCommands(commandOrMessage: CommandOrMessage): CommandOrMessage =
     if (commandOrMessage.isCommand) {
         when (val command = commandOrMessage.commandOrThrow()) {
-            is SubscribeCommand -> CommandOrMessage(SubscriptionMessage(true, command.topic).toMessage())
+            is SubscribeCommand -> CommandOrMessage(SubscriptionMessage(ZEROMQ_JS_COMPAT, command.topic).toMessage())
 
             is CancelCommand -> CommandOrMessage(SubscriptionMessage(false, command.topic).toMessage())
 
