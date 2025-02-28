@@ -80,7 +80,7 @@ internal class CIOSubscriberSocket(
 ) : CIOSocket(engine, Type.SUB), CIOReceiveSocket, SubscriberSocket {
 
     override val validPeerTypes: Set<Type> get() = validPeerSocketTypes
-    override val handler = setupHandler(SubscriberSocketHandler())
+    override val handler = setupHandler(SubscriberSocketHandler(options))
 
     override suspend fun subscribe() {
         handler.subscriptions.subscribe(listOf())
@@ -119,7 +119,7 @@ internal class CIOSubscriberSocket(
     }
 }
 
-internal class SubscriberSocketHandler : SocketHandler {
+internal class SubscriberSocketHandler(private val options: SocketOptions) : SocketHandler {
     private val mailboxes = CircularQueue<PeerMailbox>()
     val subscriptions = SubscriptionManager()
 

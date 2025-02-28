@@ -61,7 +61,7 @@ internal class CIODealerSocket(
 ) : CIOSocket(engine, Type.DEALER), CIOSendSocket, CIOReceiveSocket, DealerSocket {
 
     override val validPeerTypes: Set<Type> get() = validPeerSocketTypes
-    override val handler = setupHandler(DealerSocketHandler())
+    override val handler = setupHandler(DealerSocketHandler(options))
 
     override var conflate: Boolean
         get() = TODO("Not yet implemented")
@@ -78,7 +78,7 @@ internal class CIODealerSocket(
     }
 }
 
-internal class DealerSocketHandler : SocketHandler {
+internal class DealerSocketHandler(private val options: SocketOptions) : SocketHandler {
     private val outgoingMailboxes = CircularQueue<PeerMailbox>()
     private val incomingMailboxes = CircularQueue<PeerMailbox>()
 

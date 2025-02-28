@@ -60,7 +60,7 @@ internal class CIOReplySocket(
 ) : CIOSocket(engine, Type.REP), CIOReceiveSocket, CIOSendSocket, ReplySocket {
 
     override val validPeerTypes: Set<Type> get() = validPeerSocketTypes
-    override val handler = setupHandler(ReplySocketHandler())
+    override val handler = setupHandler(ReplySocketHandler(options))
 
     override var routingId: ByteString? by options::routingId
 
@@ -69,7 +69,7 @@ internal class CIOReplySocket(
     }
 }
 
-internal class ReplySocketHandler : SocketHandler {
+internal class ReplySocketHandler(private val options: SocketOptions) : SocketHandler {
     private val mailboxes = CircularQueue<PeerMailbox>()
     private var state = atomic<ReplySocketState>(ReplySocketState.Idle)
 

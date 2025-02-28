@@ -12,12 +12,6 @@ import kotlinx.coroutines.channels.*
 import org.zeromq.*
 import org.zeromq.internal.*
 
-internal suspend fun <H : SocketHandler> (() -> H).runTest(
-    test: suspend SocketHandlerTestScope<H>.() -> Unit,
-) = coroutineScope {
-    { o: SocketOptions -> this@runTest() }.runTest(test)
-}
-
 internal suspend fun <H : SocketHandler> ((options: SocketOptions) -> H).runTest(
     test: suspend SocketHandlerTestScope<H>.() -> Unit,
 ) = coroutineScope {

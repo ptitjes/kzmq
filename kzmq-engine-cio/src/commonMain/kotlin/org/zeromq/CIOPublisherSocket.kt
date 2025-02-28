@@ -88,7 +88,7 @@ internal class CIOPublisherSocket(
 ) : CIOSocket(engine, Type.PUB), CIOSendSocket, PublisherSocket {
 
     override val validPeerTypes: Set<Type> get() = validPeerSocketTypes
-    override val handler = setupHandler(PublisherSocketHandler())
+    override val handler = setupHandler(PublisherSocketHandler(options))
 
     override var conflate: Boolean
         get() = TODO("Not yet implemented")
@@ -105,7 +105,7 @@ internal class CIOPublisherSocket(
     }
 }
 
-internal class PublisherSocketHandler : SocketHandler {
+internal class PublisherSocketHandler(private val options: SocketOptions) : SocketHandler {
     private val mailboxes = hashSetOf<PeerMailbox>()
     private var subscriptions = SubscriptionTrie<PeerMailbox>()
 

@@ -56,7 +56,7 @@ internal class CIORequestSocket(
 ) : CIOSocket(engine, Type.REQ), CIOSendSocket, CIOReceiveSocket, RequestSocket {
 
     override val validPeerTypes: Set<Type> get() = validPeerSocketTypes
-    override val handler = setupHandler(RequestSocketHandler())
+    override val handler = setupHandler(RequestSocketHandler(options))
 
     override var routingId: ByteString? by options::routingId
     override var probeRouter: Boolean
@@ -74,7 +74,7 @@ internal class CIORequestSocket(
     }
 }
 
-internal class RequestSocketHandler : SocketHandler {
+internal class RequestSocketHandler(private val options: SocketOptions) : SocketHandler {
     private val outgoingMailboxes = CircularQueue<PeerMailbox>()
     private val incomingMailboxes = CircularQueue<PeerMailbox>()
     private var state = atomic<RequestSocketState>(RequestSocketState.Idle)

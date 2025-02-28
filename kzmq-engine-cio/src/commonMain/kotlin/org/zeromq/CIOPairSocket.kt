@@ -52,14 +52,14 @@ internal class CIOPairSocket(
 ) : CIOSocket(engine, Type.PAIR), CIOReceiveSocket, CIOSendSocket, PairSocket {
 
     override val validPeerTypes: Set<Type> get() = validPeerSocketTypes
-    override val handler = setupHandler(PairSocketHandler())
+    override val handler = setupHandler(PairSocketHandler(options))
 
     companion object {
         private val validPeerSocketTypes = setOf(Type.PAIR)
     }
 }
 
-internal class PairSocketHandler : SocketHandler {
+internal class PairSocketHandler(private val options: SocketOptions) : SocketHandler {
     private val mailbox = atomic<PeerMailbox?>(null)
 
     override suspend fun handle(peerEvents: ReceiveChannel<PeerEvent>) = coroutineScope {

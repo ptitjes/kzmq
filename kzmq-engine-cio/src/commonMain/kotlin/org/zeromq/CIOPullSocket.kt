@@ -49,7 +49,7 @@ internal class CIOPullSocket(
 ) : CIOSocket(engine, Type.PULL), CIOReceiveSocket, PullSocket {
 
     override val validPeerTypes: Set<Type> get() = validPeerSocketTypes
-    override val handler = setupHandler(PullSocketHandler())
+    override val handler = setupHandler(PullSocketHandler(options))
 
     override var conflate: Boolean
         get() = TODO("Not yet implemented")
@@ -60,7 +60,7 @@ internal class CIOPullSocket(
     }
 }
 
-internal class PullSocketHandler : SocketHandler {
+internal class PullSocketHandler(private val options: SocketOptions) : SocketHandler {
     private val mailboxes = CircularQueue<PeerMailbox>()
 
     override suspend fun handle(peerEvents: ReceiveChannel<PeerEvent>) = coroutineScope {

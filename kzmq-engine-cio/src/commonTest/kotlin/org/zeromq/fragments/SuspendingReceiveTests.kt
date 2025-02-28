@@ -20,7 +20,7 @@ import org.zeromq.utils.*
  * - SHALL suspend on receiving when it has no incoming message
  */
 internal fun <H : SocketHandler> FunSpec.suspendingReceiveTests(
-    factory: () -> H,
+    factory: (SocketOptions) -> H,
     configureForReceiver: H.(PeerMailbox) -> Unit = {},
     modifySentMessage: (Message) -> Unit = {},
     modifyReceivedMessage: (Message) -> Unit = {},

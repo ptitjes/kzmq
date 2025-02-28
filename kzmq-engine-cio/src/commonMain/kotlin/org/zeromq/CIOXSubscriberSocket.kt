@@ -91,14 +91,14 @@ internal class CIOXSubscriberSocket(
 
     override val validPeerTypes: Set<Type> get() = validPeerSocketTypes
 
-    override val handler = setupHandler(XSubscriberSocketHandler())
+    override val handler = setupHandler(XSubscriberSocketHandler(options))
 
     companion object {
         private val validPeerSocketTypes = setOf(Type.PUB, Type.XPUB)
     }
 }
 
-internal class XSubscriberSocketHandler : SocketHandler {
+internal class XSubscriberSocketHandler(private val options: SocketOptions) : SocketHandler {
     private val mailboxes = CircularQueue<PeerMailbox>()
     private val subscriptions = SubscriptionManager()
 

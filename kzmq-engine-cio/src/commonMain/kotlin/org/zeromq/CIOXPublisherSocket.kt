@@ -94,7 +94,7 @@ internal class CIOXPublisherSocket(
 ) : CIOSocket(engine, Type.XPUB), CIOSendSocket, CIOReceiveSocket, XPublisherSocket {
 
     override val validPeerTypes: Set<Type> get() = validPeerSocketTypes
-    override val handler = setupHandler(XPublisherSocketHandler())
+    override val handler = setupHandler(XPublisherSocketHandler(options))
 
     override var invertMatching: Boolean
         get() = TODO("Not yet implemented")
@@ -114,7 +114,7 @@ internal class CIOXPublisherSocket(
     }
 }
 
-internal class XPublisherSocketHandler : SocketHandler {
+internal class XPublisherSocketHandler(private val options: SocketOptions) : SocketHandler {
     private val mailboxes = CircularQueue<PeerMailbox>()
     private var subscriptions = SubscriptionTrie<PeerMailbox>()
 

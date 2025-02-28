@@ -65,7 +65,7 @@ internal class CIORouterSocket(
 ) : CIOSocket(engine, Type.ROUTER), CIOReceiveSocket, CIOSendSocket, RouterSocket {
 
     override val validPeerTypes: Set<Type> get() = validPeerSocketTypes
-    override val handler = setupHandler(RouterSocketHandler())
+    override val handler = setupHandler(RouterSocketHandler(options))
 
     override var routingId: ByteString? by options::routingId
     override var probeRouter: Boolean
@@ -83,7 +83,7 @@ internal class CIORouterSocket(
     }
 }
 
-internal class RouterSocketHandler : SocketHandler {
+internal class RouterSocketHandler(private val options: SocketOptions) : SocketHandler {
     private val mailboxes = CircularQueue<PeerMailbox>()
     private val perIdentityMailboxes = hashMapOf<Identity, PeerMailbox>()
 

@@ -21,7 +21,7 @@ import org.zeromq.utils.*
  * - SHALL NOT discard messages that it cannot queue
  */
 internal fun <H : SocketHandler> FunSpec.suspendingSendTests(
-    factory: () -> H,
+    factory: (SocketOptions) -> H,
     configureForSender: H.(PeerMailbox) -> Unit = {},
 ) =
     testSet("SHALL suspend on sending") {
