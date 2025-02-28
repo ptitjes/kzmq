@@ -9,6 +9,7 @@ import io.kotest.assertions.*
 import io.kotest.core.spec.style.*
 import kotlinx.coroutines.*
 import kotlinx.io.bytestring.*
+import org.zeromq.fragments.*
 import org.zeromq.internal.*
 import org.zeromq.test.*
 import org.zeromq.utils.*
@@ -73,4 +74,18 @@ internal class ReplySocketHandlerTests : FunSpec({
             }
         }
     }
+
+    suspendingSendTests(
+        factory = factory,
+        configureForSender = {
+            setState(ReplySocketState.ProcessingRequest(it, listOf("dummy-address".encodeToByteString())))
+        },
+    )
+
+    suspendingReceiveTests(
+        factory = factory,
+        modifyReceivedMessage = { message ->
+            message.pushPrefixAddress(listOf("dummy-address".encodeToByteString()))
+        },
+    )
 })

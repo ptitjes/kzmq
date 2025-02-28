@@ -83,6 +83,10 @@ internal class RequestSocketHandler : SocketHandler {
         while (!predicate(state.value)) yield()
     }
 
+    internal fun setState(newState: RequestSocketState) {
+        state.value = newState
+    }
+
     override suspend fun handle(peerEvents: ReceiveChannel<PeerEvent>) = coroutineScope {
         while (isActive) {
             val event = peerEvents.receive()
@@ -95,7 +99,7 @@ internal class RequestSocketHandler : SocketHandler {
         awaitState { it is RequestSocketState.Idle }
         val toSend = message.copy().apply { pushPrefixAddress() }
         val mailbox = outgoingMailboxes.sendToFirstAvailable(toSend)
-        state.value = RequestSocketState.AwaitingReply(mailbox)
+        setState(RequestSocketState.AwaitingReply(mailbox))
     }
 
     override fun trySend(message: Message): Unit? {
@@ -103,7 +107,7 @@ internal class RequestSocketHandler : SocketHandler {
         val toSend = message.copy().apply { pushPrefixAddress() }
         val maybeMailbox = outgoingMailboxes.trySendToFirstAvailable(toSend)
         return maybeMailbox?.let { mailbox ->
-            state.value = RequestSocketState.AwaitingReply(mailbox)
+            setState(RequestSocketState.AwaitingReply(mailbox))
         }
     }
 
@@ -125,7 +129,7 @@ internal class RequestSocketHandler : SocketHandler {
             }
 
             logger.v { "Received reply $message from $mailbox" }
-            state.value = RequestSocketState.Idle
+            setState(RequestSocketState.Idle)
             return message
         }
     }
@@ -150,7 +154,7 @@ internal class RequestSocketHandler : SocketHandler {
                 }
 
                 logger.v { "Received reply $message from $mailbox" }
-                state.value = RequestSocketState.Idle
+                setState(RequestSocketState.Idle)
                 return message
             } else {
                 return null
@@ -159,7 +163,7 @@ internal class RequestSocketHandler : SocketHandler {
     }
 }
 
-private sealed interface RequestSocketState {
+internal sealed interface RequestSocketState {
     data object Idle : RequestSocketState
 
     data class AwaitingReply(

@@ -143,4 +143,14 @@ internal class RequestSocketHandlerTests : FunSpec({
             })
         }
     }
+
+    suspendingReceiveTests(
+        factory = factory,
+        configureForReceiver = {
+            setState(RequestSocketState.AwaitingReply(it))
+        },
+        modifyReceivedMessage = { message ->
+            message.pushPrefixAddress(listOf("dummy-address".encodeToByteString()))
+        },
+    )
 })

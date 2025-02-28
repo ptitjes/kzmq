@@ -13,7 +13,7 @@ import org.zeromq.*
 import org.zeromq.internal.*
 
 internal suspend fun <H : SocketHandler> (() -> H).runTest(
-    test: suspend (
+    test: suspend H.(
         peerEvents: SendChannel<PeerEvent>,
         send: suspend (Message) -> Unit,
         receive: suspend () -> Message
@@ -22,7 +22,7 @@ internal suspend fun <H : SocketHandler> (() -> H).runTest(
     val handler: H = this@runTest()
     val peerEvents = Channel<PeerEvent>()
     val handlerJob = launch { handler.handle(peerEvents) }
-    test(peerEvents, handler::send, handler::receive)
+    handler.test(peerEvents, handler::send, handler::receive)
     handlerJob.cancelAndJoin()
 }
 

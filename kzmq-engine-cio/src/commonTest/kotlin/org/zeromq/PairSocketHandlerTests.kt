@@ -48,4 +48,6 @@ internal class PairSocketHandlerTests : FunSpec({
             receive shouldReceiveExactly messages
         }
     }
+
+    suspendingReceiveTests(factory)
 })

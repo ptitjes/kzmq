@@ -7,6 +7,7 @@ package org.zeromq
 
 import io.kotest.assertions.*
 import io.kotest.core.spec.style.*
+import org.zeromq.fragments.suspendingReceiveTests
 import org.zeromq.internal.*
 import org.zeromq.test.*
 import org.zeromq.utils.*
@@ -55,4 +56,6 @@ internal class PullSocketHandlerTests : FunSpec({
             receive shouldReceiveExactly messages
         }
     }
+
+    suspendingReceiveTests(factory)
 })

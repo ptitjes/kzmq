@@ -12,4 +12,5 @@ internal class DealerSocketHandlerTests : FunSpec({
     val factory = ::DealerSocketHandler
 
     suspendingSendTests(factory)
+    suspendingReceiveTests(factory)
 })

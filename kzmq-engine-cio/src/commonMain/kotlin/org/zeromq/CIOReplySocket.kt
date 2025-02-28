@@ -77,9 +77,13 @@ internal class ReplySocketHandler : SocketHandler {
         while (!predicate(state.value)) yield()
     }
 
+    internal fun setState(newState: ReplySocketState) {
+        state.value = newState
+    }
+
     private fun setProcessingStateFrom(receipt: Receipt) {
         val message = receipt.messageOrThrow()
-        state.value = ReplySocketState.ProcessingRequest(receipt.sourceMailbox, message.popPrefixAddress())
+        setState(ReplySocketState.ProcessingRequest(receipt.sourceMailbox, message.popPrefixAddress()))
     }
 
     override suspend fun handle(peerEvents: ReceiveChannel<PeerEvent>) = coroutineScope {
@@ -107,7 +111,7 @@ internal class ReplySocketHandler : SocketHandler {
 
         message.pushPrefixAddress(address)
         mailbox.sendChannel.send(CommandOrMessage(message))
-        state.value = ReplySocketState.Idle
+        setState(ReplySocketState.Idle)
     }
 
     override fun trySend(message: Message): Unit? {
@@ -116,12 +120,12 @@ internal class ReplySocketHandler : SocketHandler {
 
         message.pushPrefixAddress(address)
         val result = mailbox.sendChannel.trySend(CommandOrMessage(message))
-        if (result.isSuccess) state.value = ReplySocketState.Idle
+        if (result.isSuccess) setState(ReplySocketState.Idle)
         return result.getOrNull()
     }
 }
 
-private sealed interface ReplySocketState {
+internal sealed interface ReplySocketState {
     data object Idle : ReplySocketState
 
     data class ProcessingRequest(
