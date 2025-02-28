@@ -68,15 +68,9 @@ internal class CIORouterSocket(
     override val handler = setupHandler(RouterSocketHandler(options))
 
     override var routingId: ByteString? by options::routingId
-    override var probeRouter: Boolean
-        get() = TODO("Not yet implemented")
-        set(value) {}
-    override var mandatory: Boolean
-        get() = TODO("Not yet implemented")
-        set(value) {}
-    override var handover: Boolean
-        get() = TODO("Not yet implemented")
-        set(value) {}
+    override var probeRouter: Boolean by notImplementedOption("Not yet implemented")
+    override var mandatory: Boolean by notImplementedOption("Not yet implemented")
+    override var handover: Boolean by notImplementedOption("Not yet implemented")
 
     companion object {
         private val validPeerSocketTypes = setOf(Type.REQ, Type.DEALER, Type.ROUTER)

@@ -90,15 +90,9 @@ internal class CIOPublisherSocket(
     override val validPeerTypes: Set<Type> get() = validPeerSocketTypes
     override val handler = setupHandler(PublisherSocketHandler(options))
 
-    override var conflate: Boolean
-        get() = TODO("Not yet implemented")
-        set(value) {}
-    override var invertMatching: Boolean
-        get() = TODO("Not yet implemented")
-        set(value) {}
-    override var noDrop: Boolean
-        get() = TODO("Not yet implemented")
-        set(value) {}
+    override var conflate: Boolean by notImplementedOption("Not yet implemented")
+    override var invertMatching: Boolean by notImplementedOption("Not yet implemented")
+    override var noDrop: Boolean by notImplementedOption("Not yet implemented")
 
     companion object {
         private val validPeerSocketTypes = setOf(Type.SUB, Type.XSUB)

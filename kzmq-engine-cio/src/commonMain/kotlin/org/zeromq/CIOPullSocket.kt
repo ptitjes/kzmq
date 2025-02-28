@@ -51,9 +51,7 @@ internal class CIOPullSocket(
     override val validPeerTypes: Set<Type> get() = validPeerSocketTypes
     override val handler = setupHandler(PullSocketHandler(options))
 
-    override var conflate: Boolean
-        get() = TODO("Not yet implemented")
-        set(value) {}
+    override var conflate: Boolean by notImplementedOption("Not yet implemented")
 
     companion object {
         private val validPeerSocketTypes = setOf(Type.PUSH)

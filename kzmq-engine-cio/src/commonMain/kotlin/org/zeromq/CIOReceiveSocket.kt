@@ -30,7 +30,7 @@ internal interface CIOReceiveSocket : ReceiveSocket {
 
     override var receiveBufferSize: Int
         get() = TODO("Not yet implemented")
-        set(value) {}
+        set(value) = TODO("Not yet implemented")
 
     override var receiveHighWaterMark: Int
         get() = options.receiveQueueSize
@@ -40,5 +40,5 @@ internal interface CIOReceiveSocket : ReceiveSocket {
 
     override var receiveTimeout: Int
         get() = TODO("Not yet implemented")
-        set(value) {}
+        set(value) = TODO("Not yet implemented")
 }

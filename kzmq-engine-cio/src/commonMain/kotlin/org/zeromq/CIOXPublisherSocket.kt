@@ -96,18 +96,10 @@ internal class CIOXPublisherSocket(
     override val validPeerTypes: Set<Type> get() = validPeerSocketTypes
     override val handler = setupHandler(XPublisherSocketHandler(options))
 
-    override var invertMatching: Boolean
-        get() = TODO("Not yet implemented")
-        set(value) {}
-    override var noDrop: Boolean
-        get() = TODO("Not yet implemented")
-        set(value) {}
-    override var manual: Boolean
-        get() = TODO("Not yet implemented")
-        set(value) {}
-    override var welcomeMessage: String?
-        get() = TODO("Not yet implemented")
-        set(value) {}
+    override var invertMatching: Boolean by notImplementedOption("Not yet implemented")
+    override var noDrop: Boolean by notImplementedOption("Not yet implemented")
+    override var manual: Boolean by notImplementedOption("Not yet implemented")
+    override var welcomeMessage: String? by notImplementedOption("Not yet implemented")
 
     companion object {
         private val validPeerSocketTypes = setOf(Type.SUB, Type.XSUB)

@@ -28,11 +28,11 @@ internal interface CIOSendSocket : SendSocket {
 
     override var multicastHops: Int
         get() = TODO("Not yet implemented")
-        set(value) {}
+        set(value) = TODO("Not yet implemented")
 
     override var sendBufferSize: Int
         get() = TODO("Not yet implemented")
-        set(value) {}
+        set(value) = TODO("Not yet implemented")
 
     override var sendHighWaterMark: Int
         get() = options.sendQueueSize
@@ -42,5 +42,5 @@ internal interface CIOSendSocket : SendSocket {
 
     override var sendTimeout: Int
         get() = TODO("Not yet implemented")
-        set(value) {}
+        set(value) = TODO("Not yet implemented")
 }
