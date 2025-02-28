@@ -71,7 +71,7 @@ internal class RouterSocketHandlerTests : FunSpec({
             }
         }
 
-        test("no matching queue") {
+        test("no matching queue (mandatory=false)") {
             factory.runTest {
                 val peer = PeerMailbox("match", SocketOptions()).also { peer ->
                     peer.identity = Identity("match".encodeToByteString())
@@ -85,6 +85,29 @@ internal class RouterSocketHandlerTests : FunSpec({
                 val message = buildMessage { writeFrame("MESSAGE") }
                 message.pushIdentity(Identity("no-match".encodeToByteString()))
                 send(message)
+
+                peer.sendChannel.shouldReceiveNothing()
+            }
+        }
+
+        test("no matching queue (mandatory=true)") {
+            factory.runTest {
+                socketOptions.mandatory = true
+
+                val peer = PeerMailbox("match", socketOptions).also { peer ->
+                    peer.identity = Identity("match".encodeToByteString())
+
+                    peerEvents.send(PeerEvent(PeerEvent.Kind.ADDITION, peer))
+                    peerEvents.send(PeerEvent(PeerEvent.Kind.CONNECTION, peer))
+                }
+
+                yield()
+
+                shouldThrow<IllegalStateException> {
+                    val message = buildMessage { writeFrame("MESSAGE") }
+                    message.pushIdentity(Identity("no-match".encodeToByteString()))
+                    send(message)
+                }
 
                 peer.sendChannel.shouldReceiveNothing()
             }

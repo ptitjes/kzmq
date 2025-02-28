@@ -69,7 +69,7 @@ internal class CIORouterSocket(
 
     override var routingId: ByteString? by options::routingId
     override var probeRouter: Boolean by notImplementedOption("Not yet implemented")
-    override var mandatory: Boolean by notImplementedOption("Not yet implemented")
+    override var mandatory: Boolean by options::mandatory
     override var handover: Boolean by notImplementedOption("Not yet implemented")
 
     companion object {
@@ -114,7 +114,17 @@ internal class RouterSocketHandler(private val options: SocketOptions) : SocketH
     }
 
     override suspend fun send(message: Message) {
-        trySend(message)
+        if (!options.mandatory) {
+            trySend(message)
+        } else {
+            val toSend = message.copy()
+            val identity = toSend.popIdentity()
+
+            val mailbox = perIdentityMailboxes[identity] ?: error("Message cannot be routed")
+
+            logger.d { "Forwarding reply $toSend to $mailbox with identity $identity" }
+            mailbox.sendChannel.send(CommandOrMessage(toSend))
+        }
     }
 
     override fun trySend(message: Message): Unit? {
