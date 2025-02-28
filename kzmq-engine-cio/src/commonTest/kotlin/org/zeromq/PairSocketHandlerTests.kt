@@ -15,7 +15,7 @@ internal class PairSocketHandlerTests : FunSpec({
     val factory = ::PairSocketHandler
 
     test("SHALL consider a peer as available only when it has an outgoing queue that is not full") {
-        factory.runTest { peerEvents, send, _ ->
+        factory.runTest {
             val peer = PeerMailbox("peer", SocketOptions().apply { sendQueueSize = 5 }).also { peer ->
                 peerEvents.send(PeerEvent(PeerEvent.Kind.ADDITION, peer))
             }
@@ -34,7 +34,7 @@ internal class PairSocketHandlerTests : FunSpec({
     suspendingSendTests(factory)
 
     test("SHALL receive incoming messages from its single peer if it has one") {
-        factory.runTest { peerEvents, _, receive ->
+        factory.runTest {
             val peer = PeerMailbox("peer", SocketOptions().apply { sendQueueSize = 5 }).also { peer ->
                 peerEvents.send(PeerEvent(PeerEvent.Kind.ADDITION, peer))
                 peerEvents.send(PeerEvent(PeerEvent.Kind.CONNECTION, peer))
@@ -45,7 +45,7 @@ internal class PairSocketHandlerTests : FunSpec({
             // Send each message of the first batch once
             messages.forEach { peer.receiveChannel.send(CommandOrMessage(it.buildMessage())) }
 
-            receive shouldReceiveExactly messages
+            ::receive shouldReceiveExactly messages
         }
     }
 

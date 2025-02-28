@@ -5,24 +5,39 @@
 
 package org.zeromq.utils
 
-import io.kotest.core.spec.style.FunSpec
-import io.kotest.core.test.TestScope
+import io.kotest.core.spec.style.*
+import io.kotest.core.test.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.*
 import org.zeromq.*
 import org.zeromq.internal.*
 
 internal suspend fun <H : SocketHandler> (() -> H).runTest(
-    test: suspend H.(
-        peerEvents: SendChannel<PeerEvent>,
-        send: suspend (Message) -> Unit,
-        receive: suspend () -> Message
-    ) -> Unit,
+    test: suspend SocketHandlerTestScope<H>.() -> Unit,
 ) = coroutineScope {
-    val handler: H = this@runTest()
+    { o: SocketOptions -> this@runTest() }.runTest(test)
+}
+
+internal suspend fun <H : SocketHandler> ((options: SocketOptions) -> H).runTest(
+    test: suspend SocketHandlerTestScope<H>.() -> Unit,
+) = coroutineScope {
+    val options = SocketOptions()
+    val handler: H = this@runTest(options)
     val peerEvents = Channel<PeerEvent>()
     val handlerJob = launch { handler.handle(peerEvents) }
-    handler.test(peerEvents, handler::send, handler::receive)
+
+    val scope = object : SocketHandlerTestScope<H> {
+        override val socketOptions = options
+        override val handler = handler
+        override val peerEvents = peerEvents
+
+        override suspend fun send(message: Message) = handler.send(message)
+        override fun trySend(message: Message) = handler.trySend(message)
+        override suspend fun receive(): Message = handler.receive()
+        override fun tryReceive(): Message? = handler.tryReceive()
+    }
+
+    scope.test()
     handlerJob.cancelAndJoin()
 }
 
@@ -36,4 +51,15 @@ internal fun FunSpec.testSet(setName: String, tests: TestSetScope.() -> Unit) {
             this@testSet.test("$setName > $name", test)
         }
     }.tests()
+}
+
+internal interface SocketHandlerTestScope<H : SocketHandler> {
+    val socketOptions: SocketOptions
+    val handler: H
+    val peerEvents: SendChannel<PeerEvent>
+
+    suspend fun send(message: Message): Unit
+    fun trySend(message: Message): Unit?
+    suspend fun receive(): Message
+    fun tryReceive(): Message?
 }

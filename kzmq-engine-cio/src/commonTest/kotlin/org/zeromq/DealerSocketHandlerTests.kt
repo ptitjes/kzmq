@@ -17,7 +17,7 @@ internal class DealerSocketHandlerTests : FunSpec({
     val factory = ::DealerSocketHandler
 
     test("SHALL route outgoing messages to connected peers using a round-robin strategy") {
-        factory.runTest { peerEvents, send, receive ->
+        factory.runTest {
             val peerCount = 5
             val messageCount = 10
 
@@ -48,7 +48,7 @@ internal class DealerSocketHandlerTests : FunSpec({
                         writeFrame { writeByte(peerIndex.toByte()) }
                     }.buildMessage()))
 
-                    receive shouldReceiveExactly listOf(message {
+                    ::receive shouldReceiveExactly listOf(message {
                         writeFrame("REPLY".encodeToByteString())
                         writeFrame { writeByte(messageIndex.toByte()) }
                         writeFrame { writeByte(peerIndex.toByte()) }
@@ -61,7 +61,7 @@ internal class DealerSocketHandlerTests : FunSpec({
     suspendingSendTests(factory)
 
     test("SHALL receive incoming messages from its peers using a fair-queuing strategy") {
-        factory.runTest { peerEvents, _, receive ->
+        factory.runTest {
             val peers = List(5) { index ->
                 PeerMailbox(index.toString(), SocketOptions()).also { peer ->
                     peerEvents.send(PeerEvent(PeerEvent.Kind.ADDITION, peer))
@@ -79,7 +79,7 @@ internal class DealerSocketHandlerTests : FunSpec({
 
             all {
                 messages.forEach { message ->
-                    receive shouldReceiveExactly List(peers.size) { message }
+                    ::receive shouldReceiveExactly List(peers.size) { message }
                 }
             }
         }

@@ -27,7 +27,7 @@ internal fun <H : SocketHandler> FunSpec.suspendingReceiveTests(
 ) =
     testSet("SHALL suspend on receiving") {
         test("no incoming message") {
-            factory.runTest { _, _, receive ->
+            factory.runTest {
                 // Trigger an asynchronous receive
                 val result = async { receive() }
 
@@ -39,14 +39,14 @@ internal fun <H : SocketHandler> FunSpec.suspendingReceiveTests(
         }
 
         test("incoming message arrives during receive") {
-            factory.runTest { peerEvents, _, receive ->
+            factory.runTest {
                 // A peer appears
                 val peer = PeerMailbox("peer", SocketOptions()).also { peer ->
                     peerEvents.send(PeerEvent(PeerEvent.Kind.ADDITION, peer))
                     peerEvents.send(PeerEvent(PeerEvent.Kind.CONNECTION, peer))
                 }
 
-                configureForReceiver(peer)
+                handler.configureForReceiver(peer)
 
                 // Trigger an asynchronous receive
                 val result = async { receive() }

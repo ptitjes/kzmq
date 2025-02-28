@@ -16,7 +16,7 @@ internal class RequestSocketHandlerTests : FunSpec({
     val factory = ::RequestSocketHandler
 
     test("SHALL prefix the outgoing message with an empty delimiter frame") {
-        factory.runTest { peerEvents, send, _ ->
+        factory.runTest {
             val peer = PeerMailbox("peer", SocketOptions().apply { sendQueueSize = 5 }).also { peer ->
                 peerEvents.send(PeerEvent(PeerEvent.Kind.ADDITION, peer))
                 peerEvents.send(PeerEvent(PeerEvent.Kind.CONNECTION, peer))
@@ -24,7 +24,7 @@ internal class RequestSocketHandlerTests : FunSpec({
 
             val request = message { writeFrame("Hello") }
 
-            send.send(request)
+            send(request.buildMessage())
 
             peer.sendChannel shouldReceiveExactly listOf(message {
                 writeEmptyFrame()
@@ -34,7 +34,7 @@ internal class RequestSocketHandlerTests : FunSpec({
     }
 
     test("SHALL route outgoing messages to connected peers using a round-robin strategy").config(enabled = false) {
-        factory.runTest { peerEvents, send, receive ->
+        factory.runTest {
             val peerCount = 5
             val messageCount = 10
 
@@ -67,7 +67,7 @@ internal class RequestSocketHandlerTests : FunSpec({
                         writeFrame { writeByte(peerIndex.toByte()) }
                     }.buildMessage()))
 
-                    receive shouldReceiveExactly listOf(message {
+                    ::receive shouldReceiveExactly listOf(message {
                         writeFrame("REPLY".encodeToByteString())
                         writeFrame { writeByte(messageIndex.toByte()) }
                         writeFrame { writeByte(peerIndex.toByte()) }
@@ -80,7 +80,7 @@ internal class RequestSocketHandlerTests : FunSpec({
     suspendingSendTests(factory)
 
     test("SHALL accept an incoming message only from the last peer that it sent a request to") {
-        factory.runTest { peerEvents, send, receive ->
+        factory.runTest {
             val peers = List(2) { index ->
                 PeerMailbox(index.toString(), SocketOptions()).also { peer ->
                     peerEvents.send(PeerEvent(PeerEvent.Kind.ADDITION, peer))
@@ -102,12 +102,12 @@ internal class RequestSocketHandlerTests : FunSpec({
                 writeFrame("IGNORED-REPLY".encodeToByteString())
             }.buildMessage()))
 
-            receive.shouldReceiveNothing()
+            ::receive.shouldReceiveNothing()
         }
     }
 
     test("SHALL discard silently any messages received from other peers") {
-        factory.runTest { peerEvents, send, receive ->
+        factory.runTest {
             val peers = List(2) { index ->
                 PeerMailbox(index.toString(), SocketOptions()).also { peer ->
                     peerEvents.send(PeerEvent(PeerEvent.Kind.ADDITION, peer))
@@ -131,14 +131,14 @@ internal class RequestSocketHandlerTests : FunSpec({
                 }.buildMessage()))
             }
 
-            receive.shouldReceiveNothing()
+            ::receive.shouldReceiveNothing()
 
             peers[0].receiveChannel.send(CommandOrMessage(message {
                 writeEmptyFrame()
                 writeFrame("REPLY".encodeToByteString())
             }.buildMessage()))
 
-            receive shouldReceiveExactly listOf(message {
+            ::receive shouldReceiveExactly listOf(message {
                 writeFrame("REPLY".encodeToByteString())
             })
         }

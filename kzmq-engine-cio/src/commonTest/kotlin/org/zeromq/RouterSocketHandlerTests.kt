@@ -6,8 +6,9 @@
 package org.zeromq
 
 import io.kotest.assertions.*
+import io.kotest.assertions.throwables.*
 import io.kotest.core.spec.style.*
-import io.kotest.matchers.shouldBe
+import io.kotest.matchers.*
 import kotlinx.coroutines.*
 import kotlinx.io.bytestring.*
 import org.zeromq.fragments.*
@@ -22,7 +23,7 @@ internal class RouterSocketHandlerTests : FunSpec({
         "SHALL remove the first frame from each outgoing message " +
             "and use this as the identity of a double queue"
     ) {
-        factory.runTest { peerEvents, send, receive ->
+        factory.runTest {
             val peers = List(5) { index ->
                 val identity = Identity(index.toString().encodeToByteString())
 
@@ -52,7 +53,7 @@ internal class RouterSocketHandlerTests : FunSpec({
 
     testSet("SHALL route the message to the outgoing queue if that queue exists, and has space") {
         test("matching queue") {
-            factory.runTest { peerEvents, send, receive ->
+            factory.runTest {
                 val peer = PeerMailbox("match", SocketOptions()).also { peer ->
                     peer.identity = Identity("match".encodeToByteString())
 
@@ -71,7 +72,7 @@ internal class RouterSocketHandlerTests : FunSpec({
         }
 
         test("no matching queue") {
-            factory.runTest { peerEvents, send, receive ->
+            factory.runTest {
                 val peer = PeerMailbox("match", SocketOptions()).also { peer ->
                     peer.identity = Identity("match".encodeToByteString())
 
@@ -90,7 +91,7 @@ internal class RouterSocketHandlerTests : FunSpec({
         }
 
         test("no space") {
-            factory.runTest { peerEvents, send, receive ->
+            factory.runTest {
                 val identity = Identity("match".encodeToByteString())
                 val peer = PeerMailbox("match", SocketOptions().apply { sendQueueSize = 1 }).also { peer ->
                     peer.identity = identity
@@ -122,7 +123,7 @@ internal class RouterSocketHandlerTests : FunSpec({
     }
 
     test("SHALL receive incoming messages from its peers using a fair-queuing strategy") {
-        factory.runTest { peerEvents, _, receive ->
+        factory.runTest {
             val peers = List(5) { index ->
                 PeerMailbox(index.toString(), SocketOptions()).also { peer ->
                     peerEvents.send(PeerEvent(PeerEvent.Kind.ADDITION, peer))
@@ -155,7 +156,7 @@ internal class RouterSocketHandlerTests : FunSpec({
     }
 
     suspendingReceiveTests(
-        factory = factory,
+        factory = { factory(SocketOptions()) },
         modifyReceivedMessage = { message ->
             message.popIdentity()
         }

@@ -26,7 +26,7 @@ internal fun <H : SocketHandler> FunSpec.suspendingSendTests(
 ) =
     testSet("SHALL suspend on sending") {
         test("no peer") {
-            factory.runTest { _, send, _ ->
+            factory.runTest {
                 // Trigger an asynchronous sending
                 val result = async { send(buildMessage { writeFrame("Won't be sent") }) }
 
@@ -38,14 +38,14 @@ internal fun <H : SocketHandler> FunSpec.suspendingSendTests(
         }
 
         test("no available peer") {
-            factory.runTest { peerEvents, send, _ ->
+            factory.runTest {
                 // A peer appears with a send queue size of 1
                 val peer = PeerMailbox("peer", SocketOptions().apply { sendQueueSize = 1 }).also { peer ->
                     peerEvents.send(PeerEvent(PeerEvent.Kind.ADDITION, peer))
                     peerEvents.send(PeerEvent(PeerEvent.Kind.CONNECTION, peer))
                 }
 
-                configureForSender(peer)
+                handler.configureForSender(peer)
 
                 // Fill the peer's send queue
                 peer.sendChannel.send(CommandOrMessage(buildMessage { writeFrame("Queued") }))
@@ -61,7 +61,7 @@ internal fun <H : SocketHandler> FunSpec.suspendingSendTests(
         }
 
         test("available peer appears during send") {
-            factory.runTest { peerEvents, send, _ ->
+            factory.runTest {
                 val peer = PeerMailbox("peer", SocketOptions())
 
                 // Trigger an asynchronous sending
@@ -76,7 +76,7 @@ internal fun <H : SocketHandler> FunSpec.suspendingSendTests(
                     peerEvents.send(PeerEvent(PeerEvent.Kind.CONNECTION, peer))
                 }
 
-                configureForSender(peer)
+                handler.configureForSender(peer)
 
                 // The sending eventually succeeds
                 result.await() shouldBe Unit
@@ -84,14 +84,14 @@ internal fun <H : SocketHandler> FunSpec.suspendingSendTests(
         }
 
         test("peer becomes available during send") {
-            factory.runTest { peerEvents, send, _ ->
+            factory.runTest {
                 // A peer appears with a send queue size of 1
                 val peer = PeerMailbox("peer", SocketOptions().apply { sendQueueSize = 1 }).also { peer ->
                     peerEvents.send(PeerEvent(PeerEvent.Kind.ADDITION, peer))
                     peerEvents.send(PeerEvent(PeerEvent.Kind.CONNECTION, peer))
                 }
 
-                configureForSender(peer)
+                handler.configureForSender(peer)
 
                 // Fill the peer's send queue
                 peer.sendChannel.send(CommandOrMessage(buildMessage { writeFrame("Queued") }))
@@ -111,7 +111,7 @@ internal fun <H : SocketHandler> FunSpec.suspendingSendTests(
         }
 
         test("other available peer appears during send") {
-            factory.runTest { peerEvents, send, _ ->
+            factory.runTest {
                 // A peer appears with a send queue size of 1
                 val peer = PeerMailbox("peer", SocketOptions().apply { sendQueueSize = 1 }).also { peer ->
                     peerEvents.send(PeerEvent(PeerEvent.Kind.ADDITION, peer))
@@ -135,7 +135,7 @@ internal fun <H : SocketHandler> FunSpec.suspendingSendTests(
                     peerEvents.send(PeerEvent(PeerEvent.Kind.CONNECTION, peer))
                 }
 
-                configureForSender(anotherPeer)
+                handler.configureForSender(anotherPeer)
 
                 // The sending eventually succeeds
                 result.await() shouldBe Unit

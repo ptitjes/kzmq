@@ -16,7 +16,7 @@ internal class PushSocketHandlerTests : FunSpec({
     val factory = ::PushSocketHandler
 
     test("SHALL consider a peer as available only when it has an outgoing queue that is not full") {
-        factory.runTest { peerEvents, send, _ ->
+        factory.runTest {
             val peer1 = PeerMailbox("1", SocketOptions())
             val peer2 = PeerMailbox("2", SocketOptions().apply { sendQueueSize = 5 })
 
@@ -43,7 +43,7 @@ internal class PushSocketHandlerTests : FunSpec({
     }
 
     test("SHALL route outgoing messages to available peers using a round-robin strategy") {
-        factory.runTest { peerEvents, send, _ ->
+        factory.runTest {
             val peers = List(5) { index -> PeerMailbox(index.toString(), SocketOptions()) }
 
             peers.forEach { peer ->

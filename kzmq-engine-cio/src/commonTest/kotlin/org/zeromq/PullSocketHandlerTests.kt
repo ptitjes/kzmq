@@ -16,7 +16,7 @@ internal class PullSocketHandlerTests : FunSpec({
     val factory = ::PullSocketHandler
 
     test("SHALL receive incoming messages from its peers using a fair-queuing strategy") {
-        factory.runTest { peerEvents, _, receive ->
+        factory.runTest {
             val peers = List(5) { index ->
                 PeerMailbox(index.toString(), SocketOptions()).also { peer ->
                     peerEvents.send(PeerEvent(PeerEvent.Kind.ADDITION, peer))
@@ -34,14 +34,14 @@ internal class PullSocketHandlerTests : FunSpec({
 
             all {
                 messages.forEach { message ->
-                    receive shouldReceiveExactly List(peers.size) { message }
+                    ::receive shouldReceiveExactly List(peers.size) { message }
                 }
             }
         }
     }
 
     test("SHALL deliver these to its calling application") {
-        factory.runTest { peerEvents, _, receive ->
+        factory.runTest {
             val peer = PeerMailbox("peer", SocketOptions()).also { peer ->
                 peerEvents.send(PeerEvent(PeerEvent.Kind.ADDITION, peer))
                 peerEvents.send(PeerEvent(PeerEvent.Kind.CONNECTION, peer))
@@ -53,7 +53,7 @@ internal class PullSocketHandlerTests : FunSpec({
 
             messages.forEach { peer.receiveChannel.send(it) }
 
-            receive shouldReceiveExactly messages
+            ::receive shouldReceiveExactly messages
         }
     }
 

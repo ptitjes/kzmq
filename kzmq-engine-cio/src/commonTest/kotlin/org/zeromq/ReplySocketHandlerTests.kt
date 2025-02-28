@@ -18,7 +18,7 @@ internal class ReplySocketHandlerTests : FunSpec({
     val factory = ::ReplySocketHandler
 
     test("SHALL receive incoming messages from its peers using a fair-queuing strategy") {
-        factory.runTest { peerEvents, send, receive ->
+        factory.runTest {
             val peerCount = 5
             val messageCount = 10
 
@@ -48,7 +48,7 @@ internal class ReplySocketHandlerTests : FunSpec({
             all {
                 repeat(messageCount) { messageIndex ->
                     peers.forEachIndexed { peerIndex, peer ->
-                        receive shouldReceiveExactly listOf(message {
+                        ::receive shouldReceiveExactly listOf(message {
                             writeFrame("REQUEST".encodeToByteString())
                             writeFrame { writeByte(messageIndex.toByte()) }
                             writeFrame { writeByte(peerIndex.toByte()) }
