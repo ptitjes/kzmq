@@ -149,7 +149,7 @@ internal class RequestSocketHandlerTests : FunSpec({
         configureForReceiver = {
             setState(RequestSocketState.AwaitingReply(it))
         },
-        modifyReceivedMessage = { message ->
+        modifySentMessage = { message ->
             message.pushPrefixAddress(listOf("dummy-address".encodeToByteString()))
         },
     )

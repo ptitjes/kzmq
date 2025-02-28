@@ -105,11 +105,13 @@ internal class RouterSocketHandler : SocketHandler {
                 PeerEvent.Kind.CONNECTION -> {
                     val identity = mailbox.identity ?: randomIdentity().also { mailbox.identity = it }
                     perIdentityMailboxes[identity] = mailbox
+                    logger.d { "Assigned identity $identity to $mailbox" }
                 }
 
                 PeerEvent.Kind.DISCONNECTION -> {
                     val identity = mailbox.identity ?: error("Peer identity should not be null")
                     perIdentityMailboxes.remove(identity)
+                    logger.d { "Removed identity $identity from $mailbox" }
                 }
 
                 else -> {}
@@ -118,12 +120,7 @@ internal class RouterSocketHandler : SocketHandler {
     }
 
     override suspend fun send(message: Message) {
-        val toSend = message.copy()
-        val identity = toSend.popIdentity()
-        perIdentityMailboxes[identity]?.let { mailbox ->
-            logger.d { "Forwarding reply $toSend to $mailbox with identity $identity" }
-            mailbox.sendChannel.send(CommandOrMessage(toSend))
-        }
+        trySend(message)
     }
 
     override fun trySend(message: Message): Unit? {

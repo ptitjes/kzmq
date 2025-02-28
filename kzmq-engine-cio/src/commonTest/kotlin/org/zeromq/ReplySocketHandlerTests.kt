@@ -84,7 +84,7 @@ internal class ReplySocketHandlerTests : FunSpec({
 
     suspendingReceiveTests(
         factory = factory,
-        modifyReceivedMessage = { message ->
+        modifySentMessage = { message ->
             message.pushPrefixAddress(listOf("dummy-address".encodeToByteString()))
         },
     )

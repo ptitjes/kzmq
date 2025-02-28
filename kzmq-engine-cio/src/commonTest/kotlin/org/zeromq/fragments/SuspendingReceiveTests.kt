@@ -22,6 +22,7 @@ import org.zeromq.utils.*
 internal fun <H : SocketHandler> FunSpec.suspendingReceiveTests(
     factory: () -> H,
     configureForReceiver: H.(PeerMailbox) -> Unit = {},
+    modifySentMessage: (Message) -> Unit = {},
     modifyReceivedMessage: (Message) -> Unit = {},
 ) =
     testSet("SHALL suspend on receiving") {
@@ -54,12 +55,13 @@ internal fun <H : SocketHandler> FunSpec.suspendingReceiveTests(
                 shouldSuspend { result.await() }
 
                 // Fill the peer's receive queue
-                val receivedMessage = buildMessage { writeFrame("Received") }.also { modifyReceivedMessage(it) }
+                val receivedMessage = buildMessage { writeFrame("Received") }.also { modifySentMessage(it) }
                 peer.receiveChannel.send(CommandOrMessage(receivedMessage))
 
                 // The receive eventually succeeds
                 val received = result.await()
                 received shouldNotBe null
+                modifyReceivedMessage(received)
                 received.singleOrThrow().readString() shouldBe "Received"
             }
         }

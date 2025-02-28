@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2024 Didier Villevalois and Kzmq contributors.
+ * Copyright (c) 2022-2025 Didier Villevalois and Kzmq contributors.
  * Use of this source code is governed by the Apache 2.0 license.
  */
 
@@ -22,10 +22,13 @@ internal suspend fun shouldSuspend(block: suspend () -> Unit) {
     } shouldBe null
 }
 
-internal suspend fun shouldNotSuspend(block: suspend () -> Unit) {
-    withTimeoutOrNull(SUSPENSION_HINT_TIMEOUT) {
+internal suspend fun <T> shouldNotSuspend(block: suspend () -> T): T {
+    val result = withTimeoutOrNull(SUSPENSION_HINT_TIMEOUT) {
         block()
-    } shouldNotBe null
+    }
+    result shouldNotBe null
+    @Suppress("UNCHECKED_CAST")
+    return result as T
 }
 
 @JvmName("messageChannelShouldReceiveExactly")
@@ -36,6 +39,10 @@ internal suspend infix fun ReceiveChannel<Message>.shouldReceiveExactly(expected
 @JvmName("commandOrMessageChannelShouldReceiveExactly")
 internal suspend infix fun ReceiveChannel<CommandOrMessage>.shouldReceiveExactly(expected: List<MessageTemplate>) {
     shouldReceiveExactly(expected) { receive().messageOrThrow() }
+}
+
+internal suspend fun ReceiveChannel<CommandOrMessage>.shouldReceiveNothing() {
+    shouldSuspend { receive() }
 }
 
 @JvmName("messageChannelSend")
