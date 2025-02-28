@@ -16,6 +16,7 @@ plugins {
 kotlin {
     jvmTargets()
     jsTargets()
+    wasmJsTargets()
     nativeTargets { (it.isSupportedByCIO || it.isSupportedByLibzmq) && it.isSupportedByKtorNetwork }
 
     sourceSets {
@@ -39,6 +40,12 @@ kotlin {
             }
         }
 
+        wasmJsMain {
+            dependencies {
+                implementation(npm("find-open-port", libs.versions.findopenport.get()))
+            }
+        }
+
         nativeMain {
             dependencies {
                 implementation(libs.ktor.network)
@@ -55,6 +62,12 @@ kotlin {
         jsTest {
             dependencies {
                 implementation(project(":kzmq-engine-zeromqjs"))
+                implementation(project(":kzmq-engine-cio"))
+            }
+        }
+
+        wasmJsTest {
+            dependencies {
                 implementation(project(":kzmq-engine-cio"))
             }
         }

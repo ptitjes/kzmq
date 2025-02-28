@@ -1,8 +1,9 @@
 /*
- * Copyright (c) 2022-2024 Didier Villevalois and Kzmq contributors.
+ * Copyright (c) 2022-2025 Didier Villevalois and Kzmq contributors.
  * Use of this source code is governed by the Apache 2.0 license.
  */
 
+import org.jetbrains.kotlin.gradle.ExperimentalWasmDsl
 import org.jetbrains.kotlin.gradle.dsl.*
 import org.jetbrains.kotlin.gradle.plugin.mpp.*
 import org.jetbrains.kotlin.konan.target.*
@@ -16,6 +17,14 @@ fun KotlinMultiplatformExtension.jsTargets() {
     js {
         binaries.library()
         useCommonJs()
+        nodejs()
+    }
+}
+
+@OptIn(ExperimentalWasmDsl::class)
+fun KotlinMultiplatformExtension.wasmJsTargets() {
+    wasmJs {
+        binaries.library()
         nodejs()
     }
 }
