@@ -9,7 +9,7 @@ kover = "0.8.3"
 
 kotlinx-coroutines = "1.9.0-RC"
 kotlinx-atomicfu = "0.25.0"
-kotlinx-benchmark = "0.4.11"
+kotlinx-benchmark = "0.4.14"
 kotlinx-cli = "0.3.6"
 kotlinx-io = "0.5.1"
 
