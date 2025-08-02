@@ -2,16 +2,18 @@
 
 project = "0.1-SNAPSHOT"
 
-kotlin = "2.1.10"
+kotlin = "2.2.0"
 
 dokka = "1.9.20"
 kover = "0.8.3"
 
 kotlinx-coroutines = "1.10.1"
-kotlinx-atomicfu = "0.27.0"
+kotlinx-atomicfu = "0.29.0"
 kotlinx-benchmark = "0.4.11"
 kotlinx-cli = "0.3.6"
 kotlinx-io = "0.5.1"
+
+ksp = "2.2.0-2.0.2"
 
 ktor = "3.1.0"
 kermit = "2.0.5"
@@ -20,8 +22,8 @@ findopenport = "2.0.3"
 jeromq = "0.6.0"
 zeromqjs = "6.3.0"
 
-kotest = "5.9.1"
-mokkery = "2.7.0"
+kotest = "6.0.0.M9"
+mokkery = "2.9.0"
 
 build-config = "5.4.0"
 
@@ -33,7 +35,8 @@ kotlin-atomicfu = { id = "org.jetbrains.kotlin.plugin.atomicfu", version.ref = "
 kotlinx-benchmark = { id = "org.jetbrains.kotlinx.benchmark", version.ref = "kotlinx-benchmark" }
 kotlinx-kover = { id = "org.jetbrains.kotlinx.kover", version.ref = "kover" }
 kotlin-dokka = { id = "org.jetbrains.dokka", version.ref = "dokka" }
-kotest = { id = "io.kotest.multiplatform", version.ref = "kotest" }
+ksp = { id = "com.google.devtools.ksp", version.ref = "ksp"}
+kotest = { id = "io.kotest", version.ref = "kotest" }
 mokkery = { id = "dev.mokkery", version.ref = "mokkery" }
 
 build-config = { id = "com.github.gmazzo.buildconfig", version.ref = "build-config" }
@@ -54,7 +57,6 @@ kermit = { module = "co.touchlab:kermit", version.ref = "kermit" }
 jeromq = { module = "org.zeromq:jeromq", version.ref = "jeromq" }
 
 kotest-framework-engine = { module = "io.kotest:kotest-framework-engine", version.ref = "kotest" }
-kotest-framework-datatest = { module = "io.kotest:kotest-framework-datatest", version.ref = "kotest" }
 kotest-assertions-core = { module = "io.kotest:kotest-assertions-core", version.ref = "kotest" }
 kotest-runner-junit5 = { module = "io.kotest:kotest-runner-junit5", version.ref = "kotest" }
 

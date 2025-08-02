@@ -1,11 +1,12 @@
 /*
- * Copyright (c) 2022-2024 Didier Villevalois and Kzmq contributors.
+ * Copyright (c) 2022-2025 Didier Villevalois and Kzmq contributors.
  * Use of this source code is governed by the Apache 2.0 license.
  */
 
 plugins {
     id("plugin.common")
-    id("io.kotest.multiplatform")
+    id("io.kotest")
+    id("com.google.devtools.ksp")
 }
 
 kotlin {
@@ -14,7 +15,6 @@ kotlin {
             commonMain {
                 dependencies {
                     implementation(libs.getLibrary("kotest.framework.engine"))
-                    implementation(libs.getLibrary("kotest.framework.datatest"))
                     implementation(libs.getLibrary("kotest.assertions.core"))
                 }
             }
@@ -26,7 +26,6 @@ kotlin {
             commonTest {
                 dependencies {
                     implementation(libs.getLibrary("kotest.framework.engine"))
-                    implementation(libs.getLibrary("kotest.framework.datatest"))
                     implementation(libs.getLibrary("kotest.assertions.core"))
                 }
             }
@@ -34,15 +33,6 @@ kotlin {
             all {
                 if (name.endsWith("Test")) {
                     languageSettings.optIn("io.kotest.common.ExperimentalKotest")
-                }
-            }
-        }
-
-        val hasJvmSupport = project.projectDir.resolve("src/jvmMain").exists()
-        if (hasJvmSupport) {
-            create("jvmTest").apply {
-                dependencies {
-                    implementation(libs.getLibrary("kotest.runner.junit5"))
                 }
             }
         }

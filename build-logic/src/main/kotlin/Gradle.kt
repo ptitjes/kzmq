@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2024 Didier Villevalois and Kzmq contributors.
+ * Copyright (c) 2022-2025 Didier Villevalois and Kzmq contributors.
  * Use of this source code is governed by the Apache 2.0 license.
  */
 
@@ -9,7 +9,6 @@ import org.gradle.api.specs.*
 import org.gradle.kotlin.dsl.*
 import org.jetbrains.kotlin.gradle.plugin.*
 import org.jetbrains.kotlin.konan.target.*
-import java.io.*
 
 val CI by lazy { !"false".equals(System.getenv("CI") ?: "false", true) }
 val SANDBOX by lazy { !"false".equals(System.getenv("SANDBOX") ?: "false", true) }
@@ -30,15 +29,15 @@ fun Collection<KotlinTarget>.onlyBuildIf(enabled: Spec<in Task>) {
 }
 
 fun Project.pkgConfig(vararg args: String): List<String> {
-    val output = ByteArrayOutputStream()
-    try {
-        project.exec {
-            setCommandLine("pkg-config", *args)
-            standardOutput = output
-        }
-        return output.toByteArray().decodeToString().trim().split("\\s*")
-    } catch (_: Throwable) {
-        val standardOutput = output.toByteArray().decodeToString()
-        error("Failed to get pkg-config for '$args: $standardOutput")
+    val output = project.providers.exec {
+        isIgnoreExitValue = true
+        setCommandLine("pkg-config", *args)
     }
+
+    if (output.result.get().exitValue != 0) {
+        val errorOutput = output.standardError.asText.get()
+        error("Failed to run pkg-config for '${args.joinToString(" ")}': $errorOutput")
+    }
+
+    return output.standardOutput.asText.get().trim().split("\\s*")
 }
