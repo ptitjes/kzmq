@@ -8,7 +8,6 @@ package org.zeromq
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.*
 import kotlinx.coroutines.selects.*
-import kotlinx.io.*
 import org.zeromq.internal.*
 import org.zeromq.internal.utils.*
 
@@ -105,7 +104,7 @@ internal class PublisherSocketHandler(private val options: SocketOptions) : Sock
 
     override suspend fun handle(peerEvents: ReceiveChannel<PeerEvent>) = coroutineScope {
         while (isActive) {
-            select<Unit> {
+            select {
                 peerEvents.onReceive { (kind, peerMailbox) ->
                     when (kind) {
                         PeerEvent.Kind.ADDITION -> mailboxes.add(peerMailbox)
@@ -114,7 +113,7 @@ internal class PublisherSocketHandler(private val options: SocketOptions) : Sock
                     }
                 }
 
-                for (mailbox in mailboxes) {
+                for (mailbox in mailboxes.filter { !it.usesBroadcast }) {
                     mailbox.receiveChannel.onReceive { commandOrMessage ->
                         logger.d { "Handling $commandOrMessage from $mailbox" }
                         subscriptions = when (val command = commandOrMessage.commandOrThrow()) {
@@ -133,7 +132,11 @@ internal class PublisherSocketHandler(private val options: SocketOptions) : Sock
     }
 
     override fun trySend(message: Message) {
-        subscriptions.forEachMatching(message.peekFirstFrame().readByteArray()) { mailbox ->
+        mailboxes.filter { it.usesBroadcast }.forEach { mailbox ->
+            logger.d { "Dispatching $message to $mailbox" }
+            mailbox.sendChannel.trySend(CommandOrMessage(message.copy()))
+        }
+        subscriptions.forEachMatchingFirstFrameOf(message) { mailbox ->
             logger.d { "Dispatching $message to $mailbox" }
             mailbox.sendChannel.trySend(CommandOrMessage(message.copy()))
         }

@@ -7,7 +7,6 @@ package org.zeromq
 
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.*
-import kotlinx.io.*
 import org.zeromq.internal.*
 import org.zeromq.internal.utils.*
 
@@ -122,7 +121,7 @@ internal class XPublisherSocketHandler(private val options: SocketOptions) : Soc
     }
 
     override fun trySend(message: Message) {
-        subscriptions.forEachMatching(message.peekFirstFrame().readByteArray()) { mailbox ->
+        subscriptions.forEachMatchingFirstFrameOf(message) { mailbox ->
             logger.d { "Dispatching $message to $mailbox" }
             mailbox.sendChannel.trySend(CommandOrMessage(message.copy()))
         }

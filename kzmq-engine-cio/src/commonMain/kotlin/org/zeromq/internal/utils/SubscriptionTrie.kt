@@ -5,7 +5,9 @@
 
 package org.zeromq.internal.utils
 
+import kotlinx.io.*
 import kotlinx.io.bytestring.*
+import org.zeromq.*
 
 /**
  * Represents a subscription trie.
@@ -76,4 +78,8 @@ private fun ByteString.iterator() = object : ByteIterator() {
     private var index = 0
     override fun hasNext(): Boolean = index < size
     override fun nextByte(): Byte = get(index++)
+}
+
+internal fun <T> SubscriptionTrie<T>.forEachMatchingFirstFrameOf(message: Message, block: (T) -> Unit) {
+    forEachMatching(message.peekFirstFrame().readByteArray(), block)
 }

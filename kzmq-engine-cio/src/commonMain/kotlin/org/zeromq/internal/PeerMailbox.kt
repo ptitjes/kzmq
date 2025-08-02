@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2024 Didier Villevalois and Kzmq contributors.
+ * Copyright (c) 2021-2025 Didier Villevalois and Kzmq contributors.
  * Use of this source code is governed by the Apache 2.0 license.
  */
 
@@ -10,7 +10,11 @@ import kotlinx.io.bytestring.*
 import kotlin.jvm.*
 import kotlin.random.*
 
-internal class PeerMailbox(val endpoint: String, socketOptions: SocketOptions) {
+internal class PeerMailbox(
+    val endpoint: String,
+    socketOptions: SocketOptions,
+    val usesBroadcast: Boolean = false,
+) {
     val receiveChannel = Channel<CommandOrMessage>(socketOptions.receiveQueueSize)
     val sendChannel = Channel<CommandOrMessage>(socketOptions.sendQueueSize)
 
