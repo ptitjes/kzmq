@@ -6,6 +6,7 @@
 package org.zeromq
 
 import de.infix.testBalloon.framework.*
+import kotlinx.io.bytestring.*
 import org.zeromq.fragments.*
 import org.zeromq.internal.*
 import org.zeromq.test.*
@@ -20,14 +21,14 @@ val PairSocketHandlerTests by testSuite {
                 peerEvents.send(PeerEvent(PeerEvent.Kind.ADDITION, peer))
             }
 
-            val messages = messages(5) { index -> writeFrame { writeByte(index.toByte()) } }
+            val messages = List(5) { index -> Message(ByteString(index.toByte())) }
 
             // Send each message of the first batch once
-            messages.forEach { send(it.buildMessage()) }
+            messages.forEach { send(it) }
 
             peerEvents.send(PeerEvent(PeerEvent.Kind.CONNECTION, peer))
 
-            peer.sendChannel shouldReceiveExactly messages
+            assertReceivesExactly(messages, peer.sendChannel)
         }
     }
 
@@ -40,12 +41,12 @@ val PairSocketHandlerTests by testSuite {
                 peerEvents.send(PeerEvent(PeerEvent.Kind.CONNECTION, peer))
             }
 
-            val messages = messages(5) { index -> writeFrame { writeByte(index.toByte()) } }
+            val messages = List(5) { index -> Message(ByteString(index.toByte())) }
 
             // Send each message of the first batch once
-            messages.forEach { peer.receiveChannel.send(CommandOrMessage(it.buildMessage())) }
+            messages.forEach { peer.receiveChannel.send(CommandOrMessage(it)) }
 
-            ::receive shouldReceiveExactly messages
+            assertReceivesExactly(messages, ::receive)
         }
     }
 

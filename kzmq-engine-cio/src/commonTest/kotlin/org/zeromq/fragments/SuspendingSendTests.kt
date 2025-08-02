@@ -6,11 +6,12 @@
 package org.zeromq.fragments
 
 import de.infix.testBalloon.framework.*
-import io.kotest.matchers.*
 import kotlinx.coroutines.*
 import org.zeromq.*
 import org.zeromq.internal.*
+import org.zeromq.test.*
 import org.zeromq.utils.*
+import kotlin.test.*
 
 /**
  * Contributes tests for suspending sends.
@@ -29,10 +30,10 @@ internal fun <H : SocketHandler> TestSuite.suspendingSendTests(
         test("no peer") {
             factory.runTest {
                 // Trigger an asynchronous sending
-                val result = async { send(buildMessage { writeFrame("Won't be sent") }) }
+                val result = async { send(Message { writeFrame("Won't be sent") }) }
 
                 // The sending is suspending
-                shouldSuspend { result.await() }
+                assertSuspends { result.await() }
 
                 result.cancelAndJoin()
             }
@@ -49,13 +50,13 @@ internal fun <H : SocketHandler> TestSuite.suspendingSendTests(
                 handler.configureForSender(peer)
 
                 // Fill the peer's send queue
-                peer.sendChannel.send(CommandOrMessage(buildMessage { writeFrame("Queued") }))
+                peer.sendChannel.send(CommandOrMessage(Message { writeFrame("Queued") }))
 
                 // Trigger an asynchronous sending
-                val result = async { send(buildMessage { writeFrame("Won't be sent") }) }
+                val result = async { send(Message { writeFrame("Won't be sent") }) }
 
                 // The sending is suspending
-                shouldSuspend { result.await() }
+                assertSuspends { result.await() }
 
                 result.cancelAndJoin()
             }
@@ -66,10 +67,10 @@ internal fun <H : SocketHandler> TestSuite.suspendingSendTests(
                 val peer = PeerMailbox("peer", SocketOptions())
 
                 // Trigger an asynchronous sending
-                val result = async { send(buildMessage { writeFrame("Won't be sent immediately") }) }
+                val result = async { send(Message { writeFrame("Won't be sent immediately") }) }
 
                 // The sending is suspending
-                shouldSuspend { result.await() }
+                assertSuspends { result.await() }
 
                 // An available peer appears
                 peer.also { peer ->
@@ -80,7 +81,7 @@ internal fun <H : SocketHandler> TestSuite.suspendingSendTests(
                 handler.configureForSender(peer)
 
                 // The sending eventually succeeds
-                result.await() shouldBe Unit
+                assertEquals(Unit, result.await())
             }
         }
 
@@ -95,19 +96,19 @@ internal fun <H : SocketHandler> TestSuite.suspendingSendTests(
                 handler.configureForSender(peer)
 
                 // Fill the peer's send queue
-                peer.sendChannel.send(CommandOrMessage(buildMessage { writeFrame("Queued") }))
+                peer.sendChannel.send(CommandOrMessage(Message { writeFrame("Queued") }))
 
                 // Trigger an asynchronous sending
-                val result = async { send(buildMessage { writeFrame("Won't be sent immediately") }) }
+                val result = async { send(Message { writeFrame("Won't be sent immediately") }) }
 
                 // The sending is suspending
-                shouldSuspend { result.await() }
+                assertSuspends { result.await() }
 
                 // Clear the peer's send queue
                 peer.sendChannel.receive()
 
                 // The sending eventually succeeds
-                result.await() shouldBe Unit
+                assertEquals(Unit, result.await())
             }
         }
 
@@ -122,13 +123,13 @@ internal fun <H : SocketHandler> TestSuite.suspendingSendTests(
                 val anotherPeer = PeerMailbox("other peer", SocketOptions())
 
                 // Fill the peer's send queue
-                peer.sendChannel.send(CommandOrMessage(buildMessage { writeFrame("Queued") }))
+                peer.sendChannel.send(CommandOrMessage(Message { writeFrame("Queued") }))
 
                 // Trigger an asynchronous sending
-                val result = async { send(buildMessage { writeFrame("Won't be sent immediately") }) }
+                val result = async { send(Message { writeFrame("Won't be sent immediately") }) }
 
                 // The sending is suspending
-                shouldSuspend { result.await() }
+                assertSuspends { result.await() }
 
                 // Another available peer appears
                 anotherPeer.also { peer ->
@@ -139,7 +140,7 @@ internal fun <H : SocketHandler> TestSuite.suspendingSendTests(
                 handler.configureForSender(anotherPeer)
 
                 // The sending eventually succeeds
-                result.await() shouldBe Unit
+                assertEquals(Unit, result.await())
             }
         }
     }

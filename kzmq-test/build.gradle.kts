@@ -21,9 +21,10 @@ kotlin {
     sourceSets {
         commonMain {
             dependencies {
+                api(kotlin("test"))
+                implementation(libs.kotlinx.coroutines.core)
                 implementation(libs.kotlinx.io.core)
                 implementation(project(":kzmq-core"))
-                implementation(libs.testBalloon.kotest.assertions)
             }
         }
     }

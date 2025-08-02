@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2024 Didier Villevalois and Kzmq contributors.
+ * Copyright (c) 2021-2025 Didier Villevalois and Kzmq contributors.
  * Use of this source code is governed by the Apache 2.0 license.
  */
 
@@ -66,8 +66,8 @@ public class Message(private var frames: List<Buffer>) : ReadScope, WriteScope {
         return frames
     }
 
-    public override fun writeFrame(buffer: Buffer) {
-        frames += buffer
+    public override fun writeFrame(source: Buffer) {
+        frames += source
     }
 
     public fun writeFrames(sources: List<Buffer>) {
@@ -78,9 +78,22 @@ public class Message(private var frames: List<Buffer>) : ReadScope, WriteScope {
         return Message(frames.map { it.copy() })
     }
 
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other == null || this::class != other::class) return false
+
+        other as Message
+
+        return frames.map { it.copy().readByteString() } == other.frames.map { it.copy().readByteString() }
+    }
+
+    override fun hashCode(): Int {
+        return frames.map { it.copy().readByteString() }.hashCode()
+    }
+
     @OptIn(ExperimentalStdlibApi::class)
     override fun toString(): String {
-        return "Message(frames=${frames.joinToString { it.copy().readByteString().toHexString() }})"
+        return "Message(frames=[${frames.joinToString { it.copy().readByteString().toHexString() }}])"
     }
 }
 
@@ -90,4 +103,4 @@ public fun Message(frame: ByteString): Message = Message(listOf(frame))
 
 public fun Message(frame: String): Message = Message(listOf(frame.encodeToByteString()))
 
-public fun buildMessage(writer: WriteScope.() -> Unit): Message = Message().apply(writer)
+public fun Message(writer: WriteScope.() -> Unit): Message = Message().apply(writer)

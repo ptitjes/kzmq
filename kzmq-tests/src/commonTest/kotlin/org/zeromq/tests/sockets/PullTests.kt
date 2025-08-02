@@ -6,10 +6,8 @@
 package org.zeromq.tests.sockets
 
 import de.infix.testBalloon.framework.*
-import io.kotest.assertions.*
 import kotlinx.io.bytestring.*
 import org.zeromq.*
-import org.zeromq.test.*
 import org.zeromq.tests.utils.*
 
 val PullTests by testSuite {
@@ -29,16 +27,12 @@ val PullTests by testSuite {
 
         waitForConnections(pushSocketCount)
 
-        val templates = messages(10) { index ->
-            writeFrame(ByteString(index.toByte()))
-        }
+        val messages = List(10) { index -> Message(ByteString(index.toByte())) }
 
         pushSockets.forEach { pushSocket ->
-            templates.forEach { pushSocket.send(it) }
+            messages.forEach { message -> pushSocket.send(message.copy()) }
         }
 
-        all {
-            pullSocket shouldReceiveExactly templates.flatMap { template -> List(pushSocketCount) { template } }
-        }
+        assertReceivesExactly(messages.flatMap { message -> List(pushSocketCount) { message } }, pullSocket)
     }
 }

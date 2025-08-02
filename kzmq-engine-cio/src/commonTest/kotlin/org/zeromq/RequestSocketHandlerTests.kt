@@ -22,14 +22,17 @@ val RequestSocketHandlerTests by testSuite {
                 peerEvents.send(PeerEvent(PeerEvent.Kind.CONNECTION, peer))
             }
 
-            val request = message { writeFrame("Hello") }
+            val request = Message { writeFrame("Hello") }
 
-            send(request.buildMessage())
+            send(request)
 
-            peer.sendChannel shouldReceiveExactly listOf(message {
-                writeEmptyFrame()
-                writeFrame("Hello")
-            })
+            assertReceivesExactly(
+                listOf(Message {
+                    writeEmptyFrame()
+                    writeFrame("Hello")
+                }),
+                peer.sendChannel,
+            )
         }
     }
 
@@ -47,31 +50,37 @@ val RequestSocketHandlerTests by testSuite {
 
             repeat(messageCount) { messageIndex ->
                 peers.forEachIndexed { peerIndex, peer ->
-                    send(message {
-                        writeFrame("REQUEST".encodeToByteString())
-                        writeFrame { writeByte(messageIndex.toByte()) }
-                        writeFrame { writeByte(peerIndex.toByte()) }
-                    }.buildMessage())
-
-                    peer.sendChannel shouldReceiveExactly listOf(message {
-                        writeEmptyFrame()
+                    send(Message {
                         writeFrame("REQUEST".encodeToByteString())
                         writeFrame { writeByte(messageIndex.toByte()) }
                         writeFrame { writeByte(peerIndex.toByte()) }
                     })
 
-                    peer.receiveChannel.send(CommandOrMessage(message {
+                    assertReceivesExactly(
+                        listOf(Message {
+                            writeEmptyFrame()
+                            writeFrame("REQUEST".encodeToByteString())
+                            writeFrame { writeByte(messageIndex.toByte()) }
+                            writeFrame { writeByte(peerIndex.toByte()) }
+                        }),
+                        peer.sendChannel,
+                    )
+
+                    peer.receiveChannel.send(CommandOrMessage(Message {
                         writeEmptyFrame()
                         writeFrame("REPLY".encodeToByteString())
                         writeFrame { writeByte(messageIndex.toByte()) }
                         writeFrame { writeByte(peerIndex.toByte()) }
-                    }.buildMessage()))
+                    }))
 
-                    ::receive shouldReceiveExactly listOf(message {
-                        writeFrame("REPLY".encodeToByteString())
-                        writeFrame { writeByte(messageIndex.toByte()) }
-                        writeFrame { writeByte(peerIndex.toByte()) }
-                    })
+                    assertReceivesExactly(
+                        listOf(Message {
+                            writeFrame("REPLY".encodeToByteString())
+                            writeFrame { writeByte(messageIndex.toByte()) }
+                            writeFrame { writeByte(peerIndex.toByte()) }
+                        }),
+                        ::receive,
+                    )
                 }
             }
         }
@@ -79,7 +88,10 @@ val RequestSocketHandlerTests by testSuite {
 
     suspendingSendTests(factory)
 
-    test("SHALL accept an incoming message only from the last peer that it sent a request to", TestConfig.testScope(isEnabled = false)) {
+    test(
+        "SHALL accept an incoming message only from the last peer that it sent a request to",
+        TestConfig.testScope(isEnabled = false)
+    ) {
         factory.runTest {
             val peers = List(2) { index ->
                 PeerMailbox(index.toString(), SocketOptions()).also { peer ->
@@ -88,21 +100,22 @@ val RequestSocketHandlerTests by testSuite {
                 }
             }
 
-            send(message {
-                writeFrame("REQUEST".encodeToByteString())
-            }.buildMessage())
+            send(Message { writeFrame("REQUEST".encodeToByteString()) })
 
-            peers[0].sendChannel shouldReceiveExactly listOf(message {
-                writeEmptyFrame()
-                writeFrame("REQUEST".encodeToByteString())
-            })
+            assertReceivesExactly(
+                listOf(Message {
+                    writeEmptyFrame()
+                    writeFrame("REQUEST".encodeToByteString())
+                }),
+                peers[0].sendChannel,
+            )
 
-            peers[1].receiveChannel.send(CommandOrMessage(message {
+            peers[1].receiveChannel.send(CommandOrMessage(Message {
                 writeEmptyFrame()
                 writeFrame("IGNORED-REPLY".encodeToByteString())
-            }.buildMessage()))
+            }))
 
-            ::receive.shouldReceiveNothing()
+            assertReceivesNothing(::receive)
         }
     }
 
@@ -115,32 +128,31 @@ val RequestSocketHandlerTests by testSuite {
                 }
             }
 
-            send(message {
-                writeFrame("REQUEST".encodeToByteString())
-            }.buildMessage())
+            send(Message { writeFrame("REQUEST".encodeToByteString()) })
 
-            peers[0].sendChannel shouldReceiveExactly listOf(message {
-                writeEmptyFrame()
-                writeFrame("REQUEST".encodeToByteString())
-            })
+            assertReceivesExactly(
+                listOf(Message {
+                    writeEmptyFrame()
+                    writeFrame("REQUEST".encodeToByteString())
+                }),
+                peers[0].sendChannel,
+            )
 
             repeat(10) {
-                peers[1].receiveChannel.send(CommandOrMessage(message {
+                peers[1].receiveChannel.send(CommandOrMessage(Message {
                     writeEmptyFrame()
                     writeFrame("IGNORED-REPLY".encodeToByteString())
-                }.buildMessage()))
+                }))
             }
 
-            ::receive.shouldReceiveNothing()
+            assertReceivesNothing(::receive)
 
-            peers[0].receiveChannel.send(CommandOrMessage(message {
+            peers[0].receiveChannel.send(CommandOrMessage(Message {
                 writeEmptyFrame()
                 writeFrame("REPLY".encodeToByteString())
-            }.buildMessage()))
+            }))
 
-            ::receive shouldReceiveExactly listOf(message {
-                writeFrame("REPLY".encodeToByteString())
-            })
+            assertReceivesExactly(listOf(Message { writeFrame("REPLY".encodeToByteString()) }), ::receive)
         }
     }
 

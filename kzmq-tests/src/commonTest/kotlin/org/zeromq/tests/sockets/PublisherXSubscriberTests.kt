@@ -6,12 +6,12 @@
 package org.zeromq.tests.sockets
 
 import de.infix.testBalloon.framework.*
-import io.kotest.matchers.collections.*
 import kotlinx.coroutines.*
 import kotlinx.io.*
 import kotlinx.io.bytestring.*
 import org.zeromq.*
 import org.zeromq.tests.utils.*
+import kotlin.test.*
 
 @Suppress("unused")
 val PublisherXSubscriberTests by testSuite {
@@ -41,7 +41,7 @@ val PublisherXSubscriberTests by testSuite {
                 repeat(2) {
                     received += subscriber.receive().singleOrThrow().readByteArray().decodeToString()
                 }
-                received shouldContainExactly expected
+                assertEquals(expected, received)
             }
         }
     }

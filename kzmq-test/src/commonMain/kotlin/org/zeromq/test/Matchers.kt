@@ -1,35 +1,47 @@
 /*
- * Copyright (c) 2022-2024 Didier Villevalois and Kzmq contributors.
+ * Copyright (c) 2022-2025 Didier Villevalois and Kzmq contributors.
  * Use of this source code is governed by the Apache 2.0 license.
  */
 
 package org.zeromq.test
 
-import io.kotest.matchers.equals.*
-import kotlinx.io.*
-import kotlinx.io.bytestring.*
+import kotlinx.coroutines.*
 import org.zeromq.*
-import kotlin.jvm.*
+import kotlin.test.*
+import kotlin.time.Duration.Companion.seconds
 
-@JvmName("shouldReceiveExactlyListMessageTemplate")
-public suspend fun shouldReceiveExactly(
-    expected: List<MessageTemplate>,
-    receive: suspend () -> Message,
-) {
-    shouldReceiveExactly(expected.map { it.frames }, receive)
+private val SUSPENSION_HINT_TIMEOUT = 1.seconds
+
+public suspend fun assertSuspends(block: suspend () -> Unit) {
+    val result = withTimeoutOrNull(SUSPENSION_HINT_TIMEOUT) {
+        block()
+    }
+    assertNull(result, "Expected block to suspend")
 }
 
-@JvmName("shouldReceiveExactlyListListByteString")
-private suspend fun shouldReceiveExactly(
-    expected: List<List<ByteString>>,
-    receive: suspend () -> Message,
-) {
+public suspend fun <T> assertDoesNotSuspend(block: suspend () -> T) {
+    val result = withTimeoutOrNull(SUSPENSION_HINT_TIMEOUT) {
+        block()
+    }
+    assertNotNull(result, "Expected block to not suspend")
+}
+
+public suspend fun assertReceivesExactly(expected: List<Message>, receive: suspend () -> Message) {
     val received = buildList {
         repeat(expected.size) {
-            val message = receive()
-            add(message.readFrames().map { it.readByteString() })
+            add(receive())
         }
     }
 
-    received shouldBeEqual expected
+    assertEquals(expected, received/*, "Expected to have received exactly $expected, but received $received"*/)
+}
+
+public fun assertHasReceivedExactly(expected: List<Message>, tryReceive: () -> Message?) {
+    val received = buildList {
+        for (index in 0..<expected.size) {
+            add(tryReceive() ?: break)
+        }
+    }
+
+    assertEquals(expected, received/*, "Expected to have received exactly $expected, but received $received"*/)
 }

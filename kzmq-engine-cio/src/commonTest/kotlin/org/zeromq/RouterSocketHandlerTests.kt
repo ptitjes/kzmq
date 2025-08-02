@@ -6,15 +6,13 @@
 package org.zeromq
 
 import de.infix.testBalloon.framework.*
-import io.kotest.assertions.*
-import io.kotest.assertions.throwables.*
-import io.kotest.matchers.*
 import kotlinx.coroutines.*
 import kotlinx.io.bytestring.*
 import org.zeromq.fragments.*
 import org.zeromq.internal.*
 import org.zeromq.test.*
 import org.zeromq.utils.*
+import kotlin.test.*
 
 val RouterSocketHandlerTests by testSuite {
     val factory = ::RouterSocketHandler
@@ -37,16 +35,16 @@ val RouterSocketHandlerTests by testSuite {
 
             yield()
 
-            val message = message { writeFrame("MESSAGE") }
+            val message = Message { writeFrame("MESSAGE") }
 
             peers.forEach { peer ->
-                val message = buildMessage { writeFrame("MESSAGE") }
+                val message = Message { writeFrame("MESSAGE") }
                 message.pushIdentity(peer.identity!!)
                 send(message)
             }
 
             peers.forEach { peer ->
-                peer.sendChannel shouldReceiveExactly listOf(message)
+                assertReceivesExactly(listOf(message), peer.sendChannel)
             }
         }
     }
@@ -63,11 +61,11 @@ val RouterSocketHandlerTests by testSuite {
 
                 yield()
 
-                val message = buildMessage { writeFrame("MESSAGE") }
+                val message = Message { writeFrame("MESSAGE") }
                 message.pushIdentity(Identity("match".encodeToByteString()))
                 send(message)
 
-                peer.sendChannel shouldReceiveExactly listOf(message { writeFrame("MESSAGE") })
+                assertReceivesExactly(listOf(Message { writeFrame("MESSAGE") }), peer.sendChannel)
             }
         }
 
@@ -82,11 +80,11 @@ val RouterSocketHandlerTests by testSuite {
 
                 yield()
 
-                val message = buildMessage { writeFrame("MESSAGE") }
+                val message = Message { writeFrame("MESSAGE") }
                 message.pushIdentity(Identity("no-match".encodeToByteString()))
                 send(message)
 
-                peer.sendChannel.shouldReceiveNothing()
+                assertReceivesNothing(peer.sendChannel)
             }
         }
 
@@ -103,13 +101,13 @@ val RouterSocketHandlerTests by testSuite {
 
                 yield()
 
-                shouldThrow<IllegalStateException> {
-                    val message = buildMessage { writeFrame("MESSAGE") }
+                assertFailsWith<IllegalStateException> {
+                    val message = Message { writeFrame("MESSAGE") }
                     message.pushIdentity(Identity("no-match".encodeToByteString()))
                     send(message)
                 }
 
-                peer.sendChannel.shouldReceiveNothing()
+                assertReceivesNothing(peer.sendChannel)
             }
         }
 
@@ -126,9 +124,9 @@ val RouterSocketHandlerTests by testSuite {
                 yield()
 
                 // Fill the peer's send queue
-                peer.sendChannel.send(CommandOrMessage(buildMessage { writeFrame("Queued") }))
+                peer.sendChannel.send(CommandOrMessage(Message { writeFrame("Queued") }))
 
-                val message = buildMessage { writeFrame("Waiting") }
+                val message = Message { writeFrame("Waiting") }
 
                 // Trigger an asynchronous sending
                 val result = async {
@@ -137,10 +135,11 @@ val RouterSocketHandlerTests by testSuite {
                 }
 
                 // The sending is not suspending and returns
-                shouldNotSuspend { result.await() } shouldBe Unit
+                val awaitResult = assertDoesNotSuspend { result.await() }
+                assertEquals(Unit, awaitResult)
 
                 // But the message has been dropped
-                peer.sendChannel shouldReceiveExactly listOf(message { writeFrame("Queued") })
+                assertReceivesExactly(listOf(Message { writeFrame("Queued") }), peer.sendChannel)
             }
         }
     }
@@ -156,9 +155,7 @@ val RouterSocketHandlerTests by testSuite {
 
             yield()
 
-            val messages = messages(10) { index ->
-                writeFrame { writeByte(index.toByte()) }
-            }
+            val messages = List(10) { index -> Message(ByteString(index.toByte())) }
 
             peers.forEach { peer ->
                 messages.forEach { peer.receiveChannel.send(it) }
@@ -170,10 +167,8 @@ val RouterSocketHandlerTests by testSuite {
                 message
             }
 
-            all {
-                messages.forEach { message ->
-                    receiveWithoutIdentity shouldReceiveExactly List(peers.size) { message }
-                }
+            messages.forEach { message ->
+                assertReceivesExactly(List(peers.size) { message }, receiveWithoutIdentity)
             }
         }
     }

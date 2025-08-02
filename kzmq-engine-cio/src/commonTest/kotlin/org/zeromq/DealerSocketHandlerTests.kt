@@ -6,7 +6,6 @@
 package org.zeromq
 
 import de.infix.testBalloon.framework.*
-import io.kotest.assertions.*
 import kotlinx.io.bytestring.*
 import org.zeromq.fragments.*
 import org.zeromq.internal.*
@@ -30,29 +29,35 @@ val DealerSocketHandlerTests by testSuite {
 
             repeat(messageCount) { messageIndex ->
                 peers.forEachIndexed { peerIndex, peer ->
-                    send(message {
-                        writeFrame("REQUEST".encodeToByteString())
-                        writeFrame { writeByte(messageIndex.toByte()) }
-                        writeFrame { writeByte(peerIndex.toByte()) }
-                    }.buildMessage())
-
-                    peer.sendChannel shouldReceiveExactly listOf(message {
+                    send(Message {
                         writeFrame("REQUEST".encodeToByteString())
                         writeFrame { writeByte(messageIndex.toByte()) }
                         writeFrame { writeByte(peerIndex.toByte()) }
                     })
 
-                    peer.receiveChannel.send(CommandOrMessage(message {
-                        writeFrame("REPLY".encodeToByteString())
-                        writeFrame { writeByte(messageIndex.toByte()) }
-                        writeFrame { writeByte(peerIndex.toByte()) }
-                    }.buildMessage()))
+                    assertReceivesExactly(
+                        listOf(Message {
+                            writeFrame("REQUEST".encodeToByteString())
+                            writeFrame { writeByte(messageIndex.toByte()) }
+                            writeFrame { writeByte(peerIndex.toByte()) }
+                        }),
+                        peer.sendChannel
+                    )
 
-                    ::receive shouldReceiveExactly listOf(message {
+                    peer.receiveChannel.send(CommandOrMessage(Message {
                         writeFrame("REPLY".encodeToByteString())
                         writeFrame { writeByte(messageIndex.toByte()) }
                         writeFrame { writeByte(peerIndex.toByte()) }
-                    })
+                    }))
+
+                    assertReceivesExactly(
+                        listOf(Message {
+                            writeFrame("REPLY".encodeToByteString())
+                            writeFrame { writeByte(messageIndex.toByte()) }
+                            writeFrame { writeByte(peerIndex.toByte()) }
+                        }),
+                        ::receive
+                    )
                 }
             }
         }
@@ -69,18 +74,14 @@ val DealerSocketHandlerTests by testSuite {
                 }
             }
 
-            val messages = messages(10) { index ->
-                writeFrame { writeByte(index.toByte()) }
-            }
+            val messages = List(10) { index -> Message(ByteString(index.toByte())) }
 
             peers.forEach { peer ->
                 messages.forEach { peer.receiveChannel.send(it) }
             }
 
-            all {
-                messages.forEach { message ->
-                    ::receive shouldReceiveExactly List(peers.size) { message }
-                }
+            messages.forEach { message ->
+                assertReceivesExactly(List(peers.size) { message }, ::receive)
             }
         }
     }

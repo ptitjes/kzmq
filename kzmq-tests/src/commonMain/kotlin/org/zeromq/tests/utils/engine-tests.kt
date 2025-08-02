@@ -6,7 +6,6 @@
 package org.zeromq.tests.utils
 
 import de.infix.testBalloon.framework.*
-import io.kotest.assertions.*
 import kotlinx.coroutines.*
 import org.zeromq.*
 import kotlin.time.*
@@ -63,12 +62,10 @@ private fun TestSuite.runSingleContextTest(
             val testConfig = if (enableTest(data)) config else config.disable()
 
             test(testName, testConfig) {
-                retry(10, 5.minutes) {
-                    val context = Context(engine)
-                    context.use {
-                        withTimeout(testTimeout) {
-                            testAction(context, protocol)
-                        }
+                val context = Context(engine)
+                context.use {
+                    withTimeout(testTimeout) {
+                        testAction(context, protocol)
                     }
                 }
             }
@@ -119,13 +116,11 @@ private fun TestSuite.runDualContextTest(
             val testConfig = if (enableTest(data)) config else config.disable()
 
             test(testName, testConfig) {
-                retry(10, 5.minutes) {
-                    val context1 = Context(engine1)
-                    val context2 = if (protocol == Protocol.INPROC) context1 else Context(engine2)
-                    use(context1, context2) {
-                        withTimeout(testTimeout) {
-                            testAction(context1, context2, protocol)
-                        }
+                val context1 = Context(engine1)
+                val context2 = if (protocol == Protocol.INPROC) context1 else Context(engine2)
+                use(context1, context2) {
+                    withTimeout(testTimeout) {
+                        testAction(context1, context2, protocol)
                     }
                 }
             }

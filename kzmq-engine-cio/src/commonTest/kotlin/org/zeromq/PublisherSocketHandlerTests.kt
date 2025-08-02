@@ -9,6 +9,7 @@ import de.infix.testBalloon.framework.*
 import kotlinx.coroutines.*
 import kotlinx.io.bytestring.*
 import org.zeromq.internal.*
+import org.zeromq.test.*
 import org.zeromq.utils.*
 
 val PublisherSocketHandlerTests by testSuite {
@@ -30,7 +31,7 @@ val PublisherSocketHandlerTests by testSuite {
 
             send(message)
 
-            peer.sendChannel shouldHaveReceivedExactly listOf(message)
+            assertHasReceivedExactly(listOf(message), peer.sendChannel)
         }
     }
 
@@ -45,7 +46,7 @@ val PublisherSocketHandlerTests by testSuite {
 
             send(message)
 
-            peer.sendChannel shouldHaveReceivedExactly listOf(message)
+            assertHasReceivedExactly(listOf(message), peer.sendChannel)
         }
     }
 
@@ -61,7 +62,7 @@ val PublisherSocketHandlerTests by testSuite {
 
                 send(message)
 
-                peer.sendChannel shouldHaveReceivedExactly listOf()
+                assertHasReceivedExactly(listOf(), peer.sendChannel)
             }
         }
 
@@ -81,7 +82,7 @@ val PublisherSocketHandlerTests by testSuite {
 
                 send(message)
 
-                peer.sendChannel shouldHaveReceivedExactly listOf(message)
+                assertHasReceivedExactly(listOf(message), peer.sendChannel)
             }
         }
     }
@@ -103,7 +104,7 @@ val PublisherSocketHandlerTests by testSuite {
 
                 send(message)
 
-                peer.sendChannel shouldHaveReceivedExactly listOf(message)
+                assertHasReceivedExactly(listOf(message), peer.sendChannel)
             }
         }
 
@@ -123,7 +124,7 @@ val PublisherSocketHandlerTests by testSuite {
 
                 send(message)
 
-                peer.sendChannel shouldHaveReceivedExactly listOf(message)
+                assertHasReceivedExactly(listOf(message), peer.sendChannel)
             }
         }
 
@@ -143,7 +144,7 @@ val PublisherSocketHandlerTests by testSuite {
 
                 send(message)
 
-                peer.sendChannel shouldHaveReceivedExactly listOf()
+                assertHasReceivedExactly(listOf(), peer.sendChannel)
             }
         }
     }
@@ -168,7 +169,7 @@ val PublisherSocketHandlerTests by testSuite {
 
             send(droppedMessage)
 
-            peer.sendChannel shouldHaveReceivedExactly listOf(queuedMessage)
+            assertHasReceivedExactly(listOf(queuedMessage), peer.sendChannel)
         }
     }
 
@@ -177,9 +178,7 @@ val PublisherSocketHandlerTests by testSuite {
             factory.runTest {
                 val message = Message { writeFrame("MESSAGE") }
 
-                shouldNotSuspend {
-                    send(message)
-                }
+                assertDoesNotSuspend { send(message) }
             }
         }
 
@@ -200,9 +199,7 @@ val PublisherSocketHandlerTests by testSuite {
 
                 yield()
 
-                shouldNotSuspend {
-                    send(message)
-                }
+                assertDoesNotSuspend { send(message) }
             }
         }
     }

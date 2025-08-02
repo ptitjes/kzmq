@@ -6,14 +6,10 @@
 package org.zeromq.tests.sockets
 
 import de.infix.testBalloon.framework.*
-import io.kotest.assertions.*
-import io.kotest.matchers.*
-import kotlinx.coroutines.*
 import kotlinx.io.bytestring.*
 import org.zeromq.*
 import org.zeromq.test.*
 import org.zeromq.tests.utils.*
-import kotlin.time.Duration.Companion.seconds
 
 @Suppress("unused")
 val PushTests by testSuite {
@@ -26,11 +22,9 @@ val PushTests by testSuite {
 
         waitForConnections()
 
-        val template = message {
-            writeFrame("Hello, 0MQ!".encodeToByteString())
-        }
-        pushSocket.send(template)
-        pullSocket shouldReceive template
+        val message = Message { writeFrame("Hello, 0MQ!".encodeToByteString()) }
+        pushSocket.send(message.copy())
+        assertReceivesExactly(listOf(message), pullSocket)
 
         pushSocket.close()
         pullSocket.close()
@@ -44,11 +38,9 @@ val PushTests by testSuite {
 
         waitForConnections()
 
-        val template = message {
-            writeFrame("Hello, 0MQ!".encodeToByteString())
-        }
-        pushSocket.send(template)
-        pullSocket shouldReceive template
+        val message = Message { writeFrame("Hello, 0MQ!".encodeToByteString()) }
+        pushSocket.send(message.copy())
+        assertReceivesExactly(listOf(message), pullSocket)
 
         pushSocket.close()
         pullSocket.close()
@@ -66,14 +58,12 @@ val PushTests by testSuite {
 
         waitForConnections()
 
-        val templates = messages(messageCount) { index ->
-            writeFrame(ByteString(index.toByte()))
-        }
+        val messages = List(messageCount) { index -> Message(ByteString(index.toByte())) }
 
-        templates.forEach { pushSocket.send(it) }
+        messages.forEach { pushSocket.send(it.copy()) }
         pushSocket.disconnect(address)
 
-        pullSocket shouldReceiveExactly templates
+        assertReceivesExactly(messages, pullSocket)
 
         pushSocket.close()
         pullSocket.close()
@@ -91,14 +81,12 @@ val PushTests by testSuite {
 
         waitForConnections()
 
-        val templates = messages(messageCount) { index ->
-            writeFrame(ByteString(index.toByte()))
-        }
+        val messages = List(messageCount) { index -> Message(ByteString(index.toByte())) }
 
-        templates.forEach { pushSocket.send(it) }
+        messages.forEach { pushSocket.send(it.copy()) }
         pushSocket.close()
 
-        pullSocket shouldReceiveExactly templates
+        assertReceivesExactly(messages, pullSocket)
 
         pullSocket.close()
     }
@@ -107,12 +95,8 @@ val PushTests by testSuite {
         val address1 = randomEndpoint(protocol)
         val address2 = randomEndpoint(protocol)
 
-        val firstBatch = messages(5) { index ->
-            writeFrame(ByteString(index.toByte()))
-        }
-        val secondBatch = messages(10) { index ->
-            writeFrame(ByteString((index + 10).toByte()))
-        }
+        val firstBatch = List(5) { index -> Message(ByteString(index.toByte())) }
+        val secondBatch = List(10) { index -> Message(ByteString((index + 10).toByte())) }
 
         val push = ctx1.createPush()
         val pull1 = ctx2.createPull()
@@ -129,17 +113,15 @@ val PushTests by testSuite {
             waitForConnections()
 
             // Send each message of the first batch once per receiver
-            firstBatch.forEach { template -> repeat(2) { push.send(template) } }
+            firstBatch.forEach { message -> repeat(2) { push.send(message.copy()) } }
             // Send each message of the second batch once
-            secondBatch.forEach { template -> push.send(template) }
+            secondBatch.forEach { message -> push.send(message.copy()) }
 
             pull2.apply { bind(address2) }
             waitForConnections()
 
-            all {
-                pull1 shouldReceiveExactly firstBatch + secondBatch
-                pull2 shouldReceiveExactly firstBatch
-            }
+            assertReceivesExactly(firstBatch + secondBatch, pull1)
+            assertReceivesExactly(firstBatch, pull2)
         }
     }
 
@@ -152,17 +134,13 @@ val PushTests by testSuite {
 
         waitForConnections(pullCount)
 
-        val templates = messages(10) { index ->
-            writeFrame(ByteString(index.toByte()))
-        }
+        val messages = List(10) { index -> Message(ByteString(index.toByte())) }
 
         // Send each message once per receiver
-        templates.forEach { template -> repeat(pulls.size) { push.send(template) } }
+        messages.forEach { message -> repeat(pulls.size) { push.send(message.copy()) } }
 
-        all {
-            // Check each receiver got every messages
-            pulls.forEach { it shouldReceiveExactly templates }
-        }
+        // Check each receiver got every messages
+        pulls.forEach { assertReceivesExactly(messages, it) }
     }
 
     withContext("SHALL suspend on sending when it has no available peers").config(
@@ -173,9 +151,7 @@ val PushTests by testSuite {
 
         val message = Message("Won't be sent".encodeToByteString())
 
-        withTimeoutOrNull(1.seconds) {
-            push.send(message)
-        } shouldBe null
+        assertSuspends { push.send(message) }
     }
 
     // TODO How is it different from previous test?
@@ -187,9 +163,7 @@ val PushTests by testSuite {
 
         val message = Message("Won't be sent".encodeToByteString())
 
-        withTimeoutOrNull(1.seconds) {
-            push.send(message)
-        } shouldBe null
+        assertSuspends { push.send(message) }
     }
 
     withContexts("SHALL NOT discard messages that it cannot queue").config(
@@ -199,15 +173,15 @@ val PushTests by testSuite {
 
         val push = ctx1.createPush().apply { connect(address) }
 
-        val templates = messages(10) { index -> listOf(ByteString(index.toByte())) }
+        val messages = List(10) { index -> Message(ByteString(index.toByte())) }
 
         // Send each message once
-        templates.forEach { push.send(it) }
+        messages.forEach { push.send(it.copy()) }
 
         val pull = ctx2.createPull().apply { bind(address) }
         waitForConnections()
 
         // Check each receiver got every messages
-        pull shouldReceiveExactly templates
+        assertReceivesExactly(messages, pull)
     }
 }

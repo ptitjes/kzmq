@@ -6,7 +6,6 @@
 package org.zeromq
 
 import de.infix.testBalloon.framework.*
-import io.kotest.assertions.*
 import kotlinx.coroutines.*
 import kotlinx.io.bytestring.*
 import org.zeromq.fragments.*
@@ -32,7 +31,7 @@ val ReplySocketHandlerTests by testSuite {
             peers.forEachIndexed { peerIndex, peer ->
                 launch {
                     repeat(messageCount) { messageIndex ->
-                        peer.receiveChannel.send(CommandOrMessage(message {
+                        peer.receiveChannel.send(CommandOrMessage(Message {
                             writeFrame("dummy-address-$messageIndex#1")
                             writeFrame("dummy-address-$messageIndex#2")
                             writeFrame("dummy-address-$messageIndex#3")
@@ -40,36 +39,34 @@ val ReplySocketHandlerTests by testSuite {
                             writeFrame("REQUEST".encodeToByteString())
                             writeFrame { writeByte(messageIndex.toByte()) }
                             writeFrame { writeByte(peerIndex.toByte()) }
-                        }.buildMessage()))
+                        }))
                     }
                 }
             }
 
-            all {
-                repeat(messageCount) { messageIndex ->
-                    peers.forEachIndexed { peerIndex, peer ->
-                        ::receive shouldReceiveExactly listOf(message {
-                            writeFrame("REQUEST".encodeToByteString())
-                            writeFrame { writeByte(messageIndex.toByte()) }
-                            writeFrame { writeByte(peerIndex.toByte()) }
-                        })
+            repeat(messageCount) { messageIndex ->
+                peers.forEachIndexed { peerIndex, peer ->
+                    assertReceivesExactly(listOf(Message {
+                        writeFrame("REQUEST".encodeToByteString())
+                        writeFrame { writeByte(messageIndex.toByte()) }
+                        writeFrame { writeByte(peerIndex.toByte()) }
+                    }), ::receive)
 
-                        send(message {
-                            writeFrame("REPLY".encodeToByteString())
-                            writeFrame { writeByte(messageIndex.toByte()) }
-                            writeFrame { writeByte(peerIndex.toByte()) }
-                        }.buildMessage())
+                    send(Message {
+                        writeFrame("REPLY".encodeToByteString())
+                        writeFrame { writeByte(messageIndex.toByte()) }
+                        writeFrame { writeByte(peerIndex.toByte()) }
+                    })
 
-                        peer.sendChannel shouldReceiveExactly listOf(message {
-                            writeFrame("dummy-address-$messageIndex#1")
-                            writeFrame("dummy-address-$messageIndex#2")
-                            writeFrame("dummy-address-$messageIndex#3")
-                            writeEmptyFrame()
-                            writeFrame("REPLY".encodeToByteString())
-                            writeFrame { writeByte(messageIndex.toByte()) }
-                            writeFrame { writeByte(peerIndex.toByte()) }
-                        })
-                    }
+                    assertReceivesExactly(listOf(Message {
+                        writeFrame("dummy-address-$messageIndex#1")
+                        writeFrame("dummy-address-$messageIndex#2")
+                        writeFrame("dummy-address-$messageIndex#3")
+                        writeEmptyFrame()
+                        writeFrame("REPLY".encodeToByteString())
+                        writeFrame { writeByte(messageIndex.toByte()) }
+                        writeFrame { writeByte(peerIndex.toByte()) }
+                    }), peer.sendChannel)
                 }
             }
         }

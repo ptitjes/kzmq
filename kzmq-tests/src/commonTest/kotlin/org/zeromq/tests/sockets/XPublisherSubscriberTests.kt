@@ -6,13 +6,12 @@
 package org.zeromq.tests.sockets
 
 import de.infix.testBalloon.framework.*
-import io.kotest.matchers.*
-import io.kotest.matchers.collections.*
 import kotlinx.coroutines.*
 import kotlinx.io.*
 import kotlinx.io.bytestring.*
 import org.zeromq.*
 import org.zeromq.tests.utils.*
+import kotlin.test.*
 
 @Suppress("unused")
 val XPublisherSubscriberTests by testSuite {
@@ -36,10 +35,10 @@ val XPublisherSubscriberTests by testSuite {
             launch {
                 val message = publisher.receive()
                 val subscriptionMessage = message.toSubscriptionMessage()
-                subscriptionMessage shouldNotBe null
-                subscriptionMessage?.let { (subscribe, topic) ->
-                    subscribe shouldBe true
-                    topic.decodeToString() shouldBe "prefix"
+                assertNotNull(subscriptionMessage)
+                subscriptionMessage.let { (subscribe, topic) ->
+                    assertEquals(true, subscribe)
+                    assertEquals("prefix", topic.decodeToString())
                 }
             }
         }
@@ -56,7 +55,7 @@ val XPublisherSubscriberTests by testSuite {
                 repeat(2) {
                     received += subscriber.receive().singleOrThrow().readByteArray().decodeToString()
                 }
-                received shouldContainExactly expected
+                assertEquals(expected, received)
             }
         }
     }

@@ -56,6 +56,6 @@ kermit = { module = "co.touchlab:kermit", version.ref = "kermit" }
 
 jeromq = { module = "org.zeromq:jeromq", version.ref = "jeromq" }
 
-testBalloon-kotest-assertions = { module = "de.infix.testBalloon:testBalloon-integration-kotest-assertions", version.ref = "testBalloon" }
+testBalloonFramework = { module = "de.infix.testBalloon:testBalloon-framework-core", version.ref = "testBalloon" }
 
 [bundles]

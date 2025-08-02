@@ -5,62 +5,27 @@
 
 package org.zeromq.utils
 
-import io.kotest.matchers.*
-import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.*
 import org.zeromq.*
 import org.zeromq.internal.*
 import org.zeromq.test.*
 import kotlin.jvm.*
-import kotlin.time.Duration.Companion.seconds
 
-private val SUSPENSION_HINT_TIMEOUT = 1.seconds
-
-internal suspend fun shouldSuspend(block: suspend () -> Unit) {
-    withTimeoutOrNull(SUSPENSION_HINT_TIMEOUT) {
-        block()
-    } shouldBe null
+internal suspend fun assertReceivesExactly(expected: List<Message>, channel: ReceiveChannel<CommandOrMessage>) {
+    assertReceivesExactly(expected) { channel.receive().messageOrThrow() }
 }
 
-internal suspend fun <T> shouldNotSuspend(block: suspend () -> T): T {
-    val result = withTimeoutOrNull(SUSPENSION_HINT_TIMEOUT) {
-        block()
-    }
-    result shouldNotBe null
-    @Suppress("UNCHECKED_CAST")
-    return result as T
+internal fun assertHasReceivedExactly(expected: List<Message>, channel: ReceiveChannel<CommandOrMessage>) {
+    assertHasReceivedExactly(expected) { channel.tryReceive().getOrNull()?.messageOrThrow() }
 }
 
-@JvmName("messageChannelShouldReceiveExactly")
-internal suspend infix fun ReceiveChannel<Message>.shouldReceiveExactly(expected: List<MessageTemplate>) {
-    shouldReceiveExactly(expected) { receive() }
+internal suspend fun assertReceivesNothing(channel: ReceiveChannel<CommandOrMessage>) {
+    assertSuspends { channel.receive() }
 }
 
-@JvmName("commandOrMessageChannelShouldReceiveExactly")
-internal suspend infix fun ReceiveChannel<CommandOrMessage>.shouldReceiveExactly(expected: List<MessageTemplate>) {
-    shouldReceiveExactly(expected) { receive().messageOrThrow() }
+internal suspend fun assertReceivesNothing(tryReceive: suspend () -> Message) {
+    assertSuspends { tryReceive() }
 }
-
-internal suspend fun ReceiveChannel<CommandOrMessage>.shouldReceiveNothing() {
-    shouldSuspend { receive() }
-}
-
-@JvmName("messageChannelSend")
-internal suspend fun SendChannel<Message>.send(template: MessageTemplate) =
-    send(buildMessage { template.frames.forEach { writeFrame(it) } })
 
 @JvmName("commandOrMessageChannelSend")
-internal suspend fun SendChannel<CommandOrMessage>.send(template: MessageTemplate) =
-    send(CommandOrMessage(buildMessage { template.frames.forEach { writeFrame(it) } }))
-
-internal suspend infix fun (suspend () -> Message).shouldReceiveExactly(expected: List<MessageTemplate>) {
-    shouldReceiveExactly(expected) { this() }
-}
-
-internal suspend fun (suspend () -> Message).shouldReceiveNothing() {
-    shouldSuspend { this() }
-}
-
-internal suspend infix fun (suspend (Message) -> Unit).send(expected: MessageTemplate) {
-    this(expected.buildMessage())
-}
+internal suspend fun SendChannel<CommandOrMessage>.send(message: Message) = send(CommandOrMessage(message))

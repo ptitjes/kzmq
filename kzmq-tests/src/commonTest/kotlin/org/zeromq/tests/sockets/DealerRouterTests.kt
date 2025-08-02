@@ -6,14 +6,13 @@
 package org.zeromq.tests.sockets
 
 import de.infix.testBalloon.framework.*
-import io.kotest.matchers.*
-import io.kotest.matchers.equals.*
 import kotlinx.atomicfu.*
 import kotlinx.coroutines.*
 import kotlinx.io.*
 import kotlinx.io.bytestring.*
 import org.zeromq.*
 import org.zeromq.tests.utils.*
+import kotlin.test.*
 
 private const val REQUEST_MARKER = "REQ"
 private const val REPLY_MARKER = "REP"
@@ -63,7 +62,7 @@ val DealerRouterTests by testSuite {
                     repeat(dealerCount) {
                         val (dealerId, requestId) = router.receive {
                             val dealerId = readFrame { readByteString() }
-                            readFrame { readString() shouldBe REQUEST_MARKER }
+                            readFrame { assertEquals(REQUEST_MARKER, readString()) }
                             val requestId = readFrame { readByte() }
                             dealerId to requestId
                         }
@@ -81,15 +80,15 @@ val DealerRouterTests by testSuite {
                 launch {
                     repeat(routerCount) {
                         val (dealerId, requestId) = dealer.receive {
-                            readFrame { readString() shouldBe REPLY_MARKER }
+                            readFrame { assertEquals(REPLY_MARKER, readString()) }
                             val requestId = readFrame { readByte() }
                             val dealerId = readFrame { readByteString() }
                             dealerId to requestId
                         }
 
                         val realDealerId = dealerId.decodeFromRoutingId()
-                        realDealerId shouldBe dealer.routingId?.decodeFromRoutingId()
-                        realDealerId shouldBe requestId % dealerCount
+                        assertEquals(dealer.routingId?.decodeFromRoutingId(), realDealerId)
+                        assertEquals(requestId % dealerCount, realDealerId)
 
                         trace.receivedReplyIds.getAndUpdate { it + requestId.toInt() }
                     }
@@ -97,7 +96,7 @@ val DealerRouterTests by testSuite {
             }
         }
 
-        trace.receivedReplyIds.value shouldBeEqual (0 until 6).toSet()
+        assertEquals((0 until 6).toSet(), trace.receivedReplyIds.value)
     }
 }
 

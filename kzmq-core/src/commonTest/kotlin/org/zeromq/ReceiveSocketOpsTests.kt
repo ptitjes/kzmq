@@ -8,8 +8,8 @@ package org.zeromq
 import de.infix.testBalloon.framework.*
 import dev.mokkery.*
 import dev.mokkery.answering.*
-import io.kotest.matchers.collections.*
 import kotlinx.coroutines.flow.*
+import kotlin.test.*
 
 val ReceiveSocketOpsTests by testSuite {
     test("consumeAsFlow") {
@@ -20,6 +20,6 @@ val ReceiveSocketOpsTests by testSuite {
             everySuspend { receive() } calls { messageIterator.next() }
         }
 
-        socket.consumeAsFlow().take(10).toList() shouldContainExactly messages
+        assertEquals(messages, socket.consumeAsFlow().take(10).toList())
     }
 }

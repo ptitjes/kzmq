@@ -6,12 +6,12 @@
 package org.zeromq.tests
 
 import de.infix.testBalloon.framework.*
-import io.kotest.matchers.*
 import org.zeromq.*
+import kotlin.test.*
 
 val ContextTests by testSuite {
     test("Auto-discover engines") {
         val context = Context()
-        context shouldNotBe null
+        assertNotNull(context)
     }
 }

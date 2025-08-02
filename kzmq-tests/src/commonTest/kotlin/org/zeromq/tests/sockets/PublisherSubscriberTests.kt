@@ -6,22 +6,19 @@
 package org.zeromq.tests.sockets
 
 import de.infix.testBalloon.framework.*
-import io.kotest.matchers.collections.*
 import kotlinx.coroutines.*
 import kotlinx.io.*
 import kotlinx.io.bytestring.*
 import org.zeromq.*
-import org.zeromq.test.*
 import org.zeromq.tests.utils.*
+import kotlin.test.*
 
 @Suppress("unused")
 val PublisherSubscriberTests by testSuite {
 
     withContexts("bind-connect") { ctx1, ctx2, protocol ->
         val address = randomEndpoint(protocol)
-        val template = message {
-            writeFrame("Hello, 0MQ!".encodeToByteString())
-        }
+        val message = Message { writeFrame("Hello, 0MQ!".encodeToByteString()) }
 
         val publisher = ctx1.createPublisher().apply { bind(address) }
         val subscriber = ctx2.createSubscriber().apply { connect(address) }
@@ -32,10 +29,8 @@ val PublisherSubscriberTests by testSuite {
 
         waitForSubscriptions()
 
-        coroutineScope {
-            launch { publisher.send(template) }
-            launch { subscriber shouldReceive template }
-        }
+        publisher.send(message.copy())
+        assertReceivesExactly(listOf(message), subscriber)
     }
 
     // TODO Figure out why this test is hanging with JeroMQ and ZeroMQ.js
@@ -43,9 +38,7 @@ val PublisherSubscriberTests by testSuite {
         skip = setOf("jeromq", "zeromq.js"),
     ) { ctx1, ctx2, protocol ->
         val address = randomEndpoint(protocol)
-        val template = message {
-            writeFrame("Hello, 0MQ!".encodeToByteString())
-        }
+        val message = Message { writeFrame("Hello, 0MQ!".encodeToByteString()) }
 
         val subscriber = ctx2.createSubscriber().apply { bind(address) }
         val publisher = ctx1.createPublisher().apply { connect(address) }
@@ -56,10 +49,8 @@ val PublisherSubscriberTests by testSuite {
 
         waitForSubscriptions()
 
-        coroutineScope {
-            launch { publisher.send(template) }
-            launch { subscriber shouldReceive template }
-        }
+        publisher.send(message.copy())
+        assertReceivesExactly(listOf(message), subscriber)
     }
 
     withContexts("subscription filter") { ctx1, ctx2, protocol ->
@@ -87,7 +78,7 @@ val PublisherSubscriberTests by testSuite {
                 repeat(2) {
                     received += subscriber.receive().singleOrThrow().readByteArray().decodeToString()
                 }
-                received shouldContainExactly expected
+                assertEquals(expected, received)
             }
         }
     }

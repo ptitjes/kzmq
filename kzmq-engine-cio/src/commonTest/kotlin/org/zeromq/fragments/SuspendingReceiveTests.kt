@@ -6,12 +6,13 @@
 package org.zeromq.fragments
 
 import de.infix.testBalloon.framework.*
-import io.kotest.matchers.*
 import kotlinx.coroutines.*
 import kotlinx.io.*
 import org.zeromq.*
 import org.zeromq.internal.*
+import org.zeromq.test.*
 import org.zeromq.utils.*
+import kotlin.test.*
 
 /**
  * Contributes tests for suspending receives.
@@ -33,7 +34,7 @@ internal fun <H : SocketHandler> TestSuite.suspendingReceiveTests(
                 val result = async { receive() }
 
                 // The receive is suspending
-                shouldSuspend { result.await() }
+                assertSuspends { result.await() }
 
                 result.cancelAndJoin()
             }
@@ -53,17 +54,17 @@ internal fun <H : SocketHandler> TestSuite.suspendingReceiveTests(
                 val result = async { receive() }
 
                 // The receive is suspending
-                shouldSuspend { result.await() }
+                assertSuspends { result.await() }
 
                 // Fill the peer's receive queue
-                val receivedMessage = buildMessage { writeFrame("Received") }.also { modifySentMessage(it) }
+                val receivedMessage = Message { writeFrame("Received") }.also { modifySentMessage(it) }
                 peer.receiveChannel.send(CommandOrMessage(receivedMessage))
 
                 // The receive eventually succeeds
                 val received = result.await()
-                received shouldNotBe null
+                assertNotNull(received)
                 modifyReceivedMessage(received)
-                received.singleOrThrow().readString() shouldBe "Received"
+                assertEquals("Received", received.singleOrThrow().readString())
             }
         }
     }

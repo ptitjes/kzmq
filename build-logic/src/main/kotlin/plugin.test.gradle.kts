@@ -13,23 +13,15 @@ kotlin {
         if (project.name.endsWith("-tests")) {
             commonMain {
                 dependencies {
-                    implementation(libs.getLibrary("testBalloon.kotest.assertions"))
+                    kotlin("test")
+                    implementation(libs.getLibrary("testBalloonFramework"))
                 }
-            }
-
-            all {
-                languageSettings.optIn("io.kotest.common.ExperimentalKotest")
             }
         } else {
             commonTest {
                 dependencies {
-                    implementation(libs.getLibrary("testBalloon.kotest.assertions"))
-                }
-            }
-
-            all {
-                if (name.endsWith("Test")) {
-                    languageSettings.optIn("io.kotest.common.ExperimentalKotest")
+                    kotlin("test")
+                    implementation(libs.getLibrary("testBalloonFramework"))
                 }
             }
         }

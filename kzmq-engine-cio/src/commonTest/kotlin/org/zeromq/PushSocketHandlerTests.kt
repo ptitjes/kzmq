@@ -6,10 +6,9 @@
 package org.zeromq
 
 import de.infix.testBalloon.framework.*
-import io.kotest.assertions.*
+import kotlinx.io.bytestring.*
 import org.zeromq.fragments.*
 import org.zeromq.internal.*
-import org.zeromq.test.*
 import org.zeromq.utils.*
 
 val PushSocketHandlerTests by testSuite {
@@ -25,20 +24,18 @@ val PushSocketHandlerTests by testSuite {
 
             peerEvents.send(PeerEvent(PeerEvent.Kind.CONNECTION, peer1))
 
-            val firstBatch = messages(5) { index -> writeFrame { writeByte(index.toByte()) } }
-            val secondBatch = messages(10) { index -> writeFrame { writeByte((index + 10).toByte()) } }
+            val firstBatch = List(5) { index -> Message(ByteString(index.toByte())) }
+            val secondBatch = List(10) { index -> Message(ByteString((index + 10).toByte())) }
 
             // Send each message of the first batch once per peer
-            firstBatch.forEach { message -> repeat(2) { send(message.buildMessage()) } }
+            firstBatch.forEach { message -> repeat(2) { send(message) } }
             // Send each message of the second batch once
-            secondBatch.forEach { message -> send(message.buildMessage()) }
+            secondBatch.forEach { message -> send(message) }
 
             peerEvents.send(PeerEvent(PeerEvent.Kind.CONNECTION, peer2))
 
-            all {
-                peer1.sendChannel shouldReceiveExactly firstBatch + secondBatch
-                peer2.sendChannel shouldReceiveExactly firstBatch
-            }
+            assertReceivesExactly(firstBatch + secondBatch, peer1.sendChannel)
+            assertReceivesExactly(firstBatch, peer2.sendChannel)
         }
     }
 
@@ -54,21 +51,23 @@ val PushSocketHandlerTests by testSuite {
             // Send each message once per peer
             repeat(10) { messageIndex ->
                 repeat(peers.size) { peerIndex ->
-                    send(message {
+                    send(Message {
                         writeFrame { writeByte(messageIndex.toByte()) }
                         writeFrame { writeByte(peerIndex.toByte()) }
-                    }.buildMessage())
+                    })
                 }
             }
 
-            all {
-                peers.forEachIndexed { peerIndex, peer ->
-                    peer.sendChannel shouldReceiveExactly
-                        messages(10) { messageIndex ->
+            peers.forEachIndexed { peerIndex, peer ->
+                assertReceivesExactly(
+                    List(10) { messageIndex ->
+                        Message {
                             writeFrame { writeByte(messageIndex.toByte()) }
                             writeFrame { writeByte(peerIndex.toByte()) }
                         }
-                }
+                    },
+                    peer.sendChannel,
+                )
             }
         }
     }
