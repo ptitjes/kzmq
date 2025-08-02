@@ -1,18 +1,17 @@
 /*
- * Copyright (c) 2022-2024 Didier Villevalois and Kzmq contributors.
+ * Copyright (c) 2022-2025 Didier Villevalois and Kzmq contributors.
  * Use of this source code is governed by the Apache 2.0 license.
  */
 
 package org.zeromq.tests
 
-import io.kotest.core.spec.style.*
+import de.infix.testBalloon.framework.*
 import io.kotest.matchers.*
 import org.zeromq.*
 
-class ContextTests : FunSpec({
-
+val ContextTests by testSuite {
     test("Auto-discover engines") {
         val context = Context()
         context shouldNotBe null
     }
-})
+}

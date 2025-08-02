@@ -5,14 +5,14 @@
 
 package org.zeromq
 
-import io.kotest.core.spec.style.*
+import de.infix.testBalloon.framework.*
 import kotlinx.io.bytestring.*
 import org.zeromq.fragments.*
 import org.zeromq.internal.*
 import org.zeromq.test.*
 import org.zeromq.utils.*
 
-internal class RequestSocketHandlerTests : FunSpec({
+val RequestSocketHandlerTests by testSuite {
     val factory = ::RequestSocketHandler
 
     test("SHALL prefix the outgoing message with an empty delimiter frame") {
@@ -33,7 +33,7 @@ internal class RequestSocketHandlerTests : FunSpec({
         }
     }
 
-    test("SHALL route outgoing messages to connected peers using a round-robin strategy").config(enabled = false) {
+    test("SHALL route outgoing messages to connected peers using a round-robin strategy", TestConfig.disable()) {
         factory.runTest {
             val peerCount = 5
             val messageCount = 10
@@ -79,7 +79,7 @@ internal class RequestSocketHandlerTests : FunSpec({
 
     suspendingSendTests(factory)
 
-    test("SHALL accept an incoming message only from the last peer that it sent a request to") {
+    test("SHALL accept an incoming message only from the last peer that it sent a request to", TestConfig.testScope(isEnabled = false)) {
         factory.runTest {
             val peers = List(2) { index ->
                 PeerMailbox(index.toString(), SocketOptions()).also { peer ->
@@ -106,7 +106,7 @@ internal class RequestSocketHandlerTests : FunSpec({
         }
     }
 
-    test("SHALL discard silently any messages received from other peers") {
+    test("SHALL discard silently any messages received from other peers", TestConfig.testScope(isEnabled = false)) {
         factory.runTest {
             val peers = List(2) { index ->
                 PeerMailbox(index.toString(), SocketOptions()).also { peer ->
@@ -153,4 +153,4 @@ internal class RequestSocketHandlerTests : FunSpec({
             message.pushPrefixAddress(listOf("dummy-address".encodeToByteString()))
         },
     )
-})
+}

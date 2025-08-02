@@ -5,13 +5,13 @@
 
 package org.zeromq
 
-import io.kotest.core.spec.style.*
+import de.infix.testBalloon.framework.*
 import org.zeromq.fragments.*
 import org.zeromq.internal.*
 import org.zeromq.test.*
 import org.zeromq.utils.*
 
-internal class PairSocketHandlerTests : FunSpec({
+val PairSocketHandlerTests by testSuite {
     val factory = ::PairSocketHandler
 
     test("SHALL consider a peer as available only when it has an outgoing queue that is not full") {
@@ -50,4 +50,4 @@ internal class PairSocketHandlerTests : FunSpec({
     }
 
     suspendingReceiveTests(factory)
-})
+}

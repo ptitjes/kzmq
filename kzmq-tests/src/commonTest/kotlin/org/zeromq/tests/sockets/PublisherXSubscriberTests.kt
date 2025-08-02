@@ -1,11 +1,11 @@
 /*
- * Copyright (c) 2022-2024 Didier Villevalois and Kzmq contributors.
+ * Copyright (c) 2022-2025 Didier Villevalois and Kzmq contributors.
  * Use of this source code is governed by the Apache 2.0 license.
  */
 
 package org.zeromq.tests.sockets
 
-import io.kotest.core.spec.style.*
+import de.infix.testBalloon.framework.*
 import io.kotest.matchers.collections.*
 import kotlinx.coroutines.*
 import kotlinx.io.*
@@ -14,7 +14,7 @@ import org.zeromq.*
 import org.zeromq.tests.utils.*
 
 @Suppress("unused")
-class PublisherXSubscriberTests : FunSpec({
+val PublisherXSubscriberTests by testSuite {
 
     withContexts("subscription filter") { ctx1, ctx2, protocol ->
         val address = randomEndpoint(protocol)
@@ -45,4 +45,4 @@ class PublisherXSubscriberTests : FunSpec({
             }
         }
     }
-})
+}

@@ -1,34 +1,31 @@
 /*
- * Copyright (c) 2021-2024 Didier Villevalois and Kzmq contributors.
+ * Copyright (c) 2021-2025 Didier Villevalois and Kzmq contributors.
  * Use of this source code is governed by the Apache 2.0 license.
  */
 
 package org.zeromq.tests.utils
 
+import de.infix.testBalloon.framework.*
 import io.kotest.assertions.*
-import io.kotest.core.names.*
-import io.kotest.core.spec.style.scopes.*
-import io.kotest.core.test.*
-import io.kotest.core.test.config.*
 import kotlinx.coroutines.*
 import org.zeromq.*
 import kotlin.time.*
 import kotlin.time.Duration.Companion.minutes
 
-typealias SingleContextTest = suspend ContainerScope.(Context, Protocol) -> Unit
-typealias DualContextTest = suspend ContainerScope.(Context, Context, Protocol) -> Unit
+typealias SingleContextTest = suspend TestCoroutineScope.(Context, Protocol) -> Unit
+typealias DualContextTest = suspend TestCoroutineScope.(Context, Context, Protocol) -> Unit
 
-fun <T : RootScope> T.withContext(name: String, test: SingleContextTest) = withContext(name).config(test = test)
+fun TestSuite.withContext(name: String, testAction: SingleContextTest) = withContext(name).config(test = testAction)
 
-fun <T : RootScope> T.withContext(name: String): SingleContextTestBuilder = SingleContextTestBuilder(name, this)
+fun TestSuite.withContext(name: String): SingleContextTestBuilder = SingleContextTestBuilder(name, this)
 
-fun <T : RootScope> T.withContexts(name: String, test: DualContextTest) = withContexts(name).config(test = test)
+fun TestSuite.withContexts(name: String, testAction: DualContextTest) = withContexts(name).config(test = testAction)
 
-fun <T : RootScope> T.withContexts(name: String): DualContextTestBuilder = DualContextTestBuilder(name, this)
+fun TestSuite.withContexts(name: String): DualContextTestBuilder = DualContextTestBuilder(name, this)
 
 class SingleContextTestBuilder(
     private val name: String,
-    private val context: RootScope,
+    private val context: TestSuite,
 ) {
     fun config(
         skip: Set<String>? = null,
@@ -40,14 +37,14 @@ class SingleContextTestBuilder(
     }
 }
 
-private val DEFAULT_TEST_TIMEOUT = 5.minutes
+private val DEFAULT_TEST_TIMEOUT = 1.minutes
 
-private fun RootScope.runSingleContextTest(
+private fun TestSuite.runSingleContextTest(
     name: String,
     skip: Set<String>?,
     only: Set<String>?,
     timeout: Duration?,
-    test: SingleContextTest,
+    testAction: SingleContextTest,
 ) {
     val testData = engines.flatMap { engine -> engine.supportedTransports.map { engine to it.asProtocol() } }
 
@@ -56,22 +53,22 @@ private fun RootScope.runSingleContextTest(
     }
 
     val testTimeout = timeout ?: DEFAULT_TEST_TIMEOUT
-    val globalConfig = TestConfig(
-        timeout = testTimeout * testData.size,
-        invocationTimeout = testTimeout,
-    )
+    val config = TestConfig.testScope(isEnabled = false, timeout = testTimeout)
 
-    testData.forEach { data ->
-        val (engine, protocol) = data
-        val testName = TestName("$name (${engine.name}, $protocol)")
-        val testConfig = globalConfig.copy(enabled = enableTest(data))
+    testSuite(name) {
+        testData.forEach { data ->
+            val (engine, protocol) = data
 
-        addTest(testName, false, testConfig, TestType.Dynamic) {
-            retry(10, 5.minutes) {
-                val context = Context(engine)
-                context.use {
-                    withTimeout(testTimeout) {
-                        test(context, protocol)
+            val testName = "${engine.name}, $protocol"
+            val testConfig = if (enableTest(data)) config else config.disable()
+
+            test(testName, testConfig) {
+                retry(10, 5.minutes) {
+                    val context = Context(engine)
+                    context.use {
+                        withTimeout(testTimeout) {
+                            testAction(context, protocol)
+                        }
                     }
                 }
             }
@@ -83,7 +80,7 @@ private fun String.asProtocol(): Protocol = Protocol.valueOf(uppercase())
 
 class DualContextTestBuilder(
     private val name: String,
-    private val context: RootScope,
+    private val context: TestSuite,
 ) {
     fun config(
         skip: Set<String>? = null,
@@ -95,12 +92,12 @@ class DualContextTestBuilder(
     }
 }
 
-private fun RootScope.runDualContextTest(
+private fun TestSuite.runDualContextTest(
     name: String,
     skip: Set<String>? = null,
     only: Set<String>? = null,
     timeout: Duration?,
-    test: DualContextTest,
+    testAction: DualContextTest,
 ) {
     val enginePairs = engines.flatMap { e1 -> engines.map { e2 -> e1 to e2 } }
     val testData = enginePairs.flatMap { (e1, e2) ->
@@ -113,23 +110,22 @@ private fun RootScope.runDualContextTest(
     }
 
     val testTimeout = timeout ?: DEFAULT_TEST_TIMEOUT
-    val globalConfig = TestConfig(
-        timeout = testTimeout * testData.size,
-        invocationTimeout = testTimeout,
-    )
+    val config = TestConfig.testScope(isEnabled = false, timeout = testTimeout)
 
-    testData.forEach { data ->
-        val (engine1, engine2, protocol) = data
-        val testName = TestName("$name (${engine1.name}-${engine2.name}, $protocol)")
-        val testConfig = globalConfig.copy(enabled = enableTest(data))
+    testSuite(name) {
+        testData.forEach { data ->
+            val (engine1, engine2, protocol) = data
+            val testName = "${engine1.name}-${engine2.name}, $protocol"
+            val testConfig = if (enableTest(data)) config else config.disable()
 
-        addTest(testName, false, testConfig, TestType.Dynamic) {
-            retry(10, 5.minutes) {
-                val context1 = Context(engine1)
-                val context2 = if (protocol == Protocol.INPROC) context1 else Context(engine2)
-                use(context1, context2) {
-                    withTimeout(testTimeout) {
-                        test(context1, context2, protocol)
+            test(testName, testConfig) {
+                retry(10, 5.minutes) {
+                    val context1 = Context(engine1)
+                    val context2 = if (protocol == Protocol.INPROC) context1 else Context(engine2)
+                    use(context1, context2) {
+                        withTimeout(testTimeout) {
+                            testAction(context1, context2, protocol)
+                        }
                     }
                 }
             }

@@ -1,13 +1,12 @@
 /*
- * Copyright (c) 2021-2024 Didier Villevalois and Kzmq contributors.
+ * Copyright (c) 2021-2025 Didier Villevalois and Kzmq contributors.
  * Use of this source code is governed by the Apache 2.0 license.
  */
 
 package org.zeromq.tests.sockets
 
+import de.infix.testBalloon.framework.*
 import io.kotest.assertions.*
-import io.kotest.common.*
-import io.kotest.core.spec.style.*
 import io.kotest.matchers.*
 import kotlinx.coroutines.*
 import kotlinx.io.bytestring.*
@@ -16,9 +15,8 @@ import org.zeromq.test.*
 import org.zeromq.tests.utils.*
 import kotlin.time.Duration.Companion.seconds
 
-@OptIn(ExperimentalKotest::class)
 @Suppress("unused")
-class PushTests : FunSpec({
+val PushTests by testSuite {
 
     withContexts("simple connect-bind") { ctx1, ctx2, protocol ->
         val address = randomEndpoint(protocol)
@@ -201,7 +199,7 @@ class PushTests : FunSpec({
 
         val push = ctx1.createPush().apply { connect(address) }
 
-        val templates = messages(10) { index -> listOf(ByteString(index.toByte() )) }
+        val templates = messages(10) { index -> listOf(ByteString(index.toByte())) }
 
         // Send each message once
         templates.forEach { push.send(it) }
@@ -212,4 +210,4 @@ class PushTests : FunSpec({
         // Check each receiver got every messages
         pull shouldReceiveExactly templates
     }
-})
+}

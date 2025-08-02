@@ -5,7 +5,7 @@
 
 package org.zeromq.fragments
 
-import io.kotest.core.spec.style.*
+import de.infix.testBalloon.framework.*
 import io.kotest.matchers.*
 import kotlinx.coroutines.*
 import org.zeromq.*
@@ -20,11 +20,12 @@ import org.zeromq.utils.*
  * - SHALL not accept further messages when it has no available peers
  * - SHALL NOT discard messages that it cannot queue
  */
-internal fun <H : SocketHandler> FunSpec.suspendingSendTests(
+@TestDiscoverable
+internal fun <H : SocketHandler> TestSuite.suspendingSendTests(
     factory: (SocketOptions) -> H,
     configureForSender: H.(PeerMailbox) -> Unit = {},
 ) =
-    testSet("SHALL suspend on sending") {
+    testSuite("SHALL suspend on sending", testConfig = TestConfig.testScope(isEnabled = false)) {
         test("no peer") {
             factory.runTest {
                 // Trigger an asynchronous sending

@@ -5,9 +5,9 @@
 
 package org.zeromq
 
+import de.infix.testBalloon.framework.*
 import io.kotest.assertions.*
 import io.kotest.assertions.throwables.*
-import io.kotest.core.spec.style.*
 import io.kotest.matchers.*
 import kotlinx.coroutines.*
 import kotlinx.io.bytestring.*
@@ -16,7 +16,7 @@ import org.zeromq.internal.*
 import org.zeromq.test.*
 import org.zeromq.utils.*
 
-internal class RouterSocketHandlerTests : FunSpec({
+val RouterSocketHandlerTests by testSuite {
     val factory = ::RouterSocketHandler
 
     test(
@@ -51,7 +51,7 @@ internal class RouterSocketHandlerTests : FunSpec({
         }
     }
 
-    testSet("SHALL route the message to the outgoing queue if that queue exists, and has space") {
+    testSuite("SHALL route the message to the outgoing queue if that queue exists, and has space") {
         test("matching queue") {
             factory.runTest {
                 val peer = PeerMailbox("match", SocketOptions()).also { peer ->
@@ -184,4 +184,4 @@ internal class RouterSocketHandlerTests : FunSpec({
             message.popIdentity()
         }
     )
-})
+}

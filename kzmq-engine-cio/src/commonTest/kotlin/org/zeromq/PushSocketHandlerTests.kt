@@ -5,14 +5,14 @@
 
 package org.zeromq
 
+import de.infix.testBalloon.framework.*
 import io.kotest.assertions.*
-import io.kotest.core.spec.style.*
 import org.zeromq.fragments.*
 import org.zeromq.internal.*
 import org.zeromq.test.*
 import org.zeromq.utils.*
 
-internal class PushSocketHandlerTests : FunSpec({
+val PushSocketHandlerTests by testSuite {
     val factory = ::PushSocketHandler
 
     test("SHALL consider a peer as available only when it has an outgoing queue that is not full") {
@@ -74,4 +74,4 @@ internal class PushSocketHandlerTests : FunSpec({
     }
 
     suspendingSendTests(factory)
-})
+}

@@ -5,8 +5,6 @@
 
 package org.zeromq.utils
 
-import io.kotest.core.spec.style.*
-import io.kotest.core.test.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.*
 import org.zeromq.*
@@ -33,18 +31,6 @@ internal suspend fun <H : SocketHandler> ((options: SocketOptions) -> H).runTest
 
     scope.test()
     handlerJob.cancelAndJoin()
-}
-
-internal interface TestSetScope {
-    fun test(name: String, test: suspend TestScope.() -> Unit)
-}
-
-internal fun FunSpec.testSet(setName: String, tests: TestSetScope.() -> Unit) {
-    object : TestSetScope {
-        override fun test(name: String, test: suspend TestScope.() -> Unit) {
-            this@testSet.test("$setName > $name", test)
-        }
-    }.tests()
 }
 
 internal interface SocketHandlerTestScope<H : SocketHandler> {

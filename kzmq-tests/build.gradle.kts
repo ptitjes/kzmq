@@ -10,7 +10,7 @@ description = "Common tests for engines"
 plugins {
     id("plugin.common")
     id("plugin.atomicfu")
-    id("plugin.kotest")
+    id("plugin.test")
 }
 
 kotlin {

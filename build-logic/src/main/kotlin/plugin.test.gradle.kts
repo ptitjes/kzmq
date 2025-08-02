@@ -5,8 +5,7 @@
 
 plugins {
     id("plugin.common")
-    id("io.kotest")
-    id("com.google.devtools.ksp")
+    id("de.infix.testBalloon")
 }
 
 kotlin {
@@ -14,8 +13,7 @@ kotlin {
         if (project.name.endsWith("-tests")) {
             commonMain {
                 dependencies {
-                    implementation(libs.getLibrary("kotest.framework.engine"))
-                    implementation(libs.getLibrary("kotest.assertions.core"))
+                    implementation(libs.getLibrary("testBalloon.kotest.assertions"))
                 }
             }
 
@@ -25,8 +23,7 @@ kotlin {
         } else {
             commonTest {
                 dependencies {
-                    implementation(libs.getLibrary("kotest.framework.engine"))
-                    implementation(libs.getLibrary("kotest.assertions.core"))
+                    implementation(libs.getLibrary("testBalloon.kotest.assertions"))
                 }
             }
 
@@ -37,4 +34,8 @@ kotlin {
             }
         }
     }
+}
+
+tasks.withType<AbstractTestTask> {
+    failOnNoDiscoveredTests = false
 }

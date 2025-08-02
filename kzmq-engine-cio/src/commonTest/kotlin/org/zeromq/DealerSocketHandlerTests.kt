@@ -5,15 +5,15 @@
 
 package org.zeromq
 
-import io.kotest.assertions.all
-import io.kotest.core.spec.style.*
+import de.infix.testBalloon.framework.*
+import io.kotest.assertions.*
 import kotlinx.io.bytestring.*
 import org.zeromq.fragments.*
 import org.zeromq.internal.*
 import org.zeromq.test.*
 import org.zeromq.utils.*
 
-internal class DealerSocketHandlerTests : FunSpec({
+val DealerSocketHandlerTests by testSuite {
     val factory = ::DealerSocketHandler
 
     test("SHALL route outgoing messages to connected peers using a round-robin strategy") {
@@ -86,4 +86,4 @@ internal class DealerSocketHandlerTests : FunSpec({
     }
 
     suspendingReceiveTests(factory)
-})
+}

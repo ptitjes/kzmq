@@ -1,11 +1,11 @@
 /*
- * Copyright (c) 2021-2024 Didier Villevalois and Kzmq contributors.
+ * Copyright (c) 2021-2025 Didier Villevalois and Kzmq contributors.
  * Use of this source code is governed by the Apache 2.0 license.
  */
 
 package org.zeromq.tests.sockets
 
-import io.kotest.core.spec.style.*
+import de.infix.testBalloon.framework.*
 import io.kotest.matchers.*
 import io.kotest.matchers.equals.*
 import kotlinx.atomicfu.*
@@ -19,7 +19,7 @@ private const val REQUEST_MARKER = "REQ"
 private const val REPLY_MARKER = "REP"
 
 @Suppress("unused")
-class DealerRouterTests : FunSpec({
+val DealerRouterTests by testSuite {
 
     withContexts("base").config(
         // TODO fix when testing more Dealer and Router logic
@@ -99,7 +99,7 @@ class DealerRouterTests : FunSpec({
 
         trace.receivedReplyIds.value shouldBeEqual (0 until 6).toSet()
     }
-})
+}
 
 /*
  * TODO Remove when https://github.com/zeromq/zeromq.js/issues/506 is fixed.

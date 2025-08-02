@@ -1,17 +1,16 @@
 /*
- * Copyright (c) 2024 Didier Villevalois and Kzmq contributors.
+ * Copyright (c) 2024-2025 Didier Villevalois and Kzmq contributors.
  * Use of this source code is governed by the Apache 2.0 license.
  */
 
 package org.zeromq
 
-import kotlinx.coroutines.*
+import de.infix.testBalloon.framework.*
 import kotlinx.io.*
 import kotlin.test.*
 
-class SimpleCioTest {
-    @Test
-    fun testSimple() = runBlocking {
+val SimpleCioTest by testSuite {
+    test("simple") {
         val ctx1 = Context(CIO)
         val ctx2 = Context(CIO)
 

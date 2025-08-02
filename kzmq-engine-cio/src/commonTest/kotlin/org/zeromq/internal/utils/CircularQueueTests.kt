@@ -1,18 +1,16 @@
 /*
- * Copyright (c) 2022-2024 Didier Villevalois and Kzmq contributors.
+ * Copyright (c) 2022-2025 Didier Villevalois and Kzmq contributors.
  * Use of this source code is governed by the Apache 2.0 license.
  */
 
 package org.zeromq.internal.utils
 
+import de.infix.testBalloon.framework.*
 import io.kotest.assertions.throwables.*
-import io.kotest.core.spec.style.*
 import io.kotest.matchers.*
 import io.kotest.matchers.equals.*
 
-@Suppress("unused")
-class CircularQueueTests : FunSpec({
-
+val CircularQueueTests by testSuite {
     test("requires at least one element") {
         val queue = CircularQueue<Int>()
         shouldThrow<IllegalStateException> { queue.rotate() }
@@ -71,4 +69,4 @@ class CircularQueueTests : FunSpec({
         queue.remove(3)
         queue.elements shouldBeEqual listOf(1, 2)
     }
-})
+}

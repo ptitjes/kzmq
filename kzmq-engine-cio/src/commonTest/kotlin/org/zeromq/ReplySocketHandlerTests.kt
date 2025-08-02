@@ -5,8 +5,8 @@
 
 package org.zeromq
 
+import de.infix.testBalloon.framework.*
 import io.kotest.assertions.*
-import io.kotest.core.spec.style.*
 import kotlinx.coroutines.*
 import kotlinx.io.bytestring.*
 import org.zeromq.fragments.*
@@ -14,7 +14,7 @@ import org.zeromq.internal.*
 import org.zeromq.test.*
 import org.zeromq.utils.*
 
-internal class ReplySocketHandlerTests : FunSpec({
+val ReplySocketHandlerTests by testSuite {
     val factory = ::ReplySocketHandler
 
     test("SHALL receive incoming messages from its peers using a fair-queuing strategy") {
@@ -88,4 +88,4 @@ internal class ReplySocketHandlerTests : FunSpec({
             message.pushPrefixAddress(listOf("dummy-address".encodeToByteString()))
         },
     )
-})
+}

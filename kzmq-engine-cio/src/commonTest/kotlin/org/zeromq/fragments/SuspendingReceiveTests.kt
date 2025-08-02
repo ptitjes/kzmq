@@ -5,7 +5,7 @@
 
 package org.zeromq.fragments
 
-import io.kotest.core.spec.style.*
+import de.infix.testBalloon.framework.*
 import io.kotest.matchers.*
 import kotlinx.coroutines.*
 import kotlinx.io.*
@@ -19,13 +19,14 @@ import org.zeromq.utils.*
  * This tests covers:
  * - SHALL suspend on receiving when it has no incoming message
  */
-internal fun <H : SocketHandler> FunSpec.suspendingReceiveTests(
+@TestDiscoverable
+internal fun <H : SocketHandler> TestSuite.suspendingReceiveTests(
     factory: (SocketOptions) -> H,
     configureForReceiver: H.(PeerMailbox) -> Unit = {},
     modifySentMessage: (Message) -> Unit = {},
     modifyReceivedMessage: (Message) -> Unit = {},
 ) =
-    testSet("SHALL suspend on receiving") {
+    testSuite("SHALL suspend on receiving", testConfig = TestConfig.testScope(isEnabled = false)) {
         test("no incoming message") {
             factory.runTest {
                 // Trigger an asynchronous receive

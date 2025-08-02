@@ -22,7 +22,7 @@ findopenport = "2.0.3"
 jeromq = "0.6.0"
 zeromqjs = "6.3.0"
 
-kotest = "6.0.0.M9"
+testBalloon = "0.4.0-K2.2.0"
 mokkery = "2.9.0"
 
 build-config = "5.4.0"
@@ -35,8 +35,8 @@ kotlin-atomicfu = { id = "org.jetbrains.kotlin.plugin.atomicfu", version.ref = "
 kotlinx-benchmark = { id = "org.jetbrains.kotlinx.benchmark", version.ref = "kotlinx-benchmark" }
 kotlinx-kover = { id = "org.jetbrains.kotlinx.kover", version.ref = "kover" }
 kotlin-dokka = { id = "org.jetbrains.dokka", version.ref = "dokka" }
-ksp = { id = "com.google.devtools.ksp", version.ref = "ksp"}
-kotest = { id = "io.kotest", version.ref = "kotest" }
+ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
+testBalloon = { id = "de.infix.testBalloon", version.ref = "testBalloon" }
 mokkery = { id = "dev.mokkery", version.ref = "mokkery" }
 
 build-config = { id = "com.github.gmazzo.buildconfig", version.ref = "build-config" }
@@ -56,8 +56,6 @@ kermit = { module = "co.touchlab:kermit", version.ref = "kermit" }
 
 jeromq = { module = "org.zeromq:jeromq", version.ref = "jeromq" }
 
-kotest-framework-engine = { module = "io.kotest:kotest-framework-engine", version.ref = "kotest" }
-kotest-assertions-core = { module = "io.kotest:kotest-assertions-core", version.ref = "kotest" }
-kotest-runner-junit5 = { module = "io.kotest:kotest-runner-junit5", version.ref = "kotest" }
+testBalloon-kotest-assertions = { module = "de.infix.testBalloon:testBalloon-integration-kotest-assertions", version.ref = "testBalloon" }
 
 [bundles]

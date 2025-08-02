@@ -1,18 +1,18 @@
 /*
- * Copyright (c) 2021-2024 Didier Villevalois and Kzmq contributors.
+ * Copyright (c) 2021-2025 Didier Villevalois and Kzmq contributors.
  * Use of this source code is governed by the Apache 2.0 license.
  */
 
 package org.zeromq.tests.sockets
 
-import io.kotest.core.spec.style.*
+import de.infix.testBalloon.framework.*
 import kotlinx.io.bytestring.*
 import org.zeromq.*
 import org.zeromq.test.*
 import org.zeromq.tests.utils.*
 
 @Suppress("unused")
-class PairTests : FunSpec({
+val PairTests by testSuite {
 
     withContexts("bind-connect") { ctx1, ctx2, protocol ->
         val address = randomEndpoint(protocol)
@@ -49,4 +49,4 @@ class PairTests : FunSpec({
         pair2.send(message)
         pair1 shouldReceive message
     }
-})
+}

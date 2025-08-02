@@ -5,14 +5,14 @@
 
 package org.zeromq
 
+import de.infix.testBalloon.framework.*
 import io.kotest.assertions.*
-import io.kotest.core.spec.style.*
-import org.zeromq.fragments.suspendingReceiveTests
+import org.zeromq.fragments.*
 import org.zeromq.internal.*
 import org.zeromq.test.*
 import org.zeromq.utils.*
 
-internal class PullSocketHandlerTests : FunSpec({
+val PullSocketHandlerTests by testSuite {
     val factory = ::PullSocketHandler
 
     test("SHALL receive incoming messages from its peers using a fair-queuing strategy") {
@@ -58,4 +58,4 @@ internal class PullSocketHandlerTests : FunSpec({
     }
 
     suspendingReceiveTests(factory)
-})
+}

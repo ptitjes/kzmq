@@ -1,17 +1,17 @@
 /*
- * Copyright (c) 2022-2024 Didier Villevalois and Kzmq contributors.
+ * Copyright (c) 2022-2025 Didier Villevalois and Kzmq contributors.
  * Use of this source code is governed by the Apache 2.0 license.
  */
 
 package org.zeromq
 
+import de.infix.testBalloon.framework.*
 import dev.mokkery.*
 import dev.mokkery.answering.*
 import dev.mokkery.matcher.*
-import io.kotest.core.spec.style.*
 import kotlinx.coroutines.flow.*
 
-class SendSocketOpsTests : FunSpec({
+val SendSocketOpsTests by testSuite {
     test("collectToSocket") {
         val socket = mock<SendSocket> {
             everySuspend { send(any()) } returns Unit
@@ -26,4 +26,4 @@ class SendSocketOpsTests : FunSpec({
             }
         }
     }
-})
+}
