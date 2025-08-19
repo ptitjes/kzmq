@@ -14,7 +14,7 @@ kotlinx-cli = "0.3.6"
 kotlinx-io = "0.5.1"
 
 ktor = "3.0.0-beta-2"
-kermit = "2.0.4"
+kermit = "2.0.8"
 findopenport = "2.0.3"
 
 jeromq = "0.6.0"
