@@ -21,7 +21,7 @@ jeromq = "0.6.0"
 zeromqjs = "6.0.0-beta.20"
 
 kotest = "5.9.1"
-mokkery = "2.1.1"
+mokkery = "2.10.2"
 
 build-config = "5.4.0"
 
