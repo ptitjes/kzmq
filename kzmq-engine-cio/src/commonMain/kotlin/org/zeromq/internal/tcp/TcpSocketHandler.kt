@@ -56,7 +56,7 @@ internal class TcpSocketHandler(
 
         val identity = peerProperties[PropertyName.IDENTITY]?.let { Identity(it) }
         if (mailbox.identity != null && mailbox.identity != identity) {
-            logger.e { "Identity mismatch: old=${mailbox.receiveChannel} new=$identity)" }
+            logger.e { "Identity mismatch: old=${mailbox.identity} new=$identity)" }
         }
         mailbox.identity = identity
 
