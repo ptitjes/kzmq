@@ -127,11 +127,9 @@ internal class SubscriberSocketHandler : SocketHandler {
         while (isActive) {
             select {
                 peerEvents.onReceive { event ->
-                    mailboxes.update(event)
-
                     val (kind, mailbox) = event
                     when (kind) {
-                        PeerEvent.Kind.ADDITION -> {
+                        PeerEvent.Kind.CONNECTION -> {
                             for (subscription in subscriptions.existing) {
                                 logger.d { "Sending subscription $subscription to $mailbox" }
                                 mailbox.sendChannel.send(CommandOrMessage(SubscribeCommand(subscription)))
@@ -140,6 +138,8 @@ internal class SubscriberSocketHandler : SocketHandler {
 
                         else -> {}
                     }
+
+                    mailboxes.updateOnConnection(event)
                 }
 
                 subscriptions.lateSubscriptionCommands.onReceive { command ->
