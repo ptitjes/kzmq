@@ -11,6 +11,7 @@ plugins {
     id("plugin.atomicfu")
     id("plugin.kotest")
     id("plugin.mocks")
+    id("plugin.publishing")
 }
 
 kotlin {
