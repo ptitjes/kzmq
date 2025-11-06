@@ -39,6 +39,6 @@ fun Project.pkgConfig(vararg args: String): List<String> {
         return output.toByteArray().decodeToString().trim().split("\\s*")
     } catch (_: Throwable) {
         val standardOutput = output.toByteArray().decodeToString()
-        error("Failed to get pkg-config for '$args: $standardOutput")
+        error("Failed to get pkg-config for '${args.joinToString(" ")}': $standardOutput")
     }
 }
