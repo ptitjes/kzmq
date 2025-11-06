@@ -21,7 +21,7 @@ kotlin {
     sourceSets {
         commonMain {
             dependencies {
-                implementation(libs.kotlinx.io.core)
+                api(libs.kotlinx.io.core)
             }
         }
     }
