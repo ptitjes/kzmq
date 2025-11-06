@@ -1,24 +1,24 @@
 [versions]
 
-project = "0.1-SNAPSHOT"
+project = "0.1.0-SNAPSHOT"
 
-kotlin = "2.0.0"
+kotlin = "2.2.21"
 
 dokka = "1.9.20"
 kover = "0.8.3"
 
-kotlinx-coroutines = "1.9.0-RC"
-kotlinx-atomicfu = "0.25.0"
+kotlinx-coroutines = "1.10.2"
+kotlinx-atomicfu = "0.29.0"
 kotlinx-benchmark = "0.4.11"
 kotlinx-cli = "0.3.6"
-kotlinx-io = "0.5.1"
+kotlinx-io = "0.8.0"
 
-ktor = "3.0.0-beta-2"
-kermit = "2.0.4"
+ktor = "3.3.2"
+kermit = "2.0.8"
 findopenport = "2.0.3"
 
 jeromq = "0.6.0"
-zeromqjs = "6.0.0-beta.20"
+zeromqjs = "6.5.0"
 
 kotest = "5.9.1"
 mokkery = "2.1.1"
