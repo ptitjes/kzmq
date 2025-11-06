@@ -12,7 +12,7 @@ plugins {
 
 kotlin {
     jvmTargets()
-    nativeTargets { it.isSupportedByCIO }
+//    nativeTargets { it.isSupportedByCIO }
 
     sourceSets {
         commonMain {
