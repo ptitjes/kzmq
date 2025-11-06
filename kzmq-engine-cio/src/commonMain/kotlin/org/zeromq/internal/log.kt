@@ -7,9 +7,4 @@ package org.zeromq.internal
 
 import co.touchlab.kermit.*
 
-internal val logger = Logger(
-    StaticConfig(
-        minSeverity = Severity.Warn,
-        logWriterList = listOf(CommonWriter())
-    )
-)
+internal val logger = Logger.withTag("kzmq")
