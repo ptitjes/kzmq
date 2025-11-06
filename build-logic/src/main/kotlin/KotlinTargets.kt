@@ -29,8 +29,17 @@ private val ignoredTargets = setOf(
 fun KotlinMultiplatformExtension.nativeTargets(
     predicate: (KonanTarget) -> Boolean,
 ) {
-    KonanTarget.predefinedTargets.values.filter { it !in ignoredTargets }.filter(predicate)
+    KonanTarget.predefinedTargets.values
+        .filter { it !in ignoredTargets }
+        .filter { it.isCompatibleWithHostOs() }
+        .filter(predicate)
         .forEach { perKonanTargetApplier[it]?.invoke(this) }
+}
+
+private fun KonanTarget.isCompatibleWithHostOs(): Boolean = when (family) {
+    Family.LINUX, Family.ANDROID -> HostManager.hostIsLinux
+    Family.OSX, Family.IOS, Family.WATCHOS, Family.TVOS -> HostManager.hostIsMac
+    Family.MINGW -> HostManager.hostIsMingw
 }
 
 private val perKonanTargetApplier = mutableMapOf<KonanTarget, KotlinMultiplatformExtension.() -> KotlinNativeTarget>(
@@ -64,10 +73,10 @@ val KonanTarget.buildHost: Family
         ANDROID_ARM64,
         LINUX_ARM64,
         LINUX_X64,
-        -> Family.LINUX
+            -> Family.LINUX
 
         MINGW_X64,
-        -> Family.MINGW
+            -> Family.MINGW
 
         IOS_ARM64,
         IOS_X64,
@@ -82,7 +91,7 @@ val KonanTarget.buildHost: Family
         TVOS_SIMULATOR_ARM64,
         MACOS_X64,
         MACOS_ARM64,
-        -> Family.OSX
+            -> Family.OSX
 
         else -> error("Target $this not supported")
     }
