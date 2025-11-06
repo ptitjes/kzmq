@@ -66,8 +66,8 @@ public class Message(private var frames: List<Buffer>) : ReadScope, WriteScope {
         return frames
     }
 
-    public override fun writeFrame(buffer: Buffer) {
-        frames += buffer
+    public override fun writeFrame(source: Buffer) {
+        frames += source
     }
 
     public fun writeFrames(sources: List<Buffer>) {
