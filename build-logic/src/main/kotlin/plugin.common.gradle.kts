@@ -4,7 +4,6 @@
  */
 
 import org.gradle.api.tasks.testing.logging.*
-import org.gradle.kotlin.dsl.*
 import org.jetbrains.kotlin.gradle.plugin.mpp.*
 import org.jetbrains.kotlin.gradle.tasks.*
 import org.jetbrains.kotlin.konan.target.*
@@ -40,18 +39,6 @@ kotlin {
             }
         }
     }
-
-    val nativeTargets = targets.withType<KotlinNativeTarget>()
-    val windowsHostTargets = nativeTargets.filter { it.konanTarget.buildHost == Family.MINGW }
-    val linuxHostTargets = nativeTargets.filter { it.konanTarget.buildHost == Family.LINUX }
-    val osxHostTargets = nativeTargets.filter { it.konanTarget.buildHost == Family.OSX }
-    val androidTargets = targets.withType<KotlinAndroidTarget>()
-    val crossPlatformTargets = targets.filter { it !in nativeTargets }
-
-    linuxHostTargets.onlyBuildIf { !CI || HostManager.hostIsLinux }
-    osxHostTargets.onlyBuildIf { !CI || HostManager.hostIsMac }
-    windowsHostTargets.onlyBuildIf { !CI || HostManager.hostIsMingw }
-    crossPlatformTargets.onlyBuildIf { !CI || SANDBOX || isMainHost }
 }
 
 tasks {
