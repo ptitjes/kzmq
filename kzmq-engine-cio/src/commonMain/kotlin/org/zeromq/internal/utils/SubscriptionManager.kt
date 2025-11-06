@@ -11,7 +11,7 @@ import org.zeromq.internal.*
 
 internal class SubscriptionManager {
     val existing = mutableListOf<ByteString>()
-    val lateSubscriptionCommands = Channel<Command>(10)
+    val lateSubscriptionCommands = Channel<Command>()
 
     suspend fun subscribe(topics: List<ByteString>) {
         val effectiveTopics = topics.ifEmpty { listOf(ByteString()) }

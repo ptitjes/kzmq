@@ -18,6 +18,15 @@ internal fun CircularQueue<PeerMailbox>.update(event: PeerEvent) {
     }
 }
 
+internal fun CircularQueue<PeerMailbox>.updateOnConnection(event: PeerEvent) {
+    val mailbox = event.peerMailbox
+    when (event.kind) {
+        PeerEvent.Kind.CONNECTION -> add(mailbox)
+        PeerEvent.Kind.DISCONNECTION -> remove(mailbox)
+        else -> {}
+    }
+}
+
 internal suspend fun CircularQueue<PeerMailbox>.sendToFirstAvailable(message: Message): PeerMailbox? {
     // Fast path: Find the first mailbox we can send immediately
     logger.v { "Try sending message $message to first available" }
