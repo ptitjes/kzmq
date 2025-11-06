@@ -24,6 +24,7 @@ kotest = "5.9.1"
 mokkery = "2.1.1"
 
 build-config = "5.4.0"
+maven-publish = "0.34.0"
 
 [plugins]
 
@@ -37,6 +38,7 @@ kotest = { id = "io.kotest.multiplatform", version.ref = "kotest" }
 mokkery = { id = "dev.mokkery", version.ref = "mokkery" }
 
 build-config = { id = "com.github.gmazzo.buildconfig", version.ref = "build-config" }
+maven-publish = { id = "com.vanniktech.maven.publish", version.ref = "maven-publish" }
 
 [libraries]
 
