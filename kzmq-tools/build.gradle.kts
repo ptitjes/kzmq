@@ -3,13 +3,15 @@
  * Use of this source code is governed by the Apache 2.0 license.
  */
 
+@file:OptIn(ExperimentalKotlinGradlePluginApi::class)
+
+import org.jetbrains.kotlin.gradle.*
 import org.jetbrains.kotlin.gradle.plugin.mpp.*
 import org.jetbrains.kotlin.konan.target.*
 import org.jetbrains.kotlin.konan.target.Architecture
 
 plugins {
     id("plugin.common")
-    application
 }
 
 kotlin {
@@ -19,7 +21,9 @@ kotlin {
     nativeTargets { it.family == Family.LINUX && it.architecture == Architecture.X64 }
 
     jvm {
-        withJava()
+        binaries {
+            executable { mainClass = "org.zeromq.tools.ThroughputKt" }
+        }
     }
 
     targets.withType<KotlinNativeTarget>().forEach { target ->
@@ -46,8 +50,4 @@ kotlin {
             }
         }
     }
-}
-
-application {
-    mainClass.set("org.zeromq.tools.ThroughputKt")
 }
