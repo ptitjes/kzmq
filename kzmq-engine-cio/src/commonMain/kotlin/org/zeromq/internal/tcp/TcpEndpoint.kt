@@ -11,14 +11,7 @@ internal class TcpEndpoint(val address: SocketAddress) {
 
     override fun toString(): String = when (address) {
         is InetSocketAddress -> "tcp://${address.hostname}:${address.port}"
-        is UnixSocketAddress -> {
-            // TODO this is a workaround for:
-            // https://youtrack.jetbrains.com/issue/KTOR-4695/Regression-UnixSocketAddresspath-fails-on-JVM
-            // "ipc://${address.path}"
-            "ipc://${address.toString()}"
-        }
-
-        else -> error("Unknown SocketAddress type")
+        is UnixSocketAddress -> "ipc://${address.path}"
     }
 }
 
