@@ -6,7 +6,7 @@
 plugins {
     id("plugin.library")
     id("plugin.atomicfu")
-    id("plugin.kotest")
+    id("plugin.testing")
     id("plugin.mocks")
 }
 
@@ -21,8 +21,8 @@ kotlin {
                 implementation(libs.kotlinx.io.core)
                 implementation(project(":kzmq-core"))
 
-                implementation(libs.kotest.framework.engine)
-                implementation(libs.kotest.assertions.core)
+                implementation(libs.testBalloon.framework.core)
+                implementation(libs.testBalloon.assertions.kotest)
             }
         }
     }
