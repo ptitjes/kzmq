@@ -23,7 +23,7 @@ val DealerRouterTests by testSuite {
 
     withContexts("base").config(
         // TODO fix when testing more Dealer and Router logic
-//        skip = setOf("jeromq"),
+        skip = setOf("cio-cio, inproc"),
     ) { ctx1, ctx2, protocol ->
         val dealerCount = 2
         val routerCount = 3

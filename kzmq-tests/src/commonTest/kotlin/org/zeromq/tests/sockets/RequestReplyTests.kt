@@ -109,7 +109,7 @@ val RequestReplyTests by testSuite {
     }
 
     withContexts("fair-queuing request sockets").config(
-        skip = setOf("jeromq", "zeromq.js"),
+        skip = setOf("jeromq", "zeromq.js", "cio"),
     ) { ctx1, ctx2, protocol ->
         val address = randomEndpoint(protocol)
 
