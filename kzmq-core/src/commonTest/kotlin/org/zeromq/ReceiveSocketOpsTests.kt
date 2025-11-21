@@ -5,13 +5,13 @@
 
 package org.zeromq
 
+import de.infix.testBalloon.framework.core.*
 import dev.mokkery.*
 import dev.mokkery.answering.*
-import io.kotest.core.spec.style.*
 import io.kotest.matchers.collections.*
 import kotlinx.coroutines.flow.*
 
-class ReceiveSocketOpsTests : FunSpec({
+val ReceiveSocketOpsTests by testSuite {
     test("consumeAsFlow") {
         val messages = List(10) { Message("message-$it") }
 
@@ -22,4 +22,4 @@ class ReceiveSocketOpsTests : FunSpec({
 
         socket.consumeAsFlow().take(10).toList() shouldContainExactly messages
     }
-})
+}

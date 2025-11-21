@@ -5,7 +5,7 @@
 
 package org.zeromq.tests.sockets
 
-import io.kotest.core.spec.style.*
+import de.infix.testBalloon.framework.core.*
 import io.kotest.matchers.*
 import io.kotest.matchers.equals.*
 import kotlinx.atomicfu.*
@@ -19,7 +19,7 @@ private const val REQUEST_MARKER = "REQ"
 private const val REPLY_MARKER = "REP"
 
 @Suppress("unused")
-class DealerRouterTests : FunSpec({
+val DealerRouterTests by testSuite {
 
     withContexts("base").config(
         // TODO fix when testing more Dealer and Router logic
@@ -99,7 +99,7 @@ class DealerRouterTests : FunSpec({
 
         trace.receivedReplyIds.value shouldBeEqual (0 until 6).toSet()
     }
-})
+}
 
 /*
  * TODO Remove when https://github.com/zeromq/zeromq.js/issues/506 is fixed.

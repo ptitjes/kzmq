@@ -5,9 +5,8 @@
 
 package org.zeromq.tests.sockets
 
+import de.infix.testBalloon.framework.core.*
 import io.kotest.assertions.*
-import io.kotest.common.*
-import io.kotest.core.spec.style.*
 import io.kotest.matchers.*
 import kotlinx.coroutines.*
 import kotlinx.io.bytestring.*
@@ -16,9 +15,8 @@ import org.zeromq.test.*
 import org.zeromq.tests.utils.*
 import kotlin.time.Duration.Companion.seconds
 
-@OptIn(ExperimentalKotest::class)
 @Suppress("unused")
-class PushTests : FunSpec({
+val PushTests by testSuite {
 
     withContexts("simple connect-bind") { ctx1, ctx2, protocol ->
         val address = randomEndpoint(protocol)
@@ -212,4 +210,4 @@ class PushTests : FunSpec({
         // Check each receiver got every messages
         pull shouldReceiveExactly templates
     }
-})
+}

@@ -5,17 +5,16 @@
 
 package org.zeromq
 
+import de.infix.testBalloon.framework.core.*
 import io.kotest.assertions.*
-import io.kotest.core.spec.style.*
-import io.kotest.core.test.*
 import kotlinx.coroutines.*
 import kotlinx.io.bytestring.*
 import org.zeromq.internal.*
 import org.zeromq.test.*
 import org.zeromq.utils.*
 
-class ReplySocketHandlerTests : FunSpec({
-    suspend fun TestScope.withHandler(test: SocketHandlerTest) =
+val ReplySocketHandlerTests by testSuite {
+    suspend fun TestExecutionScope.withHandler(test: SocketHandlerTest) =
         withSocketHandler(ReplySocketHandler(), test)
 
     test("SHALL receive incoming messages from its peers using a fair-queuing strategy") {
@@ -75,4 +74,4 @@ class ReplySocketHandlerTests : FunSpec({
             }
         }
     }
-})
+}

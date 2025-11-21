@@ -5,8 +5,7 @@
 
 package org.zeromq
 
-import io.kotest.core.spec.style.*
-import io.kotest.core.test.*
+import de.infix.testBalloon.framework.core.*
 import io.kotest.matchers.*
 import kotlinx.coroutines.*
 import org.zeromq.internal.*
@@ -14,8 +13,8 @@ import org.zeromq.test.*
 import org.zeromq.utils.*
 import kotlin.time.Duration.Companion.seconds
 
-class PairSocketHandlerTests : FunSpec({
-    suspend fun TestScope.withHandler(test: SocketHandlerTest) =
+val PairSocketHandlerTests by testSuite {
+    suspend fun TestExecutionScope.withHandler(test: SocketHandlerTest) =
         withSocketHandler(PairSocketHandler(), test)
 
     test("SHALL consider a peer as available only when it has an outgoing queue that is not full") {
@@ -98,4 +97,4 @@ class PairSocketHandlerTests : FunSpec({
             receive shouldReceiveExactly messages
         }
     }
-})
+}

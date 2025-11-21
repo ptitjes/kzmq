@@ -5,67 +5,66 @@
 
 package org.zeromq.internal.utils
 
+import de.infix.testBalloon.framework.core.*
+import de.infix.testBalloon.framework.shared.*
 import kotlinx.coroutines.test.*
 import kotlinx.io.bytestring.*
 import kotlin.test.*
 
-internal class SubscriptionTrieTest {
+val SubscriptionTrieTest by testSuite {
 
-    @Test
-    fun `doesn't match null subscription`() = subscriptionTest("any", setOf<Int>()) { it }
+    subscriptionTest("doesn't match null subscription", "any", setOf<Int>()) { it }
 
-    @Test
-    fun `matches empty subscription`() = subscriptionTest("any", setOf(1)) {
+    subscriptionTest("matches empty subscription", "any", setOf(1)) {
         it.add("", 1)
     }
 
-    @Test
-    fun `matches only prefixes`() = subscriptionTest("a", setOf(1)) {
+    subscriptionTest("matches only prefixes", "a", setOf(1)) {
         it.add("a", 1).add("ab", 2)
     }
 
-    @Test
-    fun `matches all prefixes`() = subscriptionTest("abc", setOf(1, 2)) {
+    subscriptionTest("matches all prefixes", "abc", setOf(1, 2)) {
         it.add("a", 1).add("ab", 2)
     }
 
-    @Test
-    fun `matches multiple same subscriptions only once`() = subscriptionTest("abc", setOf(1)) {
+    subscriptionTest("matches multiple same subscriptions only once", "abc", setOf(1)) {
         it.add("a", 1).add("a", 1)
     }
 
-    @Test
-    fun `matches multiple subscriptions only once`() = subscriptionTest("abc", setOf(1)) {
+    subscriptionTest("matches multiple subscriptions only once", "abc", setOf(1)) {
         it.add("a", 1).add("ab", 1)
     }
 
-    @Test
-    fun `multiple subscriptions are taken in account`() = subscriptionTest("abc", setOf(1)) {
+    subscriptionTest("multiple subscriptions are taken in account", "abc", setOf(1)) {
         it.add("a", 1).add("a", 1).remove("a", 1)
     }
-
-    private fun <T> subscriptionTest(
-        content: String,
-        expectedMatches: Set<T>,
-        trieFactory: (SubscriptionTrie<T>) -> SubscriptionTrie<T>,
-    ) = subscriptionTest(content.encodeToByteArray(), expectedMatches, trieFactory)
-
-    private fun <T> subscriptionTest(
-        content: ByteArray,
-        expectedMatches: Set<T>,
-        trieFactory: (SubscriptionTrie<T>) -> SubscriptionTrie<T>,
-    ) = runTest {
-        val subscriptions = trieFactory(SubscriptionTrie<T>())
-        val matched = mutableMapOf<T, Int>()
-        subscriptions.forEachMatching(content) { matched[it] = (matched[it] ?: 0) + 1 }
-
-        assertEquals(expectedMatches, matched.keys)
-        if (matched.values.isNotEmpty()) assertEquals(setOf(1), matched.values.toSet())
-    }
-
-    private fun <T> SubscriptionTrie<T>.add(prefix: String, element: T) =
-        add(prefix.encodeToByteString(), element)
-
-    private fun <T> SubscriptionTrie<T>.remove(prefix: String, element: T) =
-        remove(prefix.encodeToByteString(), element)
 }
+
+@TestRegistering
+private fun <T> TestSuite.subscriptionTest(
+    name: String,
+    content: String,
+    expectedMatches: Set<T>,
+    trieFactory: (SubscriptionTrie<T>) -> SubscriptionTrie<T>,
+) = test(name) {
+    subscriptionTest(content.encodeToByteArray(), expectedMatches, trieFactory)
+}
+
+private fun <T> subscriptionTest(
+    content: ByteArray,
+    expectedMatches: Set<T>,
+    trieFactory: (SubscriptionTrie<T>) -> SubscriptionTrie<T>,
+) = runTest {
+    val subscriptions = trieFactory(SubscriptionTrie<T>())
+    val matched = mutableMapOf<T, Int>()
+    subscriptions.forEachMatching(content) { matched[it] = (matched[it] ?: 0) + 1 }
+
+    assertEquals(expectedMatches, matched.keys)
+    if (matched.values.isNotEmpty()) assertEquals(setOf(1), matched.values.toSet())
+}
+
+private fun <T> SubscriptionTrie<T>.add(prefix: String, element: T) =
+    add(prefix.encodeToByteString(), element)
+
+private fun <T> SubscriptionTrie<T>.remove(prefix: String, element: T) =
+    remove(prefix.encodeToByteString(), element)

@@ -5,7 +5,7 @@
 
 package org.zeromq.tests.sockets
 
-import io.kotest.core.spec.style.*
+import de.infix.testBalloon.framework.core.*
 import io.kotest.matchers.equals.*
 import kotlinx.coroutines.*
 import kotlinx.io.*
@@ -15,7 +15,7 @@ import org.zeromq.test.*
 import org.zeromq.tests.utils.*
 
 @Suppress("unused")
-class RequestReplyTests : FunSpec({
+val RequestReplyTests by testSuite {
 
     withContexts("bind-connect") { ctx1, ctx2, protocol ->
         val address = randomEndpoint(protocol)
@@ -164,4 +164,4 @@ class RequestReplyTests : FunSpec({
 
         replyJob.cancelAndJoin()
     }
-})
+}
