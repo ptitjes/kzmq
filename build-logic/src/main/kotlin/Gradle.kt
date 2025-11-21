@@ -7,6 +7,7 @@ import org.gradle.api.*
 import org.gradle.api.artifacts.*
 import org.gradle.api.specs.*
 import org.gradle.kotlin.dsl.*
+import org.jetbrains.kotlin.gradle.internal.utils.exceptions.*
 import org.jetbrains.kotlin.gradle.plugin.*
 import org.jetbrains.kotlin.konan.target.*
 import java.io.*
@@ -37,8 +38,11 @@ fun Project.pkgConfig(vararg args: String): List<String> {
             standardOutput = output
         }
         return output.toByteArray().decodeToString().trim().split("\\s*")
-    } catch (_: Throwable) {
+    } catch (cause: Throwable) {
         val standardOutput = output.toByteArray().decodeToString()
-        error("Failed to get pkg-config for '${args.joinToString(" ")}': $standardOutput")
+        throw IllegalStateException(
+            "Failed to get pkg-config for '${args.joinToString(" ")}': $standardOutput",
+            cause,
+        )
     }
 }
