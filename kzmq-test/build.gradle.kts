@@ -25,7 +25,6 @@ kotlin {
                 implementation(project(":kzmq-core"))
 
                 implementation(libs.kotest.framework.engine)
-                implementation(libs.kotest.framework.datatest)
                 implementation(libs.kotest.assertions.core)
             }
         }
