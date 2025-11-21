@@ -15,12 +15,12 @@ import org.zeromq.tests.utils.*
 @Suppress("unused")
 val PullTests by testSuite {
 
-    withContexts("SHALL receive incoming messages from its peers using a fair-queuing strategy").config(
+    dualContextTest("SHALL receive incoming messages from its peers using a fair-queuing strategy", config = {
         // TODO investigate why these tests are flaky
-        only = setOf(),
-    ) { ctx1, ctx2, protocol ->
+        skipAll()
+    }) { ctx1, ctx2, protocol ->
         // TODO Investigate why this fails with CIO native
-        if (testPlatform.type == TestPlatform.Type.NATIVE) return@config
+        if (testPlatform.type == TestPlatform.Type.NATIVE) return@dualContextTest
 
         val address = randomEndpoint(protocol)
 

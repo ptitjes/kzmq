@@ -17,7 +17,7 @@ import org.zeromq.tests.utils.*
 @Suppress("unused")
 val PublisherSubscriberTests by testSuite {
 
-    withContexts("bind-connect") { ctx1, ctx2, protocol ->
+    dualContextTest("bind-connect") { ctx1, ctx2, protocol ->
         val address = randomEndpoint(protocol)
         val template = message {
             writeFrame("Hello, 0MQ!".encodeToByteString())
@@ -38,10 +38,10 @@ val PublisherSubscriberTests by testSuite {
         }
     }
 
-    // TODO Figure out why this test is hanging with JeroMQ and ZeroMQ.js
-    withContexts("connect-bind").config(
-        skip = setOf("jeromq", "zeromq.js"),
-    ) { ctx1, ctx2, protocol ->
+    dualContextTest("connect-bind", config = {
+        // TODO Figure out why this test is hanging with JeroMQ and ZeroMQ.js
+        skip("jeromq", "zeromq.js")
+    }) { ctx1, ctx2, protocol ->
         val address = randomEndpoint(protocol)
         val template = message {
             writeFrame("Hello, 0MQ!".encodeToByteString())
@@ -62,7 +62,7 @@ val PublisherSubscriberTests by testSuite {
         }
     }
 
-    withContexts("subscription filter") { ctx1, ctx2, protocol ->
+    dualContextTest("subscription filter") { ctx1, ctx2, protocol ->
         val address = randomEndpoint(protocol)
 
         val sent = listOf("prefixed data", "non-prefixed data", "prefix is good")
