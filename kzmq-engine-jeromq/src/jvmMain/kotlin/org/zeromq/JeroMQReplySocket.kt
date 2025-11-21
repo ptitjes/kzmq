@@ -11,5 +11,9 @@ internal class JeroMQReplySocket internal constructor(
     factory: (type: SocketType) -> ZMQ.Socket,
 ) : JeroMQSocket(factory, SocketType.REP, Type.REP), ReplySocket {
 
-    override var routingId: ByteString? by underlying::identity.converted()
+    override var routingId: ByteString?
+        get() = underlying.identity?.let { ByteString(it) }
+        set(value) {
+            underlying.identity = value?.toByteArray()
+        }
 }

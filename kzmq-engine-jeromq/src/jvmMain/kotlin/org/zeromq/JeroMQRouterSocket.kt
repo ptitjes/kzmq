@@ -11,7 +11,11 @@ internal class JeroMQRouterSocket internal constructor(
     factory: (type: SocketType) -> ZMQ.Socket,
 ) : JeroMQSocket(factory, SocketType.ROUTER, Type.ROUTER), RouterSocket {
 
-    override var routingId: ByteString? by underlying::identity.converted()
+    override var routingId: ByteString?
+        get() = underlying.identity?.let { ByteString(it) }
+        set(value) {
+            underlying.identity = value?.toByteArray()
+        }
 
     // TODO there no getter for setProbeRouter in underlying socket
     override var probeRouter: Boolean by notImplementedProperty()
