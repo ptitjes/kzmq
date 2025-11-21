@@ -9,6 +9,7 @@ import org.jetbrains.kotlin.konan.target.Architecture
 
 plugins {
     id("plugin.library")
+    id("plugin.testing")
 }
 
 kotlin {

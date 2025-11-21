@@ -5,6 +5,7 @@
 
 package org.zeromq
 
+import de.infix.testBalloon.framework.core.*
 import kotlinx.cinterop.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
@@ -13,9 +14,8 @@ import kotlinx.io.bytestring.*
 import kotlin.test.*
 
 @OptIn(ExperimentalForeignApi::class)
-class SimpleTestsNative {
-    @Test
-    fun test() = runBlocking {
+val SimpleTestsNative by testSuite(testConfig = TestConfig.disable()) {
+    test("simple1") {
         println("Hello native")
         val context = Context(Libzmq)
         val message = "Hello 0MQ!".encodeToByteString()
@@ -48,8 +48,7 @@ class SimpleTestsNative {
         publication.join()
     }
 
-    @Test
-    fun testSimple() = runBlocking {
+    test("simple2") {
         val context = Context(Libzmq)
         val sent = "Hello 0MQ!"
 
@@ -74,8 +73,7 @@ class SimpleTestsNative {
         publication.join()
     }
 
-    @Test
-    fun testFlow() = runBlocking {
+    test("flow") {
         val context = Context(Libzmq)
         val intFlow: Flow<Int> = flow { for (i in 0..9) emit(i) }
 
