@@ -3,13 +3,6 @@
  * Use of this source code is governed by the Apache 2.0 license.
  */
 
-@file:Suppress(
-    "INTERFACE_WITH_SUPERCLASS",
-    "OVERRIDING_FINAL_MEMBER",
-    "RETURN_TYPE_MISMATCH_ON_OVERRIDE",
-    "CONFLICTING_OVERLOADS"
-)
-
 package org.zeromq.internal.zeromqjs
 
 import Buffer
@@ -161,24 +154,24 @@ internal open external class Socket(type: SocketType, options: Any = definedExte
     open fun setStringOption(option: Number, value: Buffer?)
 }
 
-internal external enum class SocketType {
-    Pair /* = 0 */,
-    Publisher /* = 1 */,
-    Subscriber /* = 2 */,
-    Request /* = 3 */,
-    Reply /* = 4 */,
-    Dealer /* = 5 */,
-    Router /* = 6 */,
-    Pull /* = 7 */,
-    Push /* = 8 */,
-    XPublisher /* = 9 */,
-    XSubscriber /* = 10 */,
-    Stream /* = 11 */,
-    Server /* = 12 */,
-    Client /* = 13 */,
-    Radio /* = 14 */,
-    Dish /* = 15 */,
-    Gather /* = 16 */,
-    Scatter /* = 17 */,
-    Datagram /* = 18 */
+internal sealed external class SocketType {
+    object Pair : SocketType
+    object Publisher : SocketType
+    object Subscriber : SocketType
+    object Request : SocketType
+    object Reply : SocketType
+    object Dealer : SocketType
+    object Router : SocketType
+    object Pull : SocketType
+    object Push : SocketType
+    object XPublisher : SocketType
+    object XSubscriber : SocketType
+    object Stream : SocketType
+    object Server : SocketType
+    object Client : SocketType
+    object Radio : SocketType
+    object Dish : SocketType
+    object Gather : SocketType
+    object Scatter : SocketType
+    object Datagram : SocketType
 }
