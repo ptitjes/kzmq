@@ -5,94 +5,100 @@
 
 package org.zeromq
 
-class SimpleTestsNative {
-//    @Test
-//    fun test() = runBlocking {
-//        println("Hello native")
-//        val context = LibzmqContext()
-//        val message = "Hello 0MQ!".encodeToByteArray()
-//
-//        val publication = launch {
-//            val publisher = context.createSocket(Type.PUB)
-//            publisher.bind("inproc://testSimple")
-//
-//            println("Before delay")
-//            delay(100)
-//            println("Sending message")
-//            publisher.send(message)
-//            println("Sent message")
-//        }
-//
-//        val subscription = launch {
-//            val subscriber = context.createSocket(Type.SUB)
-//            subscriber.connect("inproc://testSimple")
-//            subscriber.subscribe("")
-//
-//            println("Receiving message")
-//            var received: ByteArray?
-//            while (true) {
-//                received = subscriber.receiveOrNull()
-//                if (received != null) break
-//            }
-//            //            assertEquals(sent, received)
-//            println("Received message: ${received?.toKString()}")
-//        }
-//
-//        subscription.join()
-//        publication.join()
-//    }
+import kotlinx.cinterop.*
+import kotlinx.coroutines.*
+import kotlinx.coroutines.flow.*
+import kotlinx.io.*
+import kotlinx.io.bytestring.*
+import kotlin.test.*
 
-//    @Test
-//    fun testSimple() = runBlocking {
-//        val context = LibzmqContext()
-//        val sent = "Hello 0MQ!"
-//
-//        val publication = launch {
-//            val publisher = context.createSocket(Type.PUB)
-//            publisher.bind("inproc://testSimple")
-//
-//            delay(100)
-//            publisher.send(sent.encodeToByteArray())
-//        }
-//
-//        val subscription = launch {
-//            val subscriber = context.createSocket(Type.SUB)
-//            subscriber.connect("inproc://testSimple")
-//            subscriber.subscribe("")
-//
-//            val received = subscriber.receive().toKString()
-//            assertEquals(sent, received)
-//        }
-//
-//        subscription.join()
-//        publication.join()
-//    }
-//
-//    @Test
-//    fun testFlow() = runBlocking {
-//        val context = LibzmqContext()
-//        val intFlow: Flow<Int> = flow { for (i in 0..9) emit(i) }
-//
-//        val publication = launch {
-//            val publisher = context.createSocket(Type.PUB)
-//            publisher.bind("inproc://testFlow")
-//
-//            delay(100)
-//            intFlow
-//                .map { it.toString().encodeToByteArray() }
-//                .collectToSocket(publisher)
-//        }
-//
-//        val subscription = launch {
-//            val subscriber = context.createSocket(Type.SUB)
-//            subscriber.connect("inproc://testFlow")
-//            subscriber.subscribe("")
-//
-//            val values = subscriber.asFlow().take(10).map { it.toKString().toInt() }
-//            assertContentEquals(intFlow.toList(), values.toList())
-//        }
-//
-//        subscription.join()
-//        publication.join()
-//    }
+@OptIn(ExperimentalForeignApi::class)
+class SimpleTestsNative {
+    @Test
+    fun test() = runBlocking {
+        println("Hello native")
+        val context = Context(Libzmq)
+        val message = "Hello 0MQ!".encodeToByteString()
+
+        val publication = launch(Dispatchers.IO) {
+            val publisher = context.createPublisher()
+            publisher.bind("inproc://testSimple")
+
+            println("Before delay")
+            delay(100)
+            println("Sending message")
+            publisher.send(Message(message))
+            println("Sent message")
+        }
+
+        val subscription = launch(Dispatchers.IO) {
+            val subscriber = context.createSubscriber()
+            subscriber.connect("inproc://testSimple")
+            subscriber.subscribe("")
+
+            println("Receiving message")
+            while (true) {
+                val receivedMessage = subscriber.receive()
+                val received = receivedMessage.readFrame { readByteString() }
+                println("Received message: ${received.toHexString()}")
+            }
+        }
+
+        subscription.join()
+        publication.join()
+    }
+
+    @Test
+    fun testSimple() = runBlocking {
+        val context = Context(Libzmq)
+        val sent = "Hello 0MQ!"
+
+        val publication = launch {
+            val publisher = context.createPublisher()
+            publisher.bind("inproc://testSimple")
+
+            delay(100)
+            publisher.send(Message(sent))
+        }
+
+        val subscription = launch {
+            val subscriber = context.createSubscriber()
+            subscriber.connect("inproc://testSimple")
+            subscriber.subscribe("")
+
+            val received = subscriber.receive().readFrame { readString() }
+            assertEquals(sent, received)
+        }
+
+        subscription.join()
+        publication.join()
+    }
+
+    @Test
+    fun testFlow() = runBlocking {
+        val context = Context(Libzmq)
+        val intFlow: Flow<Int> = flow { for (i in 0..9) emit(i) }
+
+        val publication = launch {
+            val publisher = context.createPublisher()
+            publisher.bind("inproc://testFlow")
+
+            delay(100)
+            intFlow
+                .map { Message(it.toString()) }
+                .collectToSocket(publisher)
+        }
+
+        val subscription = launch {
+            val subscriber = context.createSubscriber()
+            subscriber.connect("inproc://testFlow")
+            subscriber.subscribe("")
+
+            val values = subscriber.consumeAsFlow().take(10).map { it.readFrame { readString().toInt() } }
+            assertContentEquals(intFlow.toList(), values.toList())
+        }
+
+        subscription.join()
+        publication.join()
+    }
 }

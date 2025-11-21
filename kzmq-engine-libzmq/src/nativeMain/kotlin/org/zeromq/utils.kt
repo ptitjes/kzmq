@@ -5,10 +5,12 @@
 
 package org.zeromq
 
-import platform.posix.*
+import kotlinx.cinterop.*
+import org.zeromq.internal.libzmq.*
 
 internal fun checkNativeError(result: Int) {
     if (result == -1) throwNativeError()
 }
 
-internal fun throwNativeError(): Nothing = throw ZeroMQException(errno)
+@OptIn(ExperimentalForeignApi::class)
+internal fun throwNativeError(): Nothing = throw ZeroMQException(ZeroMQError.fromErrno(zmq_errno())!!)

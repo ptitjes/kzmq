@@ -42,6 +42,37 @@ kotlin {
                     compilerOpts += pkgConfig("--cflags", "libzmq")
                 }
             }
+
+            binaries {
+                all {
+                    when (konanTarget.family) {
+                        Family.LINUX -> when (konanTarget.architecture) {
+                            Architecture.X64 -> linkerOpts += listOf("-L/usr/lib64", "-L/usr/lib/x86_64-linux-gnu")
+                            Architecture.ARM64 -> linkerOpts += listOf(
+                                "-L/usr/include",
+                                "-L/usr/include/arm64-linux-gnu"
+                            )
+
+                            else -> error("Unknown Linux architecture '${konanTarget.architecture}'")
+                        }
+
+                        Family.OSX -> linkerOpts += listOf("-L/opt/local/lib", "-L/usr/local/opt/zmq/lib")
+
+                        Family.MINGW -> {
+                            val mingwPath = File(
+                                when (konanTarget.architecture) {
+                                    Architecture.X64 -> System.getenv("MINGW64_DIR") ?: "C:/msys64/mingw64"
+                                    else -> error("Unknown Mingw architecture")
+                                }
+                            )
+                            linkerOpts += listOf("-L${mingwPath.resolve("lib").absolutePath}")
+                        }
+
+                        else -> {}
+                    }
+                    linkerOpts += pkgConfig("--libs", "libzmq")
+                }
+            }
         }
     }
 
