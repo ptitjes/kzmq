@@ -5,8 +5,7 @@
 
 package org.zeromq
 
-import io.kotest.core.spec.style.*
-import io.kotest.core.test.*
+import de.infix.testBalloon.framework.core.*
 import io.kotest.matchers.*
 import kotlinx.coroutines.*
 import kotlinx.io.bytestring.*
@@ -15,8 +14,8 @@ import org.zeromq.test.*
 import org.zeromq.utils.*
 import kotlin.time.Duration.Companion.seconds
 
-class RequestSocketHandlerTests : FunSpec({
-    suspend fun TestScope.withHandler(test: SocketHandlerTest) =
+val RequestSocketHandlerTests by testSuite {
+    suspend fun TestExecutionScope.withHandler(test: SocketHandlerTest) =
         withSocketHandler(RequestSocketHandler(), test)
 
     test("SHALL prefix the outgoing message with an empty delimiter frame") {
@@ -156,4 +155,4 @@ class RequestSocketHandlerTests : FunSpec({
             })
         }
     }
-})
+}

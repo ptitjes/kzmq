@@ -5,14 +5,14 @@
 
 package org.zeromq.tests.sockets
 
-import io.kotest.core.spec.style.*
+import de.infix.testBalloon.framework.core.*
 import kotlinx.io.bytestring.*
 import org.zeromq.*
 import org.zeromq.test.*
 import org.zeromq.tests.utils.*
 
 @Suppress("unused")
-class PairTests : FunSpec({
+val PairTests by testSuite {
 
     withContexts("bind-connect") { ctx1, ctx2, protocol ->
         val address = randomEndpoint(protocol)
@@ -49,4 +49,4 @@ class PairTests : FunSpec({
         pair2.send(message)
         pair1 shouldReceive message
     }
-})
+}

@@ -5,20 +5,20 @@
 
 package org.zeromq.utils
 
-import io.kotest.core.test.*
+import de.infix.testBalloon.framework.core.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.*
 import org.zeromq.*
 import org.zeromq.internal.*
 
 internal typealias SocketHandlerTest =
-    suspend TestScope.(
+    suspend TestExecutionScope.(
         peerEvents: SendChannel<PeerEvent>,
         send: suspend (Message) -> Unit,
         receive: suspend () -> Message,
     ) -> Unit
 
-internal suspend fun TestScope.withSocketHandler(
+internal suspend fun TestExecutionScope.withSocketHandler(
     handler: SocketHandler,
     block: SocketHandlerTest,
 ) = coroutineScope {

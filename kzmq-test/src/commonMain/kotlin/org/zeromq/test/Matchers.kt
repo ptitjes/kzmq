@@ -35,12 +35,11 @@ private suspend fun shouldReceiveExactly(
         }
 
         received shouldBeEqual expected
-    } catch (e: TimeoutCancellationException) {
-        throw AssertionErrorBuilder(
-            message = "Only ${received.size} of the expected ${expected.size} messages were received.",
-            cause = e,
+    } catch (_: TimeoutCancellationException) {
+        throw failure(
             expected = Expected(expected.print()),
-            actual = Actual(received.print())
-        ).build()
+            actual = Actual(received.print()),
+            prependMessage = "Only ${received.size} of the expected ${expected.size} messages were received.",
+        )
     }
 }

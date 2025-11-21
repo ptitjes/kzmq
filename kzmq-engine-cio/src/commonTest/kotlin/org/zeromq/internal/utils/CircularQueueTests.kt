@@ -5,13 +5,13 @@
 
 package org.zeromq.internal.utils
 
+import de.infix.testBalloon.framework.core.*
 import io.kotest.assertions.throwables.*
-import io.kotest.core.spec.style.*
 import io.kotest.matchers.*
 import io.kotest.matchers.equals.*
 
 @Suppress("unused")
-class CircularQueueTests : FunSpec({
+val CircularQueueTests by testSuite {
 
     test("requires at least one element") {
         val queue = CircularQueue<Int>()
@@ -71,4 +71,4 @@ class CircularQueueTests : FunSpec({
         queue.remove(3)
         queue.elements shouldBeEqual listOf(1, 2)
     }
-})
+}

@@ -5,7 +5,7 @@
 
 package org.zeromq.tests.sockets
 
-import io.kotest.core.spec.style.*
+import de.infix.testBalloon.framework.core.*
 import io.kotest.matchers.*
 import io.kotest.matchers.collections.*
 import kotlinx.coroutines.*
@@ -15,7 +15,7 @@ import org.zeromq.*
 import org.zeromq.tests.utils.*
 
 @Suppress("unused")
-class XPublisherSubscriberTests : FunSpec({
+val XPublisherSubscriberTests by testSuite {
 
     withContexts("subscription filter") { ctx1, ctx2, protocol ->
         val address = randomEndpoint(protocol)
@@ -60,4 +60,4 @@ class XPublisherSubscriberTests : FunSpec({
             }
         }
     }
-})
+}

@@ -5,24 +5,22 @@
 
 package org.zeromq.tests.sockets
 
+import de.infix.testBalloon.framework.core.*
 import io.kotest.assertions.*
-import io.kotest.common.*
-import io.kotest.core.spec.style.*
 import kotlinx.io.bytestring.*
 import org.zeromq.*
 import org.zeromq.test.*
 import org.zeromq.tests.utils.*
 
-@OptIn(ExperimentalKotest::class)
 @Suppress("unused")
-class PullTests : FunSpec({
+val PullTests by testSuite {
 
     withContexts("SHALL receive incoming messages from its peers using a fair-queuing strategy").config(
         // TODO investigate why these tests are flaky
         only = setOf(),
     ) { ctx1, ctx2, protocol ->
         // TODO Investigate why this fails with CIO native
-        if (platform == Platform.Native) return@config
+        if (testPlatform.type == TestPlatform.Type.NATIVE) return@config
 
         val address = randomEndpoint(protocol)
 
@@ -44,4 +42,4 @@ class PullTests : FunSpec({
             pullSocket shouldReceiveExactly templates.flatMap { template -> List(pushSocketCount) { template } }
         }
     }
-})
+}

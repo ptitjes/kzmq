@@ -5,14 +5,14 @@
 
 package org.zeromq.tests
 
-import io.kotest.core.spec.style.*
+import de.infix.testBalloon.framework.core.*
 import io.kotest.matchers.*
 import org.zeromq.*
 
-class ContextTests : FunSpec({
+val ContextTests by testSuite {
 
     test("Auto-discover engines") {
         val context = Context()
         context shouldNotBe null
     }
-})
+}

@@ -5,13 +5,13 @@
 
 package org.zeromq
 
+import de.infix.testBalloon.framework.core.*
 import dev.mokkery.*
 import dev.mokkery.answering.*
 import dev.mokkery.matcher.*
-import io.kotest.core.spec.style.*
 import kotlinx.coroutines.flow.*
 
-class SendSocketOpsTests : FunSpec({
+val SendSocketOpsTests by testSuite {
     test("collectToSocket") {
         val socket = mock<SendSocket> {
             everySuspend { send(any()) } returns Unit
@@ -26,4 +26,4 @@ class SendSocketOpsTests : FunSpec({
             }
         }
     }
-})
+}
