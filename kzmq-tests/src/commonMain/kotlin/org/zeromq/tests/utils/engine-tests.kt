@@ -9,58 +9,35 @@ import de.infix.testBalloon.framework.core.*
 import io.kotest.assertions.*
 import kotlinx.coroutines.*
 import org.zeromq.*
-import kotlin.time.*
+import kotlin.jvm.*
 import kotlin.time.Duration.Companion.minutes
 
-typealias SingleContextTest = suspend TestExecutionScope.(Context, Protocol) -> Unit
-typealias DualContextTest = suspend TestExecutionScope.(Context, Context, Protocol) -> Unit
-
-fun TestSuite.withContext(name: String, test: SingleContextTest) = withContext(name).config(test = test)
-
-fun TestSuite.withContext(name: String): SingleContextTestBuilder = SingleContextTestBuilder(name, this)
-
-fun TestSuite.withContexts(name: String, test: DualContextTest) = withContexts(name).config(test = test)
-
-fun TestSuite.withContexts(name: String): DualContextTestBuilder = DualContextTestBuilder(name, this)
-
-class SingleContextTestBuilder(
-    private val name: String,
-    private val context: TestSuite,
-) {
-    fun config(
-        skip: Set<String>? = null,
-        only: Set<String>? = null,
-        timeout: Duration? = null,
-        test: SingleContextTest,
-    ) {
-        context.runSingleContextTest(name, skip, only, timeout, test)
-    }
+interface ContextTestConfigScope {
+    fun skip(vararg skipped: String)
+    fun skipAll()
 }
 
-private val DEFAULT_TEST_TIMEOUT = 5.minutes
-
-private fun TestSuite.runSingleContextTest(
+fun TestSuite.singleContextTest(
     name: String,
-    skip: Set<String>?,
-    only: Set<String>?,
-    timeout: Duration?,
-    test: SingleContextTest,
+    config: ContextTestConfigScope.() -> Unit = {},
+    test: suspend TestExecutionScope.(Context, Protocol) -> Unit,
 ) {
-    val testData = engines.flatMap { engine -> engine.supportedTransports.map { engine to it.asProtocol() } }
+    val testCases = engines.flatMap { engine ->
+        engine.supportedTransports.map { SingleContextTestCase(engine, it.asProtocol()) }
+    }.toSet()
 
-    val enableTest = enableTest<Pair<EngineFactory, Protocol>>(skip, only) { (engine, protocol) ->
-        "${engine.name.lowercase()}, ${protocol.name.lowercase()}"
-    }
+    val skippedTestCases = testCases.computeSkippedTestCases(config)
 
-    val testTimeout = timeout ?: DEFAULT_TEST_TIMEOUT
+    val testTimeout = DEFAULT_TEST_TIMEOUT
     val globalConfig = TestConfig.testScope(isEnabled = false, timeout = testTimeout)
 
     testSuite(name = name, testConfig = globalConfig) {
-        testData.forEach { data ->
-            val (engine, protocol) = data
+        testCases.forEach { testCase ->
+            val (engine, protocol) = testCase
 
             val testName = "${engine.name}, $protocol"
-            val testConfig = if (enableTest(data)) globalConfig else globalConfig.disable()
+            val disabled = testCase in skippedTestCases
+            val testConfig = if (disabled) globalConfig.disable() else globalConfig
 
             test(testName, testConfig = testConfig) {
                 retry(10, 5.minutes) {
@@ -76,47 +53,29 @@ private fun TestSuite.runSingleContextTest(
     }
 }
 
-private fun String.asProtocol(): Protocol = Protocol.valueOf(uppercase())
-
-class DualContextTestBuilder(
-    private val name: String,
-    private val context: TestSuite,
-) {
-    fun config(
-        skip: Set<String>? = null,
-        only: Set<String>? = null,
-        timeout: Duration? = null,
-        test: DualContextTest,
-    ) {
-        context.runDualContextTest(name, skip, only, timeout, test)
-    }
-}
-
-private fun TestSuite.runDualContextTest(
+fun TestSuite.dualContextTest(
     name: String,
-    skip: Set<String>? = null,
-    only: Set<String>? = null,
-    timeout: Duration?,
-    test: DualContextTest,
+    config: ContextTestConfigScope.() -> Unit = {},
+    test: suspend TestExecutionScope.(Context, Context, Protocol) -> Unit,
 ) {
-    val enginePairs = engines.flatMap { e1 -> engines.map { e2 -> e1 to e2 } }
-    val testData = enginePairs.flatMap { (e1, e2) ->
-        (e1.supportedTransports intersect e2.supportedTransports).map { Triple(e1, e2, it.asProtocol()) }
+    val testCases = engines.flatMap { e1 -> engines.map { e2 -> e1 to e2 } }.flatMap { (e1, e2) ->
+        (e1.supportedTransports intersect e2.supportedTransports)
+            .map { DualContextTestCase(e1, e2, it.asProtocol()) }
             .filter { (e1, e2, p) -> p != Protocol.INPROC || e1 == e2 }
-    }
+    }.toSet()
 
-    val enableTest = enableTest<Triple<EngineFactory, EngineFactory, Protocol>>(skip, only) { (e1, e2, protocol) ->
-        "${e1.name.lowercase()}-${e2.name.lowercase()}, ${protocol.name.lowercase()}"
-    }
+    val skippedTestCases = testCases.computeSkippedTestCases(config)
 
-    val testTimeout = timeout ?: DEFAULT_TEST_TIMEOUT
+    val testTimeout = DEFAULT_TEST_TIMEOUT
     val globalConfig = TestConfig.testScope(isEnabled = false, timeout = testTimeout)
 
     testSuite(name = name, testConfig = globalConfig) {
-        testData.forEach { data ->
-            val (engine1, engine2, protocol) = data
+        testCases.forEach { testCase ->
+            val (engine1, engine2, protocol) = testCase
+
             val testName = "${engine1.name}-${engine2.name}, $protocol"
-            val testConfig = if (enableTest(data)) globalConfig else globalConfig.disable()
+            val disabled = testCase in skippedTestCases
+            val testConfig = if (disabled) globalConfig.disable() else globalConfig
 
             test(testName, testConfig = testConfig) {
                 retry(10, 5.minutes) {
@@ -133,11 +92,80 @@ private fun TestSuite.runDualContextTest(
     }
 }
 
-private fun <T> enableTest(
-    skip: Set<String>?,
-    only: Set<String>?,
-    labeller: (T) -> String,
-): (element: T) -> Boolean = { element ->
-    val label = labeller(element)
-    skip?.none { label.contains(it.lowercase()) } ?: true && only?.any { label.contains(it.lowercase()) } ?: true
+private val DEFAULT_TEST_TIMEOUT = 5.minutes
+
+private data class SingleContextTestCase(
+    val engine: EngineFactory,
+    val protocol: Protocol,
+) {
+    override fun toString(): String = "${engine.name.lowercase()}, ${protocol.name.lowercase()}"
 }
+
+private data class DualContextTestCase(
+    val engine1: EngineFactory,
+    val engine2: EngineFactory,
+    val protocol: Protocol,
+) {
+    override fun toString(): String =
+        "${engine1.name.lowercase()}-${engine2.name.lowercase()}, ${protocol.name.lowercase()}"
+}
+
+@JvmName("computeSkippedSingleTestCases")
+private fun Set<SingleContextTestCase>.computeSkippedTestCases(
+    config: ContextTestConfigScope.() -> Unit
+): Set<SingleContextTestCase> {
+    val scope = SingleContextTestConfigScope(this)
+    scope.config()
+    val skippedTestCases = scope.skippedTestCases
+    return skippedTestCases
+}
+
+private class SingleContextTestConfigScope(
+    val testCases: Set<SingleContextTestCase>,
+) : ContextTestConfigScope {
+    private val _skippedTestCases = mutableSetOf<SingleContextTestCase>()
+    val skippedTestCases: Set<SingleContextTestCase> get() = _skippedTestCases.toSet()
+
+    override fun skip(vararg skipped: String) {
+        skipped.forEach { skipped ->
+            _skippedTestCases += testCases.filter { testCase ->
+                skipped.lowercase() in testCase.toString()
+            }
+        }
+    }
+
+    override fun skipAll() {
+        _skippedTestCases += testCases
+    }
+}
+
+@JvmName("computeSkippedDualTestCases")
+private fun Set<DualContextTestCase>.computeSkippedTestCases(
+    config: ContextTestConfigScope.() -> Unit
+): Set<DualContextTestCase> {
+    val scope = DualContextTestConfigScope(this)
+    scope.config()
+    val skippedTestCases = scope.skippedTestCases
+    return skippedTestCases
+}
+
+private class DualContextTestConfigScope(
+    val testCases: Set<DualContextTestCase>,
+) : ContextTestConfigScope {
+    private val _skippedTestCases = mutableSetOf<DualContextTestCase>()
+    val skippedTestCases: Set<DualContextTestCase> get() = _skippedTestCases.toSet()
+
+    override fun skip(vararg skipped: String) {
+        skipped.forEach { skipped ->
+            _skippedTestCases += testCases.filter { testCase ->
+                skipped.lowercase() in testCase.toString()
+            }
+        }
+    }
+
+    override fun skipAll() {
+        _skippedTestCases += testCases
+    }
+}
+
+private fun String.asProtocol(): Protocol = Protocol.valueOf(uppercase())

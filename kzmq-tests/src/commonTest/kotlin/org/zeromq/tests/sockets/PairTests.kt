@@ -14,7 +14,7 @@ import org.zeromq.tests.utils.*
 @Suppress("unused")
 val PairTests by testSuite {
 
-    withContexts("bind-connect") { ctx1, ctx2, protocol ->
+    dualContextTest("bind-connect") { ctx1, ctx2, protocol ->
         val address = randomEndpoint(protocol)
         val message = message {
             writeFrame("Hello 0MQ!".encodeToByteString())
@@ -32,7 +32,7 @@ val PairTests by testSuite {
         pair1 shouldReceive message
     }
 
-    withContexts("connect-bind") { ctx1, ctx2, protocol ->
+    dualContextTest("connect-bind") { ctx1, ctx2, protocol ->
         val address = randomEndpoint(protocol)
         val message = message {
             writeFrame("Hello 0MQ!".encodeToByteString())

@@ -16,7 +16,7 @@ import org.zeromq.tests.utils.*
 @Suppress("unused")
 val PublisherXSubscriberTests by testSuite {
 
-    withContexts("subscription filter") { ctx1, ctx2, protocol ->
+    dualContextTest("subscription filter") { ctx1, ctx2, protocol ->
         val address = randomEndpoint(protocol)
 
         val sent = listOf("prefixed data", "non-prefixed data", "prefix is good")

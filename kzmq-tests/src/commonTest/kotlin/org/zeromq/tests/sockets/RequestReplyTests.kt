@@ -17,7 +17,7 @@ import org.zeromq.tests.utils.*
 @Suppress("unused")
 val RequestReplyTests by testSuite {
 
-    withContexts("bind-connect") { ctx1, ctx2, protocol ->
+    dualContextTest("bind-connect") { ctx1, ctx2, protocol ->
         val address = randomEndpoint(protocol)
         val requestTemplate = message {
             writeFrame("Hello, 0MQ!".encodeToByteString())
@@ -38,7 +38,7 @@ val RequestReplyTests by testSuite {
         request shouldReceive replyTemplate
     }
 
-    withContexts("connect-bind") { ctx1, ctx2, protocol ->
+    dualContextTest("connect-bind") { ctx1, ctx2, protocol ->
         val address = randomEndpoint(protocol)
         val requestTemplate = message {
             writeFrame("Hello, 0MQ!".encodeToByteString())
@@ -59,9 +59,9 @@ val RequestReplyTests by testSuite {
         request shouldReceive replyTemplate
     }
 
-    withContexts("round-robin connected reply sockets").config(
-        skip = setOf("jeromq", "zeromq.js"),
-    ) { ctx1, ctx2, protocol ->
+    dualContextTest("round-robin connected reply sockets", config = {
+        skip("jeromq", "zeromq.js")
+    }) { ctx1, ctx2, protocol ->
         val address = randomEndpoint(protocol)
 
         val request = ctx1.createRequest().apply { bind(address) }
@@ -108,9 +108,9 @@ val RequestReplyTests by testSuite {
         replyJob.cancelAndJoin()
     }
 
-    withContexts("fair-queuing request sockets").config(
-        skip = setOf("jeromq", "zeromq.js", "cio"),
-    ) { ctx1, ctx2, protocol ->
+    dualContextTest("fair-queuing request sockets", config = {
+        skip("jeromq", "zeromq.js", "cio")
+    }) { ctx1, ctx2, protocol ->
         val address = randomEndpoint(protocol)
 
         val reply = ctx2.createReply().apply { bind(address) }

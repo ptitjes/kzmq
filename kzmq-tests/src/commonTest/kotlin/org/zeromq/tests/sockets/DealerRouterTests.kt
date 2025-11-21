@@ -21,10 +21,10 @@ private const val REPLY_MARKER = "REP"
 @Suppress("unused")
 val DealerRouterTests by testSuite {
 
-    withContexts("base").config(
+    dualContextTest("base", config = {
         // TODO fix when testing more Dealer and Router logic
-        skip = setOf("cio-cio, inproc"),
-    ) { ctx1, ctx2, protocol ->
+        skip("cio-cio, inproc")
+    }) { ctx1, ctx2, protocol ->
         val dealerCount = 2
         val routerCount = 3
         val addresses = Array(routerCount) { randomEndpoint(protocol) }

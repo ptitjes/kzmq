@@ -18,7 +18,7 @@ import kotlin.time.Duration.Companion.seconds
 @Suppress("unused")
 val PushTests by testSuite {
 
-    withContexts("simple connect-bind") { ctx1, ctx2, protocol ->
+    dualContextTest("simple connect-bind") { ctx1, ctx2, protocol ->
         val address = randomEndpoint(protocol)
 
         val pushSocket = ctx1.createPush().apply { connect(address) }
@@ -36,7 +36,7 @@ val PushTests by testSuite {
         pullSocket.close()
     }
 
-    withContexts("simple bind-connect") { ctx1, ctx2, protocol ->
+    dualContextTest("simple bind-connect") { ctx1, ctx2, protocol ->
         val address = randomEndpoint(protocol)
 
         val pushSocket = ctx1.createPush().apply { bind(address) }
@@ -54,10 +54,10 @@ val PushTests by testSuite {
         pullSocket.close()
     }
 
-    withContexts("lingers after disconnect").config(
-        // TODO investigate why these pairs are flaky
-        skip = setOf("cio-jeromq", "jeromq-cio"),
-    ) { ctx1, ctx2, protocol ->
+    dualContextTest("lingers after disconnect", config = {
+        // TODO investigate why this fails with these engines
+        skip("cio-jeromq", "jeromq-cio")
+    }) { ctx1, ctx2, protocol ->
         val address = randomEndpoint(protocol)
         val messageCount = 100
 
@@ -79,10 +79,10 @@ val PushTests by testSuite {
         pullSocket.close()
     }
 
-    withContexts("lingers after close").config(
-        // TODO investigate why these tests are flaky
-        skip = setOf("cio"),
-    ) { ctx1, ctx2, protocol ->
+    dualContextTest("lingers after close", config = {
+        // TODO investigate why this fails with these engines
+        skip("cio")
+    }) { ctx1, ctx2, protocol ->
         val address = randomEndpoint(protocol)
         val messageCount = 100
 
@@ -103,7 +103,7 @@ val PushTests by testSuite {
         pullSocket.close()
     }
 
-    withContexts("SHALL consider a peer as available only when it has an outgoing queue that is not full") { ctx1, ctx2, protocol ->
+    dualContextTest("SHALL consider a peer as available only when it has an outgoing queue that is not full") { ctx1, ctx2, protocol ->
         val address1 = randomEndpoint(protocol)
         val address2 = randomEndpoint(protocol)
 
@@ -143,7 +143,7 @@ val PushTests by testSuite {
         }
     }
 
-    withContexts("SHALL route outgoing messages to available peers using a round-robin strategy") { ctx1, ctx2, protocol ->
+    dualContextTest("SHALL route outgoing messages to available peers using a round-robin strategy") { ctx1, ctx2, protocol ->
         val pullCount = 5
         val address = randomEndpoint(protocol)
 
@@ -165,10 +165,10 @@ val PushTests by testSuite {
         }
     }
 
-    withContext("SHALL suspend on sending when it has no available peers").config(
+    singleContextTest("SHALL suspend on sending when it has no available peers", config = {
         // TODO investigate why this fails with these engines
-        skip = setOf("jeromq", "zeromq.js"),
-    ) { ctx, _ ->
+        skip("jeromq", "zeromq.js")
+    }) { ctx, _ ->
         val push = ctx.createPush()
 
         val message = Message("Won't be sent".encodeToByteString())
@@ -178,11 +178,11 @@ val PushTests by testSuite {
         } shouldBe null
     }
 
-    // TODO How is it different from previous test?
-    withContext("SHALL not accept further messages when it has no available peers").config(
+    // TODO How is it different from the previous test?
+    singleContextTest("SHALL not accept further messages when it has no available peers", config = {
         // TODO investigate why this fails with these engines
-        skip = setOf("jeromq", "zeromq.js"),
-    ) { ctx, _ ->
+        skip("jeromq", "zeromq.js")
+    }) { ctx, _ ->
         val push = ctx.createPush()
 
         val message = Message("Won't be sent".encodeToByteString())
@@ -192,14 +192,15 @@ val PushTests by testSuite {
         } shouldBe null
     }
 
-    withContexts("SHALL NOT discard messages that it cannot queue").config(
-        only = setOf(),
-    ) { ctx1, ctx2, protocol ->
+    dualContextTest("SHALL NOT discard messages that it cannot queue", config = {
+        // TODO investigate why this fails with these engines
+        skipAll()
+    }) { ctx1, ctx2, protocol ->
         val address = randomEndpoint(protocol)
 
         val push = ctx1.createPush().apply { connect(address) }
 
-        val templates = messages(10) { index -> listOf(ByteString(index.toByte() )) }
+        val templates = messages(10) { index -> listOf(ByteString(index.toByte())) }
 
         // Send each message once
         templates.forEach { push.send(it) }
