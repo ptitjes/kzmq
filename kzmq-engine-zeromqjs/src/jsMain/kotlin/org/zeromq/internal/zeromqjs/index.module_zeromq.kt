@@ -3,13 +3,6 @@
  * Use of this source code is governed by the Apache 2.0 license.
  */
 
-@file:Suppress(
-    "INTERFACE_WITH_SUPERCLASS",
-    "OVERRIDING_FINAL_MEMBER",
-    "RETURN_TYPE_MISMATCH_ON_OVERRIDE",
-    "CONFLICTING_OVERLOADS"
-)
-
 @file:JsModule("zeromq")
 @file:JsNonModule
 
@@ -31,10 +24,6 @@ internal external interface Readable {
     var receiveHighWaterMark: Int
     var receiveTimeout: Int
     fun receive(): Promise<Array<Buffer>>
-}
-
-internal external interface `T$0` {
-    var context: Context
 }
 
 //internal external interface EventSubscriber {
