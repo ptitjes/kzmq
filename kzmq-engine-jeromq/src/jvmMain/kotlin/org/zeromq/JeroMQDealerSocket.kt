@@ -12,7 +12,11 @@ internal class JeroMQDealerSocket internal constructor(
 ) : JeroMQSocket(factory, SocketType.DEALER, Type.DEALER), DealerSocket {
 
     override var conflate: Boolean by underlying::conflate
-    override var routingId: ByteString? by underlying::identity.converted()
+    override var routingId: ByteString?
+        get() = underlying.identity?.let { ByteString(it) }
+        set(value) {
+            underlying.identity = value?.toByteArray()
+        }
 
     // TODO there no getter for setProbeRouter in underlying socket
     override var probeRouter: Boolean by notImplementedProperty()
