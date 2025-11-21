@@ -12,6 +12,7 @@ internal class TcpEndpoint(val address: SocketAddress) {
     override fun toString(): String = when (address) {
         is InetSocketAddress -> "tcp://${address.hostname}:${address.port}"
         is UnixSocketAddress -> "ipc://${address.path}"
+        else -> error("Unknown SocketAddress type")
     }
 }
 
