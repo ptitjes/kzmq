@@ -79,7 +79,12 @@ kotlin.targets.withType<KotlinNativeTarget> {
     // https://youtrack.jetbrains.com/issue/KT-51866/Compile-error-to-mingwX64-with-libbacktrace
     if (this.konanTarget.family != Family.MINGW) {
         binaries.all {
-            binaryOptions["sourceInfoType"] = "libbacktrace"
+            when (konanTarget.family) {
+                Family.LINUX -> binaryOption("sourceInfoType", "libbacktrace")
+                Family.OSX -> binaryOption("sourceInfoType", "coresymbolication")
+
+                else -> {}
+            }
         }
     }
 }

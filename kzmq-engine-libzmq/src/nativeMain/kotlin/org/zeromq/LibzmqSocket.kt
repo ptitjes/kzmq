@@ -149,16 +149,16 @@ internal abstract class LibzmqSocket internal constructor(
         val msg = alloc<zmq_msg_t>()
         checkNativeError(zmq_msg_init(msg.ptr))
 
-        val errno = zmq_recvmsg(underlying, msg.ptr, baseFlags)
-        if (errno == 11) return null
-        checkNativeError(errno)
+        val result = zmq_recvmsg(underlying, msg.ptr, baseFlags)
+        if (result == -1 && zmq_errno() == 11) return null
+        checkNativeError(result)
 
         val data = zmq_msg_data(msg.ptr) ?: throw IllegalStateException("No message data")
         val size = zmq_msg_size(msg.ptr)
-        val result = data.readBytes(size.toInt())
+        val bytes = data.readBytes(size.toInt())
 
         checkNativeError(zmq_msg_close(msg.ptr))
-        return result
+        bytes
     }
 
     var receiveBufferSize: Int
