@@ -5,7 +5,8 @@
 
 plugins {
     id("plugin.common")
-    id("io.kotest.multiplatform")
+    id("io.kotest")
+    id("com.google.devtools.ksp")
 }
 
 kotlin {
@@ -14,7 +15,6 @@ kotlin {
             commonMain {
                 dependencies {
                     implementation(libs.getLibrary("kotest.framework.engine"))
-                    implementation(libs.getLibrary("kotest.framework.datatest"))
                     implementation(libs.getLibrary("kotest.assertions.core"))
                 }
             }
@@ -26,7 +26,6 @@ kotlin {
             commonTest {
                 dependencies {
                     implementation(libs.getLibrary("kotest.framework.engine"))
-                    implementation(libs.getLibrary("kotest.framework.datatest"))
                     implementation(libs.getLibrary("kotest.assertions.core"))
                 }
             }
@@ -38,9 +37,8 @@ kotlin {
             }
         }
 
-        val hasJvmSupport = project.projectDir.resolve("src/jvmMain").exists()
-        if (hasJvmSupport) {
-            create("jvmTest").apply {
+        all {
+            if (name == "jvmTest") {
                 dependencies {
                     implementation(libs.getLibrary("kotest.runner.junit5"))
                 }
