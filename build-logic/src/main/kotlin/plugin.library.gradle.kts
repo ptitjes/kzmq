@@ -11,3 +11,15 @@ plugins {
 kotlin {
     explicitApi()
 }
+
+dokka {
+    dokkaSourceSets {
+        all {
+            sourceLink {
+                localDirectory.set(file("src/$name/kotlin"))
+                remoteUrl("https://github.com/ptitjes/kzmq/tree/master/${project.name}/src/$name/kotlin")
+                remoteLineSuffix.set("#L")
+            }
+        }
+    }
+}
