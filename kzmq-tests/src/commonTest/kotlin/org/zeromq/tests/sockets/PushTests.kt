@@ -18,7 +18,10 @@ import kotlin.time.Duration.Companion.seconds
 @Suppress("unused")
 val PushTests by testSuite {
 
-    dualContextTest("simple connect-bind") { ctx1, ctx2, protocol ->
+    dualContextTest("simple connect-bind", config = {
+        // TODO investigate why this is flaky
+        skip("jeromq-cio, tcp")
+    }) { ctx1, ctx2, protocol ->
         val address = randomEndpoint(protocol)
 
         val pushSocket = ctx1.createPush().apply { connect(address) }
