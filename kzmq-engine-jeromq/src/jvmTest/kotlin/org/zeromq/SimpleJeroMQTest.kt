@@ -1,17 +1,17 @@
 /*
- * Copyright (c) 2024 Didier Villevalois and Kzmq contributors.
+ * Copyright (c) 2024-2025 Didier Villevalois and Kzmq contributors.
  * Use of this source code is governed by the Apache 2.0 license.
  */
 
 package org.zeromq
 
-import kotlinx.coroutines.test.*
+import de.infix.testBalloon.framework.core.*
 import kotlinx.io.*
 import kotlin.test.*
 
-class SimpleTest {
-    @Test
-    fun testSimple() = runTest {
+val SimpleJeroMQTest by testSuite {
+
+    test("simple") {
         val ctx1 = Context(JeroMQ)
         val ctx2 = Context(JeroMQ)
 
