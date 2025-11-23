@@ -5,7 +5,7 @@ project = "0.1.0-SNAPSHOT"
 kotlin = "2.2.21"
 
 dokka = "2.1.0"
-kover = "0.8.3"
+kover = "0.9.3"
 
 kotlinx-coroutines = "1.10.2"
 kotlinx-atomicfu = "0.29.0"
