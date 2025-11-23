@@ -12,7 +12,7 @@ plugins {
 val projectVersion: String = libs.versions.project.get()
 
 subprojects {
-    group = "org.zeromq"
+    group = "io.github.ptitjes"
     version = projectVersion
 }
 
