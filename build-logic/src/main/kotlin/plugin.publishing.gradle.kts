@@ -9,7 +9,8 @@ plugins {
 }
 
 mavenPublishing {
-
+    publishToMavenCentral(automaticRelease = true, validateDeployment = true)
+    signAllPublications()
 }
 
 publishing {

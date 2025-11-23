@@ -8,7 +8,7 @@
 </div>
 
 ![Build](https://github.com/ptitjes/kzmq/actions/workflows/main.yml/badge.svg)
-[![Maven Central](https://img.shields.io/maven-central/v/org.zeromq/kzmq)](https://mvnrepository.com/artifact/org.zeromq)
+[![Maven Central](https://img.shields.io/maven-central/v/io.github.ptitjes/kzmq-core)](https://mvnrepository.com/artifact/io.github.ptitjes)
 [![Kotlin](https://img.shields.io/badge/kotlin-1.7.10-blue.svg?logo=kotlin)](http://kotlinlang.org)
 [![GitHub License](https://img.shields.io/badge/license-Apache%20License%202.0-blue.svg?style=flat)](http://www.apache.org/licenses/LICENSE-2.0)
 
@@ -143,8 +143,7 @@ kotlin {
     sourceSets {
         commonMain {
             dependencies {
-                implementation("org.zeromq:kzmq-core:0.1.0")
-                implementation("org.jetbrains.kotlinx:kotlinx-io-core:0.5.1")
+                implementation("io.github.ptitjes:kzmq-core:0.1.0")
             }
         }
     }
@@ -167,7 +166,7 @@ kotlin {
     sourceSets {
         commonMain {
             dependencies {
-                implementation("org.zeromq:kzmq-engine-cio:0.1.0")
+                implementation("io.github.ptitjes:kzmq-engine-cio:0.1.0")
             }
         }
     }
@@ -184,7 +183,7 @@ kotlin {
     sourceSets {
         jvmMain {
             dependencies {
-                implementation("org.zeromq:kzmq-engine-jeromq:0.1.0")
+                implementation("io.github.ptitjes:kzmq-engine-jeromq:0.1.0")
             }
         }
     }
@@ -201,7 +200,7 @@ kotlin {
     sourceSets {
         jsMain {
             dependencies {
-                implementation("org.zeromq:kzmq-engine-zeromqjs:0.1.0")
+                implementation("io.github.ptitjes:kzmq-engine-zeromqjs:0.1.0")
             }
         }
     }
@@ -218,7 +217,7 @@ kotlin {
     sourceSets {
         nativeMain {
             dependencies {
-                implementation("org.zeromq:kzmq-engine-libzmq:0.1.0")
+                implementation("io.github.ptitjes:kzmq-engine-libzmq:0.1.0")
             }
         }
     }

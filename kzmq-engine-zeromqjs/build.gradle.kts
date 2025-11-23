@@ -5,6 +5,7 @@
 
 plugins {
     id("plugin.library")
+    id("plugin.publishing")
 }
 
 kotlin {
