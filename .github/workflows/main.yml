@@ -39,12 +39,13 @@ jobs:
         uses: mi-kas/kover-report@v1
         with:
           path: |
-            ${{ github.workspace }}/kzmq-cio/build/reports/kover/report.xml
             ${{ github.workspace }}/kzmq-core/build/reports/kover/report.xml
-            ${{ github.workspace }}/kzmq-jeromq/build/reports/kover/report.xml
-            ${{ github.workspace }}/kzmq-libzmq/build/reports/kover/report.xml
+            ${{ github.workspace }}/kzmq-engine-cio/build/reports/kover/report.xml
+            ${{ github.workspace }}/kzmq-engine-jeromq/build/reports/kover/report.xml
+            ${{ github.workspace }}/kzmq-engine-zeromqjs/build/reports/kover/report.xml
+            ${{ github.workspace }}/kzmq-engine-libzmq/build/reports/kover/report.xml
+            ${{ github.workspace }}/kzmq-test/build/reports/kover/report.xml
             ${{ github.workspace }}/kzmq-tests/build/reports/kover/report.xml
-            ${{ github.workspace }}/kzmq-zeromqjs/build/reports/kover/report.xml
           token: ${{ secrets.GITHUB_TOKEN }}
           title: Code Coverage
           update-comment: true
