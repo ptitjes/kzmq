@@ -11,7 +11,6 @@ import org.zeromq.*
 import org.zeromq.test.*
 import org.zeromq.tests.utils.*
 
-@Suppress("unused")
 val PairTests by testSuite {
 
     dualContextTest("bind-connect") { ctx1, ctx2, protocol ->

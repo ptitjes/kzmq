@@ -18,7 +18,6 @@ import org.zeromq.tests.utils.*
 private const val REQUEST_MARKER = "REQ"
 private const val REPLY_MARKER = "REP"
 
-@Suppress("unused")
 val DealerRouterTests by testSuite {
 
     dualContextTest("base", config = {

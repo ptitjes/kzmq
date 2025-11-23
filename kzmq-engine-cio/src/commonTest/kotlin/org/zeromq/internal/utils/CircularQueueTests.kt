@@ -10,7 +10,6 @@ import io.kotest.assertions.throwables.*
 import io.kotest.matchers.*
 import io.kotest.matchers.equals.*
 
-@Suppress("unused")
 val CircularQueueTests by testSuite {
 
     test("requires at least one element") {

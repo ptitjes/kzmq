@@ -14,7 +14,6 @@ import kotlinx.io.bytestring.*
 import org.zeromq.*
 import org.zeromq.tests.utils.*
 
-@Suppress("unused")
 val XPublisherSubscriberTests by testSuite {
 
     dualContextTest("subscription filter") { ctx1, ctx2, protocol ->
