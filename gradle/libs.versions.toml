@@ -11,7 +11,7 @@ kotlinx-coroutines = "1.10.2"
 kotlinx-atomicfu = "0.29.0"
 kotlinx-benchmark = "0.4.14"
 kotlinx-cli = "0.3.6"
-kotlinx-io = "0.8.0"
+kotlinx-io = "0.8.1"
 
 ktor = "3.3.2"
 kermit = "2.0.8"
@@ -24,8 +24,8 @@ testBalloon = "0.7.1-K2.2.21"
 ksp = "2.2.21-2.0.4"
 mokkery = "2.10.2"
 
-build-config = "5.4.0"
-maven-publish = "0.34.0"
+build-config = "5.7.1"
+maven-publish = "0.35.0"
 
 [plugins]
 
