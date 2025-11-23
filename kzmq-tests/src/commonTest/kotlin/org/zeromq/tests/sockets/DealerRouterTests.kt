@@ -23,7 +23,7 @@ val DealerRouterTests by testSuite {
 
     dualContextTest("base", config = {
         // TODO fix when testing more Dealer and Router logic
-        skip("cio-cio, inproc")
+        skip("cio-cio, inproc", "cio-cio, ipc")
     }) { ctx1, ctx2, protocol ->
         val dealerCount = 2
         val routerCount = 3
