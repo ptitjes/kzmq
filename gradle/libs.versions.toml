@@ -25,7 +25,7 @@ ksp = "2.2.21-2.0.4"
 mokkery = "2.10.2"
 
 build-config = "5.4.0"
-maven-publish = "0.34.0"
+maven-publish = "0.35.0"
 
 [plugins]
 
