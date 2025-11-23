@@ -9,7 +9,7 @@ import io.ktor.utils.io.*
 import kotlinx.io.bytestring.*
 
 internal suspend fun nullMechanismHandshake(
-    localProperties: MutableMap<PropertyName, ByteString>,
+    localProperties: Map<PropertyName, ByteString>,
     isServer: Boolean,
     input: ByteReadChannel,
     output: ByteWriteChannel,
@@ -36,6 +36,6 @@ private suspend fun expectReadyCommand(input: ByteReadChannel): Map<PropertyName
     }
 }
 
-private suspend fun ByteWriteChannel.sendReadyCommand(properties: MutableMap<PropertyName, ByteString>) {
+private suspend fun ByteWriteChannel.sendReadyCommand(properties: Map<PropertyName, ByteString>) {
     writeCommand(ReadyCommand(properties))
 }

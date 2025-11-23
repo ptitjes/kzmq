@@ -18,6 +18,7 @@ internal class SocketOptions {
     var lingerTimeout: Duration = Duration.INFINITE
 
     var routingId: ByteString? = null
+    var mandatory: Boolean = false
 }
 
 internal class PlainMechanismOptions {

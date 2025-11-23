@@ -12,6 +12,8 @@ import kotlinx.io.bytestring.*
 import org.zeromq.*
 import org.zeromq.internal.*
 
+private const val ZEROMQ_JS_COMPAT = true
+
 internal class TcpSocketHandler(
     private val socketInfo: SocketInfo,
     private val isServer: Boolean,
@@ -42,7 +44,7 @@ internal class TcpSocketHandler(
         if (mechanism != peerSecuritySpec.mechanism)
             protocolError("Invalid peer security mechanism: ${peerSecuritySpec.mechanism}")
 
-        val localProperties = mutableMapOf<PropertyName, ByteString>().apply {
+        val localProperties = buildMap {
             put(PropertyName.SOCKET_TYPE, socketInfo.type.name.encodeToByteString())
             socketInfo.options.routingId?.let { identity -> put(PropertyName.IDENTITY, identity) }
         }
@@ -70,11 +72,19 @@ internal class TcpSocketHandler(
             coroutineScope {
                 launch {
                     val incoming = mailbox.receiveChannel
-                    while (isActive) incoming.send(readIncoming())
+                    while (isActive) {
+                        val incomingMessage = readIncoming()
+                        logger.v { "(TCP: $mailbox) Incoming message: $incomingMessage" }
+                        incoming.send(incomingMessage)
+                    }
                 }
                 launch {
                     val outgoing = mailbox.sendChannel
-                    while (isActive) writeOutgoing(outgoing.receive())
+                    while (isActive) {
+                        val outgoingMessage = outgoing.receive()
+                        logger.v { "(TCP: $mailbox) Outgoing message: $outgoingMessage" }
+                        writeOutgoing(outgoingMessage)
+                    }
                 }
             }
         } finally {
@@ -106,7 +116,7 @@ internal class TcpSocketHandler(
         val raw = input.readCommandOrMessage()
 
         // Specially handle ZMTP 3.0 subscriptions
-        val incoming = if (peerMinorVersion == 0 && isPublisher) {
+        val incoming = if ((peerMinorVersion == 0 || ZEROMQ_JS_COMPAT) && isPublisher) {
             transformSubscriptionMessages(raw)
         } else raw
 
@@ -141,7 +151,7 @@ private fun extractSubscriptionCommand(message: Message): CommandOrMessage? {
 private fun transformSubscriptionCommands(commandOrMessage: CommandOrMessage): CommandOrMessage =
     if (commandOrMessage.isCommand) {
         when (val command = commandOrMessage.commandOrThrow()) {
-            is SubscribeCommand -> CommandOrMessage(SubscriptionMessage(true, command.topic).toMessage())
+            is SubscribeCommand -> CommandOrMessage(SubscriptionMessage(ZEROMQ_JS_COMPAT, command.topic).toMessage())
 
             is CancelCommand -> CommandOrMessage(SubscriptionMessage(false, command.topic).toMessage())
 
