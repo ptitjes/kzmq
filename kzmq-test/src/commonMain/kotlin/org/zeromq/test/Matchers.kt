@@ -5,10 +5,7 @@
 
 package org.zeromq.test
 
-import io.kotest.assertions.*
-import io.kotest.assertions.print.*
 import io.kotest.matchers.equals.*
-import kotlinx.coroutines.*
 import kotlinx.io.*
 import kotlinx.io.bytestring.*
 import org.zeromq.*
@@ -27,19 +24,12 @@ private suspend fun shouldReceiveExactly(
     expected: List<List<ByteString>>,
     receive: suspend () -> Message,
 ) {
-    val received = mutableListOf<List<ByteString>>()
-    try {
+    val received = buildList {
         repeat(expected.size) {
             val message = receive()
-            received += message.readFrames().map { it.readByteString() }
+            add(message.readFrames().map { it.readByteString() })
         }
-
-        received shouldBeEqual expected
-    } catch (_: TimeoutCancellationException) {
-        throw failure(
-            expected = Expected(expected.print()),
-            actual = Actual(received.print()),
-            prependMessage = "Only ${received.size} of the expected ${expected.size} messages were received.",
-        )
     }
+
+    received shouldBeEqual expected
 }
