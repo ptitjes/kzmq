@@ -11,7 +11,7 @@ kotlinx-coroutines = "1.10.2"
 kotlinx-atomicfu = "0.29.0"
 kotlinx-benchmark = "0.4.14"
 kotlinx-cli = "0.3.6"
-kotlinx-io = "0.8.1"
+kotlinx-io = "0.8.2"
 
 ktor = "3.3.2"
 kermit = "2.0.8"
