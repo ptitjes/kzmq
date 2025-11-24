@@ -10,6 +10,10 @@ import org.zeromq.*
 
 internal interface SocketHandler {
     suspend fun handle(peerEvents: ReceiveChannel<PeerEvent>)
+
     suspend fun send(message: Message): Unit = error("Should not be called")
+    fun trySend(message: Message): Unit? = error("Should not be called")
+
     suspend fun receive(): Message = error("Should not be called")
+    fun tryReceive(): Message? = error("Should not be called")
 }

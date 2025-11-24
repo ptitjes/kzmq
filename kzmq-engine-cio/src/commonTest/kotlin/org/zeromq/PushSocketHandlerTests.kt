@@ -7,20 +7,16 @@ package org.zeromq
 
 import de.infix.testBalloon.framework.core.*
 import io.kotest.assertions.*
-import io.kotest.matchers.*
-import kotlinx.coroutines.*
-import kotlinx.io.bytestring.*
+import org.zeromq.fragments.*
 import org.zeromq.internal.*
 import org.zeromq.test.*
 import org.zeromq.utils.*
-import kotlin.time.Duration.Companion.seconds
 
 val PushSocketHandlerTests by testSuite {
-    suspend fun TestExecutionScope.withHandler(test: SocketHandlerTest) =
-        withSocketHandler(PushSocketHandler(), test)
+    val factory = ::PushSocketHandler
 
     test("SHALL consider a peer as available only when it has an outgoing queue that is not full") {
-        withHandler { peerEvents, send, _ ->
+        factory.runTest {
             val peer1 = PeerMailbox("1", SocketOptions())
             val peer2 = PeerMailbox("2", SocketOptions().apply { sendQueueSize = 5 })
 
@@ -47,7 +43,7 @@ val PushSocketHandlerTests by testSuite {
     }
 
     test("SHALL route outgoing messages to available peers using a round-robin strategy") {
-        withHandler { peerEvents, send, _ ->
+        factory.runTest {
             val peers = List(5) { index -> PeerMailbox(index.toString(), SocketOptions()) }
 
             peers.forEach { peer ->
@@ -77,40 +73,5 @@ val PushSocketHandlerTests by testSuite {
         }
     }
 
-    test("SHALL suspend on sending when it has no available peers") {
-        withHandler { _, send, _ ->
-            val message = buildMessage { writeFrame("Won't be sent".encodeToByteString()) }
-
-            withTimeoutOrNull(1.seconds) {
-                send(message)
-            } shouldBe null
-        }
-    }
-
-    test("SHALL not accept further messages when it has no available peers") {
-        withHandler { _, send, _ ->
-            val message = buildMessage { writeFrame("Won't be sent".encodeToByteString()) }
-
-            withTimeoutOrNull(1.seconds) {
-                send(message)
-            } shouldBe null
-        }
-    }
-
-    test("SHALL NOT discard messages that it cannot queue") {
-        withHandler { peerEvents, send, _ ->
-            val peer = PeerMailbox("1", SocketOptions())
-            peerEvents.send(PeerEvent(PeerEvent.Kind.ADDITION, peer))
-
-            val messages = messages(10) { index -> writeFrame { writeByte(index.toByte()) } }
-
-            // Send each message once
-            messages.forEach { send(it.buildMessage()) }
-
-            peerEvents.send(PeerEvent(PeerEvent.Kind.CONNECTION, peer))
-
-            // Check each receiver got every messages
-            peer.sendChannel shouldReceiveExactly messages
-        }
-    }
+    suspendingSendTests(factory)
 }

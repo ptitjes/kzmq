@@ -15,7 +15,6 @@ import org.zeromq.test.*
 import org.zeromq.tests.utils.*
 import kotlin.time.Duration.Companion.seconds
 
-@Suppress("unused")
 val PushTests by testSuite {
 
     dualContextTest("simple connect-bind", config = {

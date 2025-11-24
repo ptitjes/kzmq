@@ -12,7 +12,6 @@ import org.zeromq.*
 import org.zeromq.test.*
 import org.zeromq.tests.utils.*
 
-@Suppress("unused")
 val PullTests by testSuite {
 
     dualContextTest("SHALL receive incoming messages from its peers using a fair-queuing strategy", config = {

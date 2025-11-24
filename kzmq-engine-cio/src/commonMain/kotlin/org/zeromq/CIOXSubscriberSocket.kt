@@ -91,14 +91,14 @@ internal class CIOXSubscriberSocket(
 
     override val validPeerTypes: Set<Type> get() = validPeerSocketTypes
 
-    override val handler = setupHandler(XSubscriberSocketHandler())
+    override val handler = setupHandler(XSubscriberSocketHandler(options))
 
     companion object {
         private val validPeerSocketTypes = setOf(Type.PUB, Type.XPUB)
     }
 }
 
-internal class XSubscriberSocketHandler : SocketHandler {
+internal class XSubscriberSocketHandler(private val options: SocketOptions) : SocketHandler {
     private val mailboxes = CircularQueue<PeerMailbox>()
     private val subscriptions = SubscriptionManager()
 
@@ -106,7 +106,7 @@ internal class XSubscriberSocketHandler : SocketHandler {
         while (isActive) {
             select {
                 peerEvents.onReceive { event ->
-                    mailboxes.update(event)
+                    mailboxes.updateOnAdditionRemoval(event)
 
                     val (kind, peerMailbox) = event
                     when (kind) {
@@ -147,8 +147,9 @@ internal class XSubscriberSocketHandler : SocketHandler {
         }
     }
 
-    override suspend fun receive(): Message {
-        val (_, message) = mailboxes.receiveFromFirst()
-        return message
-    }
+    override suspend fun receive(): Message = mailboxes.receiveFromFirst().messageOrThrow()
+
+    override fun tryReceive(): Message? = mailboxes.tryReceiveFromFirst()?.messageOrThrow()
+
+    private fun Receipt.messageOrThrow() = commandOrMessage.messageOrThrow()
 }

@@ -55,6 +55,7 @@ kotlin {
         jsTest {
             dependencies {
                 implementation(project(":kzmq-engine-zeromqjs"))
+                implementation(project(":kzmq-engine-cio"))
             }
         }
 

@@ -61,38 +61,42 @@ internal class CIODealerSocket(
 ) : CIOSocket(engine, Type.DEALER), CIOSendSocket, CIOReceiveSocket, DealerSocket {
 
     override val validPeerTypes: Set<Type> get() = validPeerSocketTypes
-    override val handler = setupHandler(DealerSocketHandler())
+    override val handler = setupHandler(DealerSocketHandler(options))
 
-    override var conflate: Boolean
-        get() = TODO("Not yet implemented")
-        set(value) {}
+    override var conflate: Boolean by notImplementedOption("Not yet implemented")
 
     override var routingId: ByteString? by options::routingId
 
-    override var probeRouter: Boolean
-        get() = TODO("Not yet implemented")
-        set(value) {}
+    override var probeRouter: Boolean by notImplementedOption("Not yet implemented")
 
     companion object {
         private val validPeerSocketTypes = setOf(Type.REP, Type.ROUTER)
     }
 }
 
-internal class DealerSocketHandler : SocketHandler {
-    private val mailboxes = CircularQueue<PeerMailbox>()
+internal class DealerSocketHandler(private val options: SocketOptions) : SocketHandler {
+    private val outgoingMailboxes = CircularQueue<PeerMailbox>()
+    private val incomingMailboxes = CircularQueue<PeerMailbox>()
 
     override suspend fun handle(peerEvents: ReceiveChannel<PeerEvent>) = coroutineScope {
         while (isActive) {
-            mailboxes.update(peerEvents.receive())
+            val event = peerEvents.receive()
+            outgoingMailboxes.updateOnAdditionRemoval(event)
+            incomingMailboxes.updateOnAdditionRemoval(event)
         }
     }
 
     override suspend fun send(message: Message) {
-        mailboxes.sendToFirstAvailable(message)
+        outgoingMailboxes.sendToFirstAvailable(message)
     }
 
-    override suspend fun receive(): Message {
-        val (_, message) = mailboxes.receiveFromFirst()
-        return message
+    override fun trySend(message: Message): Unit? {
+        return outgoingMailboxes.trySendToFirstAvailable(message)?.let {}
     }
+
+    override suspend fun receive(): Message = incomingMailboxes.receiveFromFirst().messageOrThrow()
+
+    override fun tryReceive(): Message? = incomingMailboxes.tryReceiveFromFirst()?.messageOrThrow()
+
+    private fun Receipt.messageOrThrow() = commandOrMessage.messageOrThrow()
 }

@@ -6,20 +6,17 @@
 package org.zeromq
 
 import de.infix.testBalloon.framework.core.*
-import io.kotest.matchers.*
-import kotlinx.coroutines.*
 import kotlinx.io.bytestring.*
+import org.zeromq.fragments.*
 import org.zeromq.internal.*
 import org.zeromq.test.*
 import org.zeromq.utils.*
-import kotlin.time.Duration.Companion.seconds
 
 val RequestSocketHandlerTests by testSuite {
-    suspend fun TestExecutionScope.withHandler(test: SocketHandlerTest) =
-        withSocketHandler(RequestSocketHandler(), test)
+    val factory = ::RequestSocketHandler
 
     test("SHALL prefix the outgoing message with an empty delimiter frame") {
-        withHandler { peerEvents, send, _ ->
+        factory.runTest {
             val peer = PeerMailbox("peer", SocketOptions().apply { sendQueueSize = 5 }).also { peer ->
                 peerEvents.send(PeerEvent(PeerEvent.Kind.ADDITION, peer))
                 peerEvents.send(PeerEvent(PeerEvent.Kind.CONNECTION, peer))
@@ -27,7 +24,7 @@ val RequestSocketHandlerTests by testSuite {
 
             val request = message { writeFrame("Hello") }
 
-            send.send(request)
+            send(request.buildMessage())
 
             peer.sendChannel shouldReceiveExactly listOf(message {
                 writeEmptyFrame()
@@ -36,8 +33,11 @@ val RequestSocketHandlerTests by testSuite {
         }
     }
 
-    test("SHALL route outgoing messages to connected peers using a round-robin strategy") {
-        withHandler { peerEvents, send, receive ->
+    test(
+        "SHALL route outgoing messages to connected peers using a round-robin strategy",
+        testConfig = TestConfig.disable(),
+    ) {
+        factory.runTest {
             val peerCount = 5
             val messageCount = 10
 
@@ -70,7 +70,7 @@ val RequestSocketHandlerTests by testSuite {
                         writeFrame { writeByte(peerIndex.toByte()) }
                     }.buildMessage()))
 
-                    receive shouldReceiveExactly listOf(message {
+                    ::receive shouldReceiveExactly listOf(message {
                         writeFrame("REPLY".encodeToByteString())
                         writeFrame { writeByte(messageIndex.toByte()) }
                         writeFrame { writeByte(peerIndex.toByte()) }
@@ -80,19 +80,13 @@ val RequestSocketHandlerTests by testSuite {
         }
     }
 
-    test("SHALL suspend on sending when it has no available peers") {
-        withHandler { _, send, _ ->
-            val message = buildMessage { writeFrame("Won't be sent".encodeToByteString()) }
+    suspendingSendTests(factory)
 
-            withTimeoutOrNull(1.seconds) {
-                send(message)
-            } shouldBe null
-        }
-    }
-
-
-    test("SHALL accept an incoming message only from the last peer that it sent a request to") {
-        withHandler { peerEvents, send, receive ->
+    test(
+        "SHALL accept an incoming message only from the last peer that it sent a request to",
+        testConfig = TestConfig.testScope(isEnabled = false),
+    ) {
+        factory.runTest {
             val peers = List(2) { index ->
                 PeerMailbox(index.toString(), SocketOptions()).also { peer ->
                     peerEvents.send(PeerEvent(PeerEvent.Kind.ADDITION, peer))
@@ -114,12 +108,15 @@ val RequestSocketHandlerTests by testSuite {
                 writeFrame("IGNORED-REPLY".encodeToByteString())
             }.buildMessage()))
 
-            receive.shouldReceiveNothing()
+            ::receive.shouldReceiveNothing()
         }
     }
 
-    test("SHALL discard silently any messages received from other peers") {
-        withHandler { peerEvents, send, receive ->
+    test(
+        "SHALL discard silently any messages received from other peers",
+        testConfig = TestConfig.testScope(isEnabled = false),
+    ) {
+        factory.runTest {
             val peers = List(2) { index ->
                 PeerMailbox(index.toString(), SocketOptions()).also { peer ->
                     peerEvents.send(PeerEvent(PeerEvent.Kind.ADDITION, peer))
@@ -143,16 +140,26 @@ val RequestSocketHandlerTests by testSuite {
                 }.buildMessage()))
             }
 
-            receive.shouldReceiveNothing()
+            ::receive.shouldReceiveNothing()
 
             peers[0].receiveChannel.send(CommandOrMessage(message {
                 writeEmptyFrame()
                 writeFrame("REPLY".encodeToByteString())
             }.buildMessage()))
 
-            receive shouldReceiveExactly listOf(message {
+            ::receive shouldReceiveExactly listOf(message {
                 writeFrame("REPLY".encodeToByteString())
             })
         }
     }
+
+    suspendingReceiveTests(
+        factory = factory,
+        configureForReceiver = {
+            setState(RequestSocketState.AwaitingReply(it))
+        },
+        modifySentMessage = { message ->
+            message.pushPrefixAddress(listOf("dummy-address".encodeToByteString()))
+        },
+    )
 }

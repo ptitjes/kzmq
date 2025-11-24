@@ -5,7 +5,6 @@
 
 package org.zeromq
 
-import kotlinx.coroutines.channels.*
 import org.zeromq.internal.*
 
 internal interface CIOSendSocket : SendSocket {
@@ -22,16 +21,18 @@ internal interface CIOSendSocket : SendSocket {
     }
 
     override fun trySend(message: Message): SocketResult<Unit> {
-        TODO()
+        val maybeUnit = handler.trySend(message)
+        return if (maybeUnit != null) SocketResult.success(maybeUnit)
+        else SocketResult.failure()
     }
 
     override var multicastHops: Int
         get() = TODO("Not yet implemented")
-        set(value) {}
+        set(value) = TODO("Not yet implemented")
 
     override var sendBufferSize: Int
         get() = TODO("Not yet implemented")
-        set(value) {}
+        set(value) = TODO("Not yet implemented")
 
     override var sendHighWaterMark: Int
         get() = options.sendQueueSize
@@ -41,5 +42,5 @@ internal interface CIOSendSocket : SendSocket {
 
     override var sendTimeout: Int
         get() = TODO("Not yet implemented")
-        set(value) {}
+        set(value) = TODO("Not yet implemented")
 }

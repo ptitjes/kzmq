@@ -7,16 +7,16 @@ package org.zeromq
 
 import de.infix.testBalloon.framework.core.*
 import io.kotest.assertions.*
+import org.zeromq.fragments.*
 import org.zeromq.internal.*
 import org.zeromq.test.*
 import org.zeromq.utils.*
 
 val PullSocketHandlerTests by testSuite {
-    suspend fun TestExecutionScope.withHandler(test: SocketHandlerTest) =
-        withSocketHandler(PullSocketHandler(), test)
+    val factory = ::PullSocketHandler
 
     test("SHALL receive incoming messages from its peers using a fair-queuing strategy") {
-        withHandler { peerEvents, _, receive ->
+        factory.runTest {
             val peers = List(5) { index ->
                 PeerMailbox(index.toString(), SocketOptions()).also { peer ->
                     peerEvents.send(PeerEvent(PeerEvent.Kind.ADDITION, peer))
@@ -34,14 +34,14 @@ val PullSocketHandlerTests by testSuite {
 
             all {
                 messages.forEach { message ->
-                    receive shouldReceiveExactly List(peers.size) { message }
+                    ::receive shouldReceiveExactly List(peers.size) { message }
                 }
             }
         }
     }
 
     test("SHALL deliver these to its calling application") {
-        withHandler { peerEvents, _, receive ->
+        factory.runTest {
             val peer = PeerMailbox("peer", SocketOptions()).also { peer ->
                 peerEvents.send(PeerEvent(PeerEvent.Kind.ADDITION, peer))
                 peerEvents.send(PeerEvent(PeerEvent.Kind.CONNECTION, peer))
@@ -53,7 +53,9 @@ val PullSocketHandlerTests by testSuite {
 
             messages.forEach { peer.receiveChannel.send(it) }
 
-            receive shouldReceiveExactly messages
+            ::receive shouldReceiveExactly messages
         }
     }
+
+    suspendingReceiveTests(factory)
 }

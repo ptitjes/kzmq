@@ -88,24 +88,18 @@ internal class CIOPublisherSocket(
 ) : CIOSocket(engine, Type.PUB), CIOSendSocket, PublisherSocket {
 
     override val validPeerTypes: Set<Type> get() = validPeerSocketTypes
-    override val handler = setupHandler(PublisherSocketHandler())
+    override val handler = setupHandler(PublisherSocketHandler(options))
 
-    override var conflate: Boolean
-        get() = TODO("Not yet implemented")
-        set(value) {}
-    override var invertMatching: Boolean
-        get() = TODO("Not yet implemented")
-        set(value) {}
-    override var noDrop: Boolean
-        get() = TODO("Not yet implemented")
-        set(value) {}
+    override var conflate: Boolean by notImplementedOption("Not yet implemented")
+    override var invertMatching: Boolean by notImplementedOption("Not yet implemented")
+    override var noDrop: Boolean by notImplementedOption("Not yet implemented")
 
     companion object {
         private val validPeerSocketTypes = setOf(Type.SUB, Type.XSUB)
     }
 }
 
-internal class PublisherSocketHandler : SocketHandler {
+internal class PublisherSocketHandler(private val options: SocketOptions) : SocketHandler {
     private val mailboxes = hashSetOf<PeerMailbox>()
     private var subscriptions = SubscriptionTrie<PeerMailbox>()
 
@@ -135,9 +129,13 @@ internal class PublisherSocketHandler : SocketHandler {
     }
 
     override suspend fun send(message: Message) {
+        trySend(message)
+    }
+
+    override fun trySend(message: Message) {
         subscriptions.forEachMatching(message.peekFirstFrame().readByteArray()) { mailbox ->
             logger.d { "Dispatching $message to $mailbox" }
-            mailbox.sendChannel.send(CommandOrMessage(message))
+            mailbox.sendChannel.trySend(CommandOrMessage(message.copy()))
         }
     }
 }

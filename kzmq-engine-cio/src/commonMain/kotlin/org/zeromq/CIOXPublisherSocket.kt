@@ -7,7 +7,6 @@ package org.zeromq
 
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.*
-import kotlinx.coroutines.selects.*
 import kotlinx.io.*
 import org.zeromq.internal.*
 import org.zeromq.internal.utils.*
@@ -95,75 +94,63 @@ internal class CIOXPublisherSocket(
 ) : CIOSocket(engine, Type.XPUB), CIOSendSocket, CIOReceiveSocket, XPublisherSocket {
 
     override val validPeerTypes: Set<Type> get() = validPeerSocketTypes
-    override val handler = setupHandler(XPublisherSocketHandler())
+    override val handler = setupHandler(XPublisherSocketHandler(options))
 
-    override var invertMatching: Boolean
-        get() = TODO("Not yet implemented")
-        set(value) {}
-    override var noDrop: Boolean
-        get() = TODO("Not yet implemented")
-        set(value) {}
-    override var manual: Boolean
-        get() = TODO("Not yet implemented")
-        set(value) {}
-    override var welcomeMessage: String?
-        get() = TODO("Not yet implemented")
-        set(value) {}
+    override var invertMatching: Boolean by notImplementedOption("Not yet implemented")
+    override var noDrop: Boolean by notImplementedOption("Not yet implemented")
+    override var manual: Boolean by notImplementedOption("Not yet implemented")
+    override var welcomeMessage: String? by notImplementedOption("Not yet implemented")
 
     companion object {
         private val validPeerSocketTypes = setOf(Type.SUB, Type.XSUB)
     }
 }
 
-internal class XPublisherSocketHandler : SocketHandler {
-    private val mailboxes = hashSetOf<PeerMailbox>()
+internal class XPublisherSocketHandler(private val options: SocketOptions) : SocketHandler {
+    private val mailboxes = CircularQueue<PeerMailbox>()
     private var subscriptions = SubscriptionTrie<PeerMailbox>()
 
     override suspend fun handle(peerEvents: ReceiveChannel<PeerEvent>) = coroutineScope {
         while (isActive) {
-            select<Unit> {
-                peerEvents.onReceive { (kind, peerMailbox) ->
-                    when (kind) {
-                        PeerEvent.Kind.ADDITION -> mailboxes.add(peerMailbox)
-                        PeerEvent.Kind.REMOVAL -> mailboxes.remove(peerMailbox)
-                        else -> {}
-                    }
-                }
-            }
+            val event = peerEvents.receive()
+            mailboxes.updateOnAdditionRemoval(event)
         }
     }
 
     override suspend fun send(message: Message) {
-        subscriptions.forEachMatching(message.peekFirstFrame().readByteArray()) { peerMailbox ->
-            logger.d { "Dispatching $message to $peerMailbox" }
-            peerMailbox.sendChannel.send(CommandOrMessage(message))
+        trySend(message)
+    }
+
+    override fun trySend(message: Message) {
+        subscriptions.forEachMatching(message.peekFirstFrame().readByteArray()) { mailbox ->
+            logger.d { "Dispatching $message to $mailbox" }
+            mailbox.sendChannel.trySend(CommandOrMessage(message.copy()))
         }
     }
 
     override suspend fun receive(): Message {
-        return select {
-            for (mailbox in mailboxes) {
-                mailbox.receiveChannel.onReceive { commandOrMessage ->
-                    logger.d { "Handling $commandOrMessage from $mailbox" }
-                    if (commandOrMessage.isCommand) {
-                        when (val command = commandOrMessage.commandOrThrow()) {
-                            is SubscribeCommand -> {
-                                subscriptions = subscriptions.add(command.topic, mailbox)
-                                SubscriptionMessage(true, command.topic).toMessage()
-                            }
+        return mailboxes.receiveFromFirst().handleReceipt()
+    }
 
-                            is CancelCommand -> {
-                                subscriptions = subscriptions.remove(command.topic, mailbox)
-                                SubscriptionMessage(false, command.topic).toMessage()
-                            }
+    override fun tryReceive(): Message? {
+        return mailboxes.tryReceiveFromFirst()?.handleReceipt()
+    }
 
-                            else -> protocolError("Expected SUBSCRIBE or CANCEL, but got ${command.name}")
-                        }
-                    } else {
-                        commandOrMessage.messageOrThrow()
-                    }
-                }
+    private fun Receipt.handleReceipt(): Message = when (commandOrMessage) {
+        is CommandCase -> when (val command = commandOrMessage.command) {
+            is SubscribeCommand -> {
+                subscriptions = subscriptions.add(command.topic, sourceMailbox)
+                SubscriptionMessage(true, command.topic).toMessage()
             }
+
+            is CancelCommand -> {
+                subscriptions = subscriptions.remove(command.topic, sourceMailbox)
+                SubscriptionMessage(false, command.topic).toMessage()
+            }
+
+            else -> protocolError("Expected SUBSCRIBE or CANCEL, but got ${command.name}")
         }
+
+        is MessageCase -> commandOrMessage.message
     }
 }

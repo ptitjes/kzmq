@@ -80,7 +80,7 @@ internal class CIOSubscriberSocket(
 ) : CIOSocket(engine, Type.SUB), CIOReceiveSocket, SubscriberSocket {
 
     override val validPeerTypes: Set<Type> get() = validPeerSocketTypes
-    override val handler = setupHandler(SubscriberSocketHandler())
+    override val handler = setupHandler(SubscriberSocketHandler(options))
 
     override suspend fun subscribe() {
         handler.subscriptions.subscribe(listOf())
@@ -106,20 +106,16 @@ internal class CIOSubscriberSocket(
         handler.subscriptions.unsubscribe(topics.map { it.encodeToByteString() })
     }
 
-    override var conflate: Boolean
-        get() = TODO("Not yet implemented")
-        set(value) {}
+    override var conflate: Boolean by notImplementedOption("Not yet implemented")
 
-    override var invertMatching: Boolean
-        get() = TODO("Not yet implemented")
-        set(value) {}
+    override var invertMatching: Boolean by notImplementedOption("Not yet implemented")
 
     companion object {
         private val validPeerSocketTypes = setOf(Type.PUB, Type.XPUB)
     }
 }
 
-internal class SubscriberSocketHandler : SocketHandler {
+internal class SubscriberSocketHandler(private val options: SocketOptions) : SocketHandler {
     private val mailboxes = CircularQueue<PeerMailbox>()
     val subscriptions = SubscriptionManager()
 
@@ -127,6 +123,8 @@ internal class SubscriberSocketHandler : SocketHandler {
         while (isActive) {
             select {
                 peerEvents.onReceive { event ->
+                    mailboxes.updateOnAdditionRemoval(event)
+
                     val (kind, mailbox) = event
                     when (kind) {
                         PeerEvent.Kind.CONNECTION -> {
@@ -138,8 +136,6 @@ internal class SubscriberSocketHandler : SocketHandler {
 
                         else -> {}
                     }
-
-                    mailboxes.updateOnConnection(event)
                 }
 
                 subscriptions.lateSubscriptionCommands.onReceive { command ->
@@ -152,8 +148,9 @@ internal class SubscriberSocketHandler : SocketHandler {
         }
     }
 
-    override suspend fun receive(): Message {
-        val (_, message) = mailboxes.receiveFromFirst()
-        return message
-    }
+    override suspend fun receive(): Message = mailboxes.receiveFromFirst().messageOrThrow()
+
+    override fun tryReceive(): Message? = mailboxes.tryReceiveFromFirst()?.messageOrThrow()
+
+    private fun Receipt.messageOrThrow() = commandOrMessage.messageOrThrow()
 }

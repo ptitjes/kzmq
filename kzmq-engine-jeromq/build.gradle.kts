@@ -5,6 +5,7 @@
 
 plugins {
     id("plugin.library")
+    id("plugin.testing")
     id("plugin.publishing")
 }
 
@@ -13,9 +14,6 @@ kotlin {
 
     sourceSets {
         jvmMain {
-            languageSettings {
-                languageVersion = "2.1"
-            }
             dependencies {
                 implementation(project(":kzmq-core"))
                 implementation(libs.kotlinx.io.core)

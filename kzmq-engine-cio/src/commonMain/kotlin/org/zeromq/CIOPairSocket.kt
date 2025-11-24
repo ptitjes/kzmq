@@ -52,23 +52,15 @@ internal class CIOPairSocket(
 ) : CIOSocket(engine, Type.PAIR), CIOReceiveSocket, CIOSendSocket, PairSocket {
 
     override val validPeerTypes: Set<Type> get() = validPeerSocketTypes
-    override val handler = setupHandler(PairSocketHandler())
+    override val handler = setupHandler(PairSocketHandler(options))
 
     companion object {
         private val validPeerSocketTypes = setOf(Type.PAIR)
     }
 }
 
-internal class PairSocketHandler : SocketHandler {
+internal class PairSocketHandler(private val options: SocketOptions) : SocketHandler {
     private val mailbox = atomic<PeerMailbox?>(null)
-
-    private suspend fun awaitCurrentPeer() {
-        var counter = 0
-        while (mailbox.value == null) {
-            if (counter++ < 100) println("in awaitCurrentPeer: ${mailbox.value}")
-            yield()
-        }
-    }
 
     override suspend fun handle(peerEvents: ReceiveChannel<PeerEvent>) = coroutineScope {
         while (isActive) {
@@ -82,18 +74,43 @@ internal class PairSocketHandler : SocketHandler {
     }
 
     override suspend fun send(message: Message) {
-        awaitCurrentPeer()
-        val mailbox = mailbox.value!!
-        logger.v { "Sending $message to $mailbox" }
-        mailbox.sendChannel.send(CommandOrMessage(message))
+        while (true) {
+            val result = trySend(message)
+            if (result != null) return
+            yield()
+        }
+    }
+
+    override fun trySend(message: Message): Unit? {
+        val maybeMailbox = mailbox.value
+        if (maybeMailbox != null) {
+            val result = maybeMailbox.sendChannel.trySend(CommandOrMessage(message))
+            if (result.isSuccess) {
+                logger.v { "Sent message to $maybeMailbox" }
+                return Unit
+            }
+        }
+        return null
     }
 
     override suspend fun receive(): Message {
-        awaitCurrentPeer()
-        val mailbox = mailbox.value!!
-        val commandOrMessage = mailbox.receiveChannel.receive()
-        val message = commandOrMessage.messageOrThrow()
-        logger.v { "Receiving $message from $mailbox" }
-        return message
+        while (true) {
+            val result = tryReceive()
+            if (result != null) return result
+            yield()
+        }
+    }
+
+    override fun tryReceive(): Message? {
+        val mailbox = mailbox.value
+        if (mailbox != null) {
+            val result = mailbox.receiveChannel.tryReceive()
+            if (result.isSuccess) {
+                val message = result.getOrThrow().messageOrThrow()
+                logger.v { "Receiving $message from $mailbox" }
+                return message
+            }
+        }
+        return null
     }
 }

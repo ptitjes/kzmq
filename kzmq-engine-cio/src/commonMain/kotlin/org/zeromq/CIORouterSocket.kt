@@ -65,25 +65,19 @@ internal class CIORouterSocket(
 ) : CIOSocket(engine, Type.ROUTER), CIOReceiveSocket, CIOSendSocket, RouterSocket {
 
     override val validPeerTypes: Set<Type> get() = validPeerSocketTypes
-    override val handler = setupHandler(RouterSocketHandler())
+    override val handler = setupHandler(RouterSocketHandler(options))
 
     override var routingId: ByteString? by options::routingId
-    override var probeRouter: Boolean
-        get() = TODO("Not yet implemented")
-        set(value) {}
-    override var mandatory: Boolean
-        get() = TODO("Not yet implemented")
-        set(value) {}
-    override var handover: Boolean
-        get() = TODO("Not yet implemented")
-        set(value) {}
+    override var probeRouter: Boolean by notImplementedOption("Not yet implemented")
+    override var mandatory: Boolean by options::mandatory
+    override var handover: Boolean by notImplementedOption("Not yet implemented")
 
     companion object {
         private val validPeerSocketTypes = setOf(Type.REQ, Type.DEALER, Type.ROUTER)
     }
 }
 
-internal class RouterSocketHandler : SocketHandler {
+internal class RouterSocketHandler(private val options: SocketOptions) : SocketHandler {
     private val mailboxes = CircularQueue<PeerMailbox>()
     private val perIdentityMailboxes = hashMapOf<Identity, PeerMailbox>()
 
@@ -98,18 +92,20 @@ internal class RouterSocketHandler : SocketHandler {
         while (isActive) {
             val event = peerEvents.receive()
 
-            mailboxes.update(event)
+            mailboxes.updateOnAdditionRemoval(event)
 
             val (kind, mailbox) = event
             when (kind) {
                 PeerEvent.Kind.CONNECTION -> {
                     val identity = mailbox.identity ?: randomIdentity().also { mailbox.identity = it }
                     perIdentityMailboxes[identity] = mailbox
+                    logger.d { "Assigned identity $identity to $mailbox" }
                 }
 
                 PeerEvent.Kind.DISCONNECTION -> {
                     val identity = mailbox.identity ?: error("Peer identity should not be null")
                     perIdentityMailboxes.remove(identity)
+                    logger.d { "Removed identity $identity from $mailbox" }
                 }
 
                 else -> {}
@@ -118,16 +114,39 @@ internal class RouterSocketHandler : SocketHandler {
     }
 
     override suspend fun send(message: Message) {
-        val identity = message.popIdentity()
-        perIdentityMailboxes[identity]?.let { peerMailbox ->
-            logger.d { "Forwarding reply $message to $peerMailbox with identity $identity" }
-            peerMailbox.sendChannel.send(CommandOrMessage(message))
+        if (!options.mandatory) {
+            trySend(message)
+        } else {
+            val toSend = message.copy()
+            val identity = toSend.popIdentity()
+
+            val mailbox = perIdentityMailboxes[identity] ?: error("Message cannot be routed")
+
+            logger.d { "Forwarding reply $toSend to $mailbox with identity $identity" }
+            mailbox.sendChannel.send(CommandOrMessage(toSend))
+        }
+    }
+
+    override fun trySend(message: Message): Unit? {
+        val toSend = message.copy()
+        val identity = toSend.popIdentity()
+        return perIdentityMailboxes[identity]?.let { mailbox ->
+            logger.d { "Forwarding reply $toSend to $mailbox with identity $identity" }
+            mailbox.sendChannel.trySend(CommandOrMessage(toSend)).getOrNull()
         }
     }
 
     override suspend fun receive(): Message {
-        val (peerMailbox, message) = mailboxes.receiveFromFirst()
-        val identity = peerMailbox.identity ?: error("Peer identity should not be null")
+        return mailboxes.receiveFromFirst().messageWithIdentity()
+    }
+
+    override fun tryReceive(): Message? {
+        return mailboxes.tryReceiveFromFirst()?.messageWithIdentity()
+    }
+
+    private fun Receipt.messageWithIdentity(): Message {
+        val identity = sourceMailbox.identity ?: error("Peer identity should not be null")
+        val message = commandOrMessage.messageOrThrow()
         message.pushIdentity(identity)
         return message
     }

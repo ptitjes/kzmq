@@ -9,16 +9,16 @@ import de.infix.testBalloon.framework.core.*
 import io.kotest.assertions.*
 import kotlinx.coroutines.*
 import kotlinx.io.bytestring.*
+import org.zeromq.fragments.*
 import org.zeromq.internal.*
 import org.zeromq.test.*
 import org.zeromq.utils.*
 
 val ReplySocketHandlerTests by testSuite {
-    suspend fun TestExecutionScope.withHandler(test: SocketHandlerTest) =
-        withSocketHandler(ReplySocketHandler(), test)
+    val factory = ::ReplySocketHandler
 
     test("SHALL receive incoming messages from its peers using a fair-queuing strategy") {
-        withHandler { peerEvents, send, receive ->
+        factory.runTest {
             val peerCount = 5
             val messageCount = 10
 
@@ -48,7 +48,7 @@ val ReplySocketHandlerTests by testSuite {
             all {
                 repeat(messageCount) { messageIndex ->
                     peers.forEachIndexed { peerIndex, peer ->
-                        receive shouldReceiveExactly listOf(message {
+                        ::receive shouldReceiveExactly listOf(message {
                             writeFrame("REQUEST".encodeToByteString())
                             writeFrame { writeByte(messageIndex.toByte()) }
                             writeFrame { writeByte(peerIndex.toByte()) }
@@ -74,4 +74,18 @@ val ReplySocketHandlerTests by testSuite {
             }
         }
     }
+
+    suspendingSendTests(
+        factory = factory,
+        configureForSender = {
+            setState(ReplySocketState.ProcessingRequest(it, listOf("dummy-address".encodeToByteString())))
+        },
+    )
+
+    suspendingReceiveTests(
+        factory = factory,
+        modifySentMessage = { message ->
+            message.pushPrefixAddress(listOf("dummy-address".encodeToByteString()))
+        },
+    )
 }
