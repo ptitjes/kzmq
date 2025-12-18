@@ -22,7 +22,7 @@ zeromqjs = "6.5.0"
 
 testBalloon = "0.7.1-K2.2.21"
 ksp = "2.2.21-2.0.4"
-mokkery = "2.10.2"
+mokkery = "3.1.1"
 
 build-config = "5.7.1"
 maven-publish = "0.35.0"
